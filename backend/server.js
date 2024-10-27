@@ -2,16 +2,18 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
-
+const passport=require('passport');
 
 dotenv.config();
+require('./config/passport')(passport);
+
+
 
 const app = express();
-
-
 app.use(express.json());
 app.use(cors());
 
+app.use(passport.initialize());
 
 const PORT = process.env.PORT || 5000;
 

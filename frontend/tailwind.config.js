@@ -3,6 +3,7 @@ export default {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/flowbite/**/*.js"
   ],
   theme: {
     extend: {
@@ -12,6 +13,7 @@ export default {
       },
       colors: {
         urbanBrown: '#8B4513', 
+        navyBlue: '#001F3F'
       },
     },
   },

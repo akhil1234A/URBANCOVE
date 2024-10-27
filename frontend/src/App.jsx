@@ -1,14 +1,63 @@
-import React from 'react'
-import {BrowserRouter as Router, Routes, Route} from 'react-router-dom'
-import AdminLogin from './Pages/Admin/Login'
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// Admin
+import AdminLogin from './Pages/Admin/Login';
+import AdminRoutes from './Routes/AdminRoutes';
+
+// User Pages
+import UserLogin from './Pages/User/UserLogin';
+import Home from './Pages/User/Home';
+import Collection from './Pages/User/Collection';
+import Product from './Pages/User/Product';
+import ForgotPassword from './Pages/User/ForgotPassword'
+import OtpVerification from './Pages/User/OtpVerification';
+
+// User Components
+import Navbar from './Components/User/Navbar'; 
+import Footer from './Components/User/Footer'; 
+import SearchBar from './Components/User/SearchBar'; 
+
 const App = () => {
   return (
-    <Router>
-    <Routes>
-      <Route path='/admin/login' element={<AdminLogin/>}/>
-    </Routes>
-  </Router>
-  )
-}
+    <div>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+      
+      <Router>
+        <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
+          <Navbar />
+          <SearchBar />
+          
+          <Routes>
+            {/* User Routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/collection" element={<Collection />} />
+            <Route path="/product/:productID" element={<Product />} />
+            <Route path="/login" element={<UserLogin />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/otp-verify" element={<OtpVerification />} />
+            {/* Admin Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard/*" element={<AdminRoutes />} />
+          </Routes>
 
-export default App
+          <Footer />
+        </div>
+      </Router>
+    </div>
+  );
+};
+
+export default App;
