@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { assets } from '../../assets/assets';
-import { products } from '../../assets/assets'; // assuming products array is in assets
+import { products } from '../../assets/assets';
 import RelatedProducts from '../../components/User/RelatedProducts';
 
 const Product = () => {
   const { productID } = useParams();
-  const currency = '$'; // Hardcoded for simplicity; adjust as needed
+  const currency = '$';
   const [productData, setProductData] = useState(null);
   const [image, setImage] = useState('');
   const [size, setSize] = useState('');
+  const [zoomPosition, setZoomPosition] = useState({});
+  const [isZoomed, setIsZoomed] = useState(false);
 
-  // Fetch product data directly from products array
   useEffect(() => {
     const fetchProductData = () => {
       const product = products.find((item) => item._id === productID);
@@ -23,8 +24,34 @@ const Product = () => {
     fetchProductData();
   }, [productID]);
 
+  const handleMouseMove = (e) => {
+    const { top, left, width, height } = e.target.getBoundingClientRect();
+    const x = ((e.pageX - left) / width) * 100;
+    const y = ((e.pageY - top) / height) * 100;
+    setZoomPosition({
+      backgroundImage: `url(${image})`,
+      backgroundPosition: `${x}% ${y}%`,
+    });
+  };
+
   return productData ? (
     <div className='border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100'>
+      <nav className="text-gray-600 text-sm mb-6">
+        <Link to="/" className="hover:text-gray-800">Home</Link>
+        <span> / </span>
+        <Link to={`/category/${productData.category}`} className="hover:text-gray-800">{productData.category}</Link>
+        {productData.subCategory && (
+          <>
+            <span> / </span>
+            <Link to={`/category/${productData.category}/${productData.subCategory}`} className="hover:text-gray-800">
+              {productData.subCategory}
+            </Link>
+          </>
+        )}
+        <span> / </span>
+        <span className="text-gray-800">{productData.name}</span>
+      </nav>
+
       <div className='flex gap-12 sm:gap-12 flex-col sm:flex-row'>
         
         {/* Product Images */}
@@ -34,8 +61,26 @@ const Product = () => {
               <img onClick={() => setImage(item)} src={item} key={index} className='w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer' />
             ))}
           </div>
-          <div className='w-full sm:w-[80%]'>
-            <img className='w-full h-auto' src={image} alt={productData.name} />
+          <div className='w-full sm:w-[80%] relative flex'>
+            <div
+              className="w-full h-auto cursor-crosshair relative"
+              onMouseEnter={() => setIsZoomed(true)}
+              onMouseLeave={() => setIsZoomed(false)}
+              onMouseMove={handleMouseMove}
+            >
+              <img className='w-full h-auto' src={image} alt={productData.name} />
+            </div>
+
+            {/* Zoomed Image Display */}
+            {isZoomed && (
+              <div
+                className="zoom-box hidden sm:block absolute w-[200px] h-[200px] ml-4 mt-12 bg-no-repeat bg-cover border border-gray-200 shadow-lg"
+                style={{
+                  ...zoomPosition,
+                  backgroundSize: '200%',  // Adjust zoom level
+                }}
+              ></div>
+            )}
           </div>
         </div>
 
@@ -43,11 +88,11 @@ const Product = () => {
         <div className='flex-1'>
           <h1 className='font-medium text-2xl mt-2'>{productData.name}</h1>
           <div className='flex item-center gap-1 mt-2'>
-            <img className='w-3.5' src={assets.star_icon} alt="star" />
-            <img className='w-3.5' src={assets.star_icon} alt="star" />
-            <img className='w-3.5' src={assets.star_icon} alt="star" />
-            <img className='w-3.5' src={assets.star_icon} alt="star" />
-            <img className='w-3.5' src={assets.star_dull_icon} alt="star" />
+            <img className='w-5 h-5' src={assets.star_icon} alt="star"/>
+            <img className='w-5 h-5' src={assets.star_icon} alt="star" />
+            <img className='w-5 h-5' src={assets.star_icon} alt="star" />
+            <img className='w-5 h-5' src={assets.star_icon} alt="star" />
+            <img className='w-5 h-5' src={assets.star_dull_icon} alt="star" />
             <p className='pl-2'>(122)</p>
           </div>
           <p className='mt-5 text-3xl font-medium'>{currency}{productData.price}</p>
