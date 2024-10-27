@@ -13,7 +13,7 @@ const Sidebar = () => {
       icon: <UserOutlined />,
       label: 'User Management',
       children: [
-        { key: '1', label: <Link to="/admin/dashboard/users">View Users</Link> },
+        { key: '1', label: <Link to="/admin/users">View Users</Link> },
       ],
     },
     {
@@ -21,8 +21,8 @@ const Sidebar = () => {
       icon: <AppstoreOutlined />,
       label: 'Category Management',
       children: [
-        { key: '2', label: <Link to="/admin/dashboard/categories">View Categories</Link> },
-        { key: '3', label: <Link to="/admin/dashboard/subcategories">View Sub Categories</Link> },
+        { key: '2', label: <Link to="/admin/categories">View Categories</Link> },
+        { key: '3', label: <Link to="/admin/subcategories">View Sub Categories</Link> },
       ],
     },
     {
@@ -30,8 +30,8 @@ const Sidebar = () => {
       icon: <ShoppingOutlined />,
       label: 'Product Management',
       children: [
-        { key: '4', label: <Link to="/admin/dashboard/products/add">Add Product</Link> },
-        { key: '5', label: <Link to="/admin/dashboard/products/view">View Products</Link> },
+        { key: '4', label: <Link to="/admin/products/add">Add Product</Link> },
+        { key: '5', label: <Link to="/admin/products/view">View Products</Link> },
       ],
     },
   ];
