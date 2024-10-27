@@ -19,6 +19,7 @@ import SearchBar from './Components/User/SearchBar';
 // Admin
 import AdminLogin from './Pages/Admin/Login';
 import AdminRoutes from './Routes/AdminRoutes';
+import ProtectedRoute from './Routes/ProtectedRoutes';
 
 const App = () => {
   return (
@@ -39,7 +40,13 @@ const App = () => {
         <Routes>
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/*" element={<AdminRoutes />} />
+          <Route path="/admin/*" element={
+            <ProtectedRoute>
+              <AdminRoutes />
+            </ProtectedRoute>
+            }
+/>
+
           
           {/* User Routes */}
           <Route path="/*" element={<UserLayout />} />
