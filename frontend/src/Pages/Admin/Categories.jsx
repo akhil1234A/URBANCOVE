@@ -1,40 +1,122 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentCategory, setCurrentCategory] = useState({ id: '', name: '', status: 'listed' });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    const token = localStorage.getItem('adminToken');
+    console.log("Token retrieved:", token); // Log the token
+
+    try {
+      const response = await axios.get('http://localhost:3000/admin/categories', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log("Fetched categories:", response.data); // Log the fetched data
+      setCategories(response.data);
+    } catch (error) {
+      console.error("Error fetching categories:", error); // Log the error details
+      toast.error(`Error fetching categories: ${error.response?.data?.message || error.message}`);
+    }
+  };
 
   const handleAddCategory = () => {
     setShowModal(true);
     setIsEditing(false);
-    setCurrentCategory({ id: '', name: '', status: 'listed' }); // Default to listed
+    setCurrentCategory({ id: '', name: '', status: 'listed' });
   };
 
   const handleEditCategory = (category) => {
     setShowModal(true);
     setIsEditing(true);
-    setCurrentCategory(category);
+    setCurrentCategory({ id: category._id, name: category.category, status: category.isActive ? 'listed' : 'unlisted' });
   };
 
-  const handleSave = () => {
-    if (isEditing) {
-      setCategories(categories.map(cat => (cat.id === currentCategory.id ? currentCategory : cat)));
-    } else {
-      setCategories([...categories, { id: Date.now(), name: currentCategory.name, status: currentCategory.status }]);
+  const handleSave = async () => {
+    setLoading(true);
+    const token = localStorage.getItem('adminToken');
+
+    try {
+      if (isEditing) {
+        const response = await axios.put(`http://localhost:3000/admin/categories/${currentCategory.id}`, {
+          category: currentCategory.name,
+          isActive: currentCategory.status === 'listed'
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        // Update the existing category in state
+        setCategories(prevCategories => 
+          prevCategories.map(cat => (cat._id === currentCategory.id ? response.data : cat))
+        );
+        toast.success('Category updated successfully');
+      } else {
+        const response = await axios.post('http://localhost:3000/admin/categories', {
+          category: currentCategory.name,
+          isActive: currentCategory.status === 'listed'
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        // Log the entire response to ensure correct structure
+        console.log("Response from adding category:", response.data);
+        
+        // Extract the new category from the response
+        const newCategory = response.data.newCategory;
+
+        // Immediately update the categories state with the newly added category
+        setCategories(prevCategories => [...prevCategories, newCategory]);
+        toast.success('Category added successfully');
+      }
+    } catch (error) {
+      toast.error(`Error saving category: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setLoading(false);
+      setShowModal(false);
     }
-    setShowModal(false);
   };
 
   const handleChange = (e) => {
     setCurrentCategory({ ...currentCategory, [e.target.name]: e.target.value });
   };
 
-  const toggleStatus = (categoryId) => {
-    setCategories(categories.map(cat => 
-      cat.id === categoryId ? { ...cat, status: cat.status === 'listed' ? 'unlisted' : 'listed' } : cat
-    ));
+  const toggleStatus = async (categoryId) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('adminToken'); // Use the correct token
+      const updatedCategory = categories.find(cat => cat._id === categoryId);
+      const response = await axios.put(`http://localhost:3000/admin/categories/${categoryId}`, {
+        ...updatedCategory,
+        isActive: !updatedCategory.isActive
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setCategories(prevCategories => 
+        prevCategories.map(cat => (cat._id === categoryId ? response.data : cat))
+      );
+      toast.success(`Category ${response.data.isActive ? 'listed' : 'unlisted'} successfully`);
+    } catch (error) {
+      toast.error(`Error updating category status: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,27 +129,34 @@ const Categories = () => {
         Add Category
       </button>
 
-      <ul className="mb-4">
-        {categories.map(category => (
-          <li key={category.id} className="flex justify-between items-center py-2">
-            <span className="text-lg">{category.name} ({category.status})</span>
-            <div>
-              <button 
-                className={`text-white px-3 py-1 rounded ${category.status === 'listed' ? 'bg-red-500' : 'bg-green-500'}`}
-                onClick={() => toggleStatus(category.id)}
-              >
-                {category.status === 'listed' ? 'Unlist' : 'List'}
-              </button>
-              <button 
-                className="bg-yellow-500 text-white px-3 py-1 rounded ml-2"
-                onClick={() => handleEditCategory(category)}
-              >
-                Edit
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {loading ? ( // Show loading state
+        <div>Loading categories...</div>
+      ) : (
+        <ul className="mb-4">
+          {categories.map(category => (
+            <li 
+              key={category._id} 
+              className={`flex justify-between items-center py-2 ${category.isActive ? '' : 'text-gray-400'}`}
+            >
+              <span className="text-lg">{category.category} ({category.isActive ? 'Listed' : 'Unlisted'})</span>
+              <div>
+                <button 
+                  className={`text-white px-3 py-1 rounded ${category.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
+                  onClick={() => toggleStatus(category._id)}
+                >
+                  {category.isActive ? 'Unlist' : 'List'}
+                </button>
+                <button 
+                  className="bg-yellow-500 text-white px-3 py-1 rounded ml-2 hover:bg-yellow-600"
+                  onClick={() => handleEditCategory(category)}
+                >
+                  Edit
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-600 bg-opacity-50">
@@ -98,15 +187,18 @@ const Categories = () => {
                 Close
               </button>
               <button 
-                className="bg-blue-500 text-white px-4 py-2 rounded"
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 onClick={handleSave}
+                disabled={loading}
               >
-                Save Changes
+                {loading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>
         </div>
       )}
+      
+      <ToastContainer />
     </div>
   );
 };

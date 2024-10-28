@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
+import axios from 'axios';
 
 // components
 import Navbar from '../components/Admin/Navbar';
@@ -14,6 +15,38 @@ import AddProduct from '../Pages/Admin/AddProduct';
 import ViewProducts from '../Pages/Admin/ViewProducts';
 
 const AdminRoutes = () => {
+
+  const [categories, setCategories] = useState([])
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const token = localStorage.getItem('adminToken');
+      console.log('Admin Token:', token); // Log the token to verify its presence
+      try {
+        const response = await axios.get('http://localhost:3000/admin/categories', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log('Fetched Categories:', response.data); // Log the fetched categories
+        setCategories(response.data); // Assuming response.data is an array of categories
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        // Log detailed error response
+        if (error.response) {
+          console.error("Response data:", error.response.data);
+          console.error("Response status:", error.response.status);
+          console.error("Response headers:", error.response.headers);
+        } else {
+          console.error("Error message:", error.message);
+        }
+      }
+    };
+    
+
+    fetchCategories();
+  }, []);
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Fixed Navbar */}
@@ -34,7 +67,7 @@ const AdminRoutes = () => {
             <Route path="/" element={<AdminDashboard />} />
             <Route path="users" element={<Users />} />
             <Route path="categories" element={<Categories />} />
-            <Route path="subcategories" element={<SubCategory />} />
+            <Route path="subcategories" element={<SubCategory categories={categories}/>} />
             <Route path="products/add" element={<AddProduct />} />
             <Route path="products/view" element={<ViewProducts />} />
           </Routes>
