@@ -6,18 +6,26 @@ export const adminLogin = createAsyncThunk(
   async ({ email, password }, { rejectWithValue }) => {
     try {
       const data = await loginAdmin(email, password);
+      localStorage.setItem('adminToken', data.token);
       return data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response ? error.response.data : { message: 'Login failed' });
     }
   }
 );
 
+const initialState = {
+  token: localStorage.getItem('adminToken') || null, 
+  isAuthenticated: !!localStorage.getItem('adminToken'),
+  error: null, 
+};
+
 const adminSlice = createSlice({
   name: 'admin',
-  initialState: { token: null, isAuthenticated: false, error: null },
+  initialState,
   reducers: {
     logoutAdmin: (state) => {
+      localStorage.removeItem('adminToken');
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
@@ -31,7 +39,8 @@ const adminSlice = createSlice({
         state.error = null;
       })
       .addCase(adminLogin.rejected, (state, action) => {
-        state.error = action.payload.message;
+        console.error("Login Error: ", action.payload); 
+        state.error = action.payload.message || "Login failed";
       });
   },
 });

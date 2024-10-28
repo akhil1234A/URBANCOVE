@@ -13,21 +13,22 @@ const AdminLogin = () => {
   const navigate = useNavigate();
 
   // Access the login state
-  const { isAuthenticated, error } = useSelector((state) => state.admin);
+  const { isAuthenticated, error, token} = useSelector((state) => state.admin);
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/admin/dashboard'); // Redirect on successful login
+      localStorage.setItem('adminToken', token);
+      navigate('/admin/dashboard'); 
       toast.success("Login successful!");
     }
     if (error) {
       toast.error(error);
     }
-  }, [isAuthenticated, error, navigate]);
+  }, [isAuthenticated, error, navigate, token]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(adminLogin({ email, password })); // Dispatch the login action
+    dispatch(adminLogin({ email, password })); 
   };
 
   return (

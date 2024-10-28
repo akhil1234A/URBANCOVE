@@ -1,19 +1,22 @@
-// store/store.js
 import { configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import adminReducer from '../slices/admin/adminSlice';
+import userReducer from '../slices/admin/userSlice';
 
 const persistConfig = {
-  key: 'admin',
+  key: 'root', 
   storage,
-  whitelist: ['token','isAuthenticated'], // Only persist the token field
+  whitelist: ['admin'], 
 };
 
-const persistedReducer = persistReducer(persistConfig, adminReducer);
+const persistedAdminReducer = persistReducer(persistConfig, adminReducer);
 
 export const store = configureStore({
-  reducer: { admin: persistedReducer },
+  reducer: {
+    admin: persistedAdminReducer,
+    users: userReducer, 
+  },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }),
 });

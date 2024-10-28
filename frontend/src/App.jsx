@@ -1,7 +1,9 @@
-import React from 'react';
+import React, {useEffect} from 'react';
+import { useDispatch } from 'react-redux';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { logoutAdmin, adminLogin} from './slices/admin/adminSlice';
 
 // User Pages
 import UserLogin from './Pages/User/UserLogin';
@@ -22,6 +24,22 @@ import AdminRoutes from './Routes/AdminRoutes';
 import ProtectedRoute from './Routes/ProtectedRoutes';
 
 const App = () => {
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    // console.log(token);
+
+    if (!token) {
+      dispatch(logoutAdmin());
+    } 
+
+    
+  }, [dispatch]);
+
+
+
   return (
     <div>
       <ToastContainer

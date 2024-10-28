@@ -38,13 +38,15 @@ exports.listUsers = async(req,res)=>{
 
 exports.blockUser = async(req,res)=>{
    try{
+      // console.log('Headers: ',req.headers);
       const user = await User.findById(req.params.id);
       if(!user) return res.status(404).json({message: 'User not found'});
 
       user.isActive = !user.isActive;
+      // console.log('debugging',user);
       await user.save();
 
-      res.json({message: `User has been ${user.isActive? 'unblocked': 'blocked'}`});
+      res.json({message: `User has been ${user.isActive? 'unblocked': 'blocked'}`, isActive: user.isActive});
    } catch(error){
       console.log(error);
       res.status(500).json({message: `Server error: ${error}`});

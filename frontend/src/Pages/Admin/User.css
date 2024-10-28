@@ -1,0 +1,46 @@
+/* Admin.css */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  text-align: center; /* Center-align text in each cell */
+}
+
+th {
+  background-color: #f7f7f7;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:hover {
+  background-color: #f1f1f1;
+}
+
+button {
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+.bg-red-500 {
+  background-color: #f56565;
+}
+
+.bg-red-600:hover {
+  background-color: #e53e3e;
+}
+
+.bg-green-500 {
+  background-color: #48bb78;
+}
+
+.bg-green-600:hover {
+  background-color: #38a169;
+}
