@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { assets } from '../../assets/assets';
-import { products } from '../../assets/assets';
-import RelatedProducts from '../../components/User/RelatedProducts';
+import { assets } from '../assets/assets';
 
 const Product = () => {
-  const { productID } = useParams();
-  const currency = '$';
+  const formatPath = (path) => Array.isArray(path) ? path.map(p => p.replace(/\\/g, '/')) : path.replace(/\\/g, '/');
+  const { id: productID } = useParams();
   const [productData, setProductData] = useState(null);
   const [image, setImage] = useState('');
   const [size, setSize] = useState('');
@@ -14,13 +12,42 @@ const Product = () => {
   const [isZoomed, setIsZoomed] = useState(false);
 
   useEffect(() => {
-    const fetchProductData = () => {
-      const product = products.find((item) => item._id === productID);
-      if (product) {
-        setProductData(product);
-        setImage(product.image[0]);
+    const fetchProductData = async () => {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        console.error("Authorization token not found.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:3000/admin/products/${productID}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        });
+
+        if (response.ok) {
+          const [data] = await response.json();
+          
+          // Correct size format
+          const parsedSizes = data.size[0].replace(/\"/g, "").split(","); 
+          
+          // Format image paths for display
+          const formattedImages = data.images ? data.images.map(formatPath) : [];
+
+          // Set state with formatted data
+          setProductData({ ...data, size: parsedSizes, images: formattedImages });
+          setImage(formattedImages[0] || ''); // Default to the first image
+          
+        } else {
+          console.error('Failed to fetch product:', response.statusText);
+        }
+      } catch (error) {
+        console.error('An error occurred:', error);
       }
     };
+
     fetchProductData();
   }, [productID]);
 
@@ -29,27 +56,20 @@ const Product = () => {
     const x = ((e.pageX - left) / width) * 100;
     const y = ((e.pageY - top) / height) * 100;
     setZoomPosition({
-      backgroundImage: `url(${image})`,
+      backgroundImage: `url(http://localhost:3000/${image})`,
       backgroundPosition: `${x}% ${y}%`,
     });
   };
 
   return productData ? (
     <div className='border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100'>
+      {/* Breadcrumbs */}
       <nav className="text-gray-600 text-sm mb-6">
         <Link to="/" className="hover:text-gray-800">Home</Link>
         <span> / </span>
-        <Link to={`/collection`} className="hover:text-gray-800">{productData.category}</Link>
-        {/* {productData.subCategory && (
-          <>
-            <span> / </span>
-            <Link to={`/category/${productData.category}/${productData.subCategory}`} className="hover:text-gray-800">
-              {productData.subCategory}
-            </Link>
-          </>
-        )} */}
+        <Link to={`/collection`} className="hover:text-gray-800">{productData.category?.category}</Link>
         <span> / </span>
-        <span className="text-gray-800">{productData.name}</span>
+        <span className="text-gray-800">{productData.productName}</span>
       </nav>
 
       <div className='flex gap-12 sm:gap-12 flex-col sm:flex-row'>
@@ -57,8 +77,8 @@ const Product = () => {
         {/* Product Images */}
         <div className='flex-1 flex flex-col-reverse gap-3 sm:flex-row'>
           <div className='flex sm:flex-col overflow-x-auto sm:overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full'>
-            {productData.image.map((item, index) => (
-              <img onClick={() => setImage(item)} src={item} key={index} className='w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer' />
+            {productData.images && productData.images.map((img, index) => (
+              <img onClick={() => setImage(img)} src={`http://localhost:3000/${img}`} key={index} className='w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer' alt={productData.productName} />
             ))}
           </div>
           <div className='w-full sm:w-[80%] relative flex'>
@@ -68,7 +88,7 @@ const Product = () => {
               onMouseLeave={() => setIsZoomed(false)}
               onMouseMove={handleMouseMove}
             >
-              <img className='w-full h-auto' src={image} alt={productData.name} />
+              <img className='w-full h-auto' src={`http://localhost:3000/${image}`} alt={productData.productName} />
             </div>
 
             {/* Zoomed Image Display */}
@@ -86,7 +106,7 @@ const Product = () => {
 
         {/* Product Info */}
         <div className='flex-1'>
-          <h1 className='font-medium text-2xl mt-2'>{productData.name}</h1>
+          <h1 className='font-medium text-2xl mt-2'>{productData.productName}</h1>
           <div className='flex item-center gap-1 mt-2'>
             <img className='w-5 h-5' src={assets.star_icon} alt="star"/>
             <img className='w-5 h-5' src={assets.star_icon} alt="star" />
@@ -95,13 +115,13 @@ const Product = () => {
             <img className='w-5 h-5' src={assets.star_dull_icon} alt="star" />
             <p className='pl-2'>(122)</p>
           </div>
-          <p className='mt-5 text-3xl font-medium'>{currency}{productData.price}</p>
-          <p className='mt-5 text-gray-500 md:w-4/5'>{productData.description}</p>
+          <p className='mt-5 text-3xl font-medium'>${productData.price}</p>
+          <p className='mt-5 text-gray-500 md:w-4/5'>{productData.productDescription}</p>
           <div className='flex flex-col gap-4 my-8'>
             <p>Select Size</p>
             <div className='flex gap-2'>
-              {productData.sizes.map((item, index) => (
-                <button onClick={() => setSize(item)} className={`border py-2 px-4 bg-gray-100 ${item === size ? 'border-orange-500' : ''}`} key={index}>{item}</button>
+              {productData.size && productData.size.map((s, index) => (
+                <button onClick={() => setSize(s)} className={`border py-2 px-4 bg-gray-100 ${s === size ? 'border-orange-500' : ''}`} key={index}>{s}</button>
               ))}
             </div>
           </div>
@@ -126,9 +146,6 @@ const Product = () => {
           <p>With the growth of online shopping, e-commerce websites have become essential for retailers...</p>
         </div>
       </div>
-
-      {/* Related Products */}
-      <RelatedProducts category={productData.category} subCategory={productData.subCategory} products={products}/>
     </div>
   ) : <div>Product not found</div>;
 };

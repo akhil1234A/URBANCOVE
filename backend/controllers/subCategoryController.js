@@ -26,8 +26,10 @@ exports.addSubCategory = async (req, res) => {
 
 exports.listSubCategories = async (req, res) => {
   try {
-      const subCategories = await SubCategory.find().populate('category', 'category');
-      res.status(200).json(subCategories);
+    const { categoryId } = req.params;
+    const query = categoryId ? { category: categoryId } : {};
+    const subCategories = await SubCategory.find().populate('category', 'category');
+    res.status(200).json(subCategories);
   } catch (error) {
       res.status(500).json({ message: 'Server error', error });
   }

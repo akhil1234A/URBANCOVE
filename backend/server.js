@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const passport=require('passport');
+const path = require('path');
 
 dotenv.config();
 require('./config/passport')(passport);
@@ -22,6 +23,7 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('MongoDB connected'))
     .catch((err) => console.error('MongoDB connection error:', err));
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));    
 
 const adminRoutes = require('./routes/adminRoutes');
 app.use('/admin', adminRoutes);

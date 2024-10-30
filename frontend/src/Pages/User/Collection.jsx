@@ -1,16 +1,21 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import { assets } from '../../assets/assets';
 import Title from '../../components/User/Title';
 import ProductItem from '../../components/User/ProductItem';
+import { products } from '../../assets/assets'; 
 
 const Collection = () => {
-  // Sample products array for layout demonstration
-  const sampleProducts = [
-    { id: '1', name: 'Product 1', price: 100, image: assets.product_image },
-    { id: '2', name: 'Product 2', price: 200, image: assets.product_image },
-    { id: '3', name: 'Product 3', price: 300, image: assets.product_image },
-    { id: '4', name: 'Product 4', price: 400, image: assets.product_image },
-  ];
+  
+  const [productList, setProductList] = useState([]);
+  
+  useEffect(() => {
+    // Set latest products from dummy data instead of context or Redux store
+    setProductList(products);
+   
+  }, []);
+
+
+
 
   return (
     <div className='flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t'>
@@ -68,8 +73,8 @@ const Collection = () => {
 
         {/* Map products */}
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6'>
-          {sampleProducts.map((item) => (
-            <ProductItem key={item.id} name={item.name} id={item.id} price={item.price} image={item.image} />
+          {products.map((item) => (
+             <ProductItem key={item._id} id={item._id} name={item.name} price={item.price} image={item.image} />
           ))}
         </div>
       </div>
