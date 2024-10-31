@@ -25,18 +25,18 @@ const AdminRoutes = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       const token = localStorage.getItem('adminToken');
-      console.log('Admin Token:', token); // Log the token to verify its presence
+      // console.log('Admin Token:', token); 
       try {
         const response = await axios.get('http://localhost:3000/admin/categories', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log('Fetched Categories:', response.data); // Log the fetched categories
-        setCategories(response.data); // Assuming response.data is an array of categories
+        console.log('Fetched Categories:', response.data); 
+        setCategories(response.data); 
       } catch (error) {
         console.error("Error fetching categories:", error);
-        // Log detailed error response
+   
         if (error.response) {
           console.error("Response data:", error.response.data);
           console.error("Response status:", error.response.status);
@@ -53,18 +53,18 @@ const AdminRoutes = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Fixed Navbar */}
+
       <Navbar />
       <div className="flex">
-        {/* Fixed Sidebar */}
+
         <Sidebar />
         
-        {/* Main content area */}
+
         <div
           className="flex-grow p-6 text-gray-600 text-base"
           style={{
-            marginLeft: '250px',  // Adjust this based on your Sidebar width
-            paddingTop: '100px',    // Adjust this based on your Navbar height
+            marginLeft: '250px',  
+            paddingTop: '100px',  
           }}
         >
           <Routes>

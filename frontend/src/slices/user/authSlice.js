@@ -1,34 +1,26 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { signUpUser, verifyUserOtp, loginUser, resendUserOtp } from '../../services/user/userAuth';
 
-// Utility function to handle API responses
-const handleApiResponse = async (apiCall) => {
-  try {
-    const response = await apiCall();
-    return response.data; // Return the data if the request is successful
-  } catch (error) {
-    return Promise.reject(error.response?.data || { message: 'An error occurred' });
-  }
-};
-
-// Async thunks for user authentication
 export const signUp = createAsyncThunk('auth/signUp', async (userData) => {
-  return handleApiResponse(() => axios.post('http://localhost:3000/user/signup', userData));
+  return signUpUser(userData);
 });
 
 export const verifyOtp = createAsyncThunk('auth/verifyOtp', async ({ email, otp }) => {
-  return handleApiResponse(() => axios.post('http://localhost:3000/user/verify-otp', { email, otp }));
+  return verifyUserOtp(email, otp);
 });
 
 export const login = createAsyncThunk('auth/login', async (credentials) => {
-  return handleApiResponse(() => axios.post('http://localhost:3000/user/login', credentials));
+  return loginUser(credentials);
 });
 
 export const resendOtp = createAsyncThunk('auth/resendOtp', async (email) => {
-  return handleApiResponse(() => axios.post('http://localhost:3000/user/resend-otp', { email }));
+  console.log("Sending OTP to email:", email);
+  // return resendUserOtp(email);
+  const response = await resendUserOtp(email);
+  console.log("Resend OTP response:", response); // Log the response from the service
+  return response;
 });
 
-// Auth slice
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
@@ -42,10 +34,10 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       localStorage.removeItem('token');
-      state.error = null; // Clear error on logout
+      state.error = null;
     },
     resetError: (state) => {
-      state.error = null; // Reset error state
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -56,23 +48,22 @@ const authSlice = createSlice({
       .addCase(signUp.fulfilled, (state, { payload }) => {
         state.isLoading = false;
         state.user = payload.user;
-        state.token = payload.token; // Assuming your signup response includes a token
+        state.token = payload.token;
         localStorage.setItem('token', payload.token);
       })
       .addCase(signUp.rejected, (state, { payload }) => {
         state.isLoading = false;
-        state.error = payload.message; // Capture error message
+        state.error = payload?.message || 'An error occurred during sign up';
       })
       .addCase(verifyOtp.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(verifyOtp.fulfilled, (state, { payload }) => {
         state.isLoading = false;
-        // Handle successful OTP verification, possibly save user/token
       })
       .addCase(verifyOtp.rejected, (state, { payload }) => {
         state.isLoading = false;
-        state.error = payload.message; // Capture error message
+        state.error = payload?.message || 'OTP verification failed';
       })
       .addCase(login.pending, (state) => {
         state.isLoading = true;
@@ -82,30 +73,25 @@ const authSlice = createSlice({
         state.user = payload.user;
         state.token = payload.token;
         localStorage.setItem('token', payload.token);
-        console.log(payload.token);
-        console.log(payload.user);
-        
       })
       .addCase(login.rejected, (state, { payload }) => {
         state.isLoading = false;
-        state.error = payload.message; // Capture error message
-        console.log(payload.message)
+        state.error = payload?.message || 'Login failed';
       })
       .addCase(resendOtp.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(resendOtp.fulfilled, (state, { payload }) => {
+      .addCase(resendOtp.fulfilled, (state) => {
         state.isLoading = false;
-        // Handle successful OTP resend, maybe show a success message
+        console.log("OTP successfully resent:", payload);
       })
       .addCase(resendOtp.rejected, (state, { payload }) => {
         state.isLoading = false;
-        state.error = payload.message; // Capture error message
-        console.log(payload.message)
+        state.error = payload?.message || 'Failed to resend OTP';
+        console.error("Error while resending OTP:", payload); 
       });
   },
 });
 
-// Export actions and reducer
 export const { logout, resetError } = authSlice.actions;
 export default authSlice.reducer;

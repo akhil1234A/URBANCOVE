@@ -6,26 +6,26 @@ const jwt = require('jsonwebtoken');
 
 const signUp = async (req, res) => {
     const { name, email, password } = req.body;
-    console.log(req.body)
-    console.log(name);
+    // console.log(req.body); // Debugging
     try {
-   
+        // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "User already exists" });
         }
 
-      
-        const newUser = new User({ name, email, password }); // save without password initially
+        // Hash password before saving user
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ name, email, password: hashedPassword });
 
-        // Generate OTP
-        const otp = crypto.randomInt(100000, 999999).toString(); // Generate a 6-digit OTP
+        // Generate and set OTP and expiry
+        const otp = crypto.randomInt(100000, 999999).toString();
         newUser.otp = otp;
-        newUser.otpExpiry = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
+        newUser.otpExpiry = Date.now() + 1 * 60 * 1000;
 
         await newUser.save();
 
-        // Send OTP via email
+        // Send OTP email
         const transporter = nodemailer.createTransport({
             service: 'Gmail',
             auth: {
@@ -43,7 +43,8 @@ const signUp = async (req, res) => {
 
         await transporter.sendMail(mailOptions);
 
-        res.status(200).json({ message: "OTP sent to your email." });
+        // Success response
+        res.status(200).json({ success: true, message: "OTP sent to your email.", otpExpiry: newUser.otpExpiry });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -54,22 +55,70 @@ const verifyOtp = async (req, res) => {
 
     try {
         const user = await User.findOne({ email });
+        
+        // OTP and expiry validation
         if (!user || user.otp !== otp) {
             return res.status(400).json({ message: "Invalid OTP" });
         }
-
-        // Check if OTP is expired
         if (user.otpExpiry < Date.now()) {
             return res.status(400).json({ message: "OTP expired" });
         }
 
+        // Mark user as verified, hash password, and clear OTP details
         user.isVerified = true;
-        user.password = await bcrypt.hash(user.password, 10); // Hash password
-        user.otp = undefined; // Clear OTP
-        user.otpExpiry = undefined; // Clear expiry time
+        user.otp = undefined;
+        user.otpExpiry = undefined;
         await user.save();
 
-        res.status(200).json({ message: "User registered successfully." });
+        res.status(200).json({ success: true, message: "User registered successfully." });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const resendOtp = async (req, res) => {
+    const { email } = req.body;
+    console.log("Received request to resend OTP:", req.body);
+
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).json({ message: "User not found" });
+        }
+
+        // Generate a new OTP and update expiry
+        const otp = crypto.randomInt(100000, 999999).toString();
+        user.otp = otp;
+        user.otpExpiry = Date.now() + 1 * 60 * 1000; // 1 minute from now
+
+        await user.save();
+
+        // Send the OTP email
+        const transporter = nodemailer.createTransport({
+            service: 'Gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Your OTP Code',
+            text: `Your new OTP code is: ${otp}`,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        // Send the new OTP expiry time back to the frontend
+        res.status(200).json({ 
+            success: true,
+            message: "New OTP sent to your email.",
+            otpExpiry: user.otpExpiry // Pass expiry time to frontend
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -81,31 +130,30 @@ const login = async (req, res) => {
 
     try {
         const user = await User.findOne({ email });
-        
-        // Check if the user exists and if they are active
+
+        // Account and verification checks
         if (!user || !user.isActive) {
             return res.status(400).json({ message: "User not found or account is blocked." });
         }
+        if (!user.isVerified) {
+            return res.status(400).json({ message: "User not verified. Please verify your account." });
+        }
 
-        // Check if the user has been verified
-        // if (!user.isVerified) {
-        //     return res.status(400).json({ message: "User not verified. Please verify your account." });
-        // }
-
-        // Compare the provided password with the hashed password
+        // Password validation
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid credentials." });
         }
 
-        // Generate a JWT token
+        // JWT generation
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.status(200).json({ message: "Login successful", token });
+        res.status(200).json({ success: true, message: "Login successful", token });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
 
-module.exports = { signUp, verifyOtp, login };
+
+module.exports = { signUp, verifyOtp, login, resendOtp};
 

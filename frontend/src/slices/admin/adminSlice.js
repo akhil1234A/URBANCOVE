@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { loginAdmin } from '../../services/admin/authService';
+import { toast } from 'react-toastify';
 
 export const adminLogin = createAsyncThunk(
   'admin/login',
@@ -29,6 +30,7 @@ const adminSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
+      // toast.success('Logout successful');
     },
   },
   extraReducers: (builder) => {
@@ -37,9 +39,10 @@ const adminSlice = createSlice({
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.error = null;
+        // toast.success('Login successful')
       })
       .addCase(adminLogin.rejected, (state, action) => {
-        console.error("Login Error: ", action.payload); 
+        // toast.error(`Login Error: ${action.payload.message || "Login failed"}`);
         state.error = action.payload.message || "Login failed";
       });
   },

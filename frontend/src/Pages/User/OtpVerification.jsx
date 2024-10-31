@@ -1,76 +1,83 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { useDispatch } from 'react-redux';
+import { useLocation } from 'react-router-dom';
+import { verifyOtp, resendOtp } from '../../slices/user/authSlice';
 
-const OtpVerification = ({ userEmail }) => {
+const OtpVerification = () => {
   const [otp, setOtp] = useState('');
   const [isResendDisabled, setIsResendDisabled] = useState(true);
-  const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+  const { state } = useLocation();
+  const userEmail = state?.email;
+  const initialExpiry = state?.otpExpiry || Date.now() + 1 * 60 * 1000; // Default to 1 min if not provided
+  const [timer, setTimer] = useState(Math.max(0, Math.floor((initialExpiry - Date.now()) / 1000)));
+  const dispatch = useDispatch();
 
-  // Custom hook for countdown
-  const useCountdown = (initialTime) => {
-    const [time, setTime] = useState(initialTime);
-    const [isActive, setIsActive] = useState(true);
-
-    useEffect(() => {
-      if (isActive && time > 0) {
-        const countdown = setInterval(() => setTime((t) => t - 1), 1000);
-        return () => clearInterval(countdown);
-      } else if (time === 0) {
-        setIsActive(false);
-        setIsResendDisabled(false);
-      }
-    }, [isActive, time]);
-
-    return { time, reset: () => { setTime(initialTime); setIsActive(true); }};
-  };
-
-  const { time: timer, reset: resetTimer } = useCountdown(30);
+  useEffect(() => {
+    let countdown;
+    if (isResendDisabled && timer > 0) {
+      countdown = setInterval(() => setTimer((prev) => prev - 1), 1000);
+    } else {
+      setIsResendDisabled(false);
+      clearInterval(countdown);
+    }
+    return () => clearInterval(countdown);
+  }, [isResendDisabled, timer]);
 
   const handleOtpChange = (e) => {
-    const input = e.target.value;
-    if (input.length <= 6) setOtp(input);
+    setOtp(e.target.value.slice(0, 6));
   };
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${BASE_URL}/api/user/verify-otp`, { otp, email: userEmail });
-      if (response.data.success) {
+      const response = await dispatch(verifyOtp({ email: userEmail, otp })).unwrap();
+      if (response.success) {
         toast.success('OTP verified successfully!');
         window.location.href = '/';
       } else {
-        toast.error(response.data.message);
+        toast.error(response.message);
       }
     } catch (error) {
-      console.error(error);
-      toast.error('Failed to verify OTP. Please try again.');
+      toast.error('Failed to verify OTP.');
     }
   };
+
+  // const handleResendOtp = async () => {
+  //   console.log("Resend OTP button clicked"); 
+  //   try {
+  //     setIsResendDisabled(true);
+  //     const newExpiry = Date.now() + 1 * 60 * 1000; // Reset to 1 minute from now
+  //     setTimer(60);
+  //     await dispatch(resendOtp({ email: userEmail })).unwrap();
+  //     toast.success('OTP resent successfully!');
+  //   } catch (error) {
+  //     toast.error('Failed to resend OTP.');
+  //     setIsResendDisabled(false);
+  //   }
+  // };
 
   const handleResendOtp = async () => {
+    console.log("Resend OTP button clicked"); 
     try {
-      setIsResendDisabled(true);
-      resetTimer();
-      const response = await axios.post(`${BASE_URL}/api/user/resend-otp`, { email: userEmail });
-      if (response.data.success) {
+        setIsResendDisabled(true);
+        const newExpiry = Date.now() + 1 * 60 * 1000; // Reset to 1 minute from now
+        setTimer(60);
+        await dispatch(resendOtp(userEmail)).unwrap(); // Pass userEmail directly
         toast.success('OTP resent successfully!');
-      } else {
-        toast.error(response.data.message);
-      }
     } catch (error) {
-      console.error(error);
-      toast.error('Failed to resend OTP. Please try again.');
-      setIsResendDisabled(false);
+        toast.error('Failed to resend OTP.');
+        setIsResendDisabled(false);
     }
-  };
+};
 
+ 
 
   return (
     <div className="flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4 text-gray-800">
       <h2 className="text-2xl font-semibold">OTP Verification</h2>
-      <p className="text-center text-gray-600">An OTP has been sent to your email. Please enter it below to verify your account.</p>
-
+      <p className="text-center text-gray-600">Enter the OTP sent to your email to verify your account.</p>
+      
       <form onSubmit={handleVerifyOtp} className="flex flex-col items-center gap-4 w-full">
         <input
           type="text"
@@ -80,12 +87,7 @@ const OtpVerification = ({ userEmail }) => {
           placeholder="Enter OTP"
           required
         />
-        <button
-          type="submit"
-          className="bg-black text-white font-light px-8 py-2 mt-4"
-        >
-          Verify OTP
-        </button>
+        <button type="submit" className="bg-black text-white font-light px-8 py-2 mt-4">Verify OTP</button>
       </form>
 
       <div className="mt-4 text-center">
@@ -93,9 +95,7 @@ const OtpVerification = ({ userEmail }) => {
           {isResendDisabled ? (
             `Resend OTP in ${timer} seconds`
           ) : (
-            <button onClick={handleResendOtp} className="text-blue-600 hover:underline">
-              Resend OTP
-            </button>
+            <button onClick={handleResendOtp} className="text-blue-600 hover:underline">Resend OTP</button>
           )}
         </p>
       </div>
