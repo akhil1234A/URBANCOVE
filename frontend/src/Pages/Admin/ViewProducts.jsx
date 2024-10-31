@@ -41,14 +41,43 @@ const ViewProducts = () => {
     fetchProducts();
   }, []);
 
-  const toggleProductStatus = (id) => {
-    setList((prevList) =>
-      prevList.map((item) =>
-        item._id === id ? { ...item, status: item.status === 'listed' ? 'unlisted' : 'listed' } : item
-      )
-    );
-    toast.success('Product status updated successfully');
+  const toggleProductStatus = async (id, currentIsActive) => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      toast.error("Authorization token not found. Please log in again.");
+      return;
+    }
+  
+    try {
+      const newIsActive = !currentIsActive;
+  
+      const response = await fetch(`http://localhost:3000/admin/products/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ isActive: newIsActive })
+      });
+  
+      if (!response.ok) throw new Error('Failed to update product status');
+  
+      const updatedProduct = await response.json();
+  
+      // Update the product list in the UI
+      setList((prevList) =>
+        prevList.map((item) =>
+          item._id === id ? { ...item, isActive: updatedProduct.isActive } : item
+        )
+      );
+  
+      toast.success(`Product is now ${newIsActive ? 'active' : 'inactive'}`);
+    } catch (error) {
+      console.error(error);
+      toast.error('Error updating product status. Please try again later.');
+    }
   };
+  
 
   const handleEditProduct = (id) => {
     navigate(`/admin/products/${id}/edit`);
@@ -81,13 +110,14 @@ const ViewProducts = () => {
             <p>{item.status}</p>
             <div className='flex gap-2 justify-center'>
               <button
-                onClick={() => toggleProductStatus(item._id)}
+                onClick={() => toggleProductStatus(item._id, item.isActive)}
                 className={`text-sm py-1 px-3 rounded-md 
-                 ${item.status === 'listed' ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-green-500 text-white hover:bg-green-600'} 
-                 transition duration-200 ease-in-out`}
+                ${item.isActive ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-green-500 text-white hover:bg-green-600'} 
+                transition duration-200 ease-in-out`}
               >
-                {item.status === 'listed' ? 'Unlist' : 'List'}
+                {item.isActive ? 'Unlist' : 'List'}
               </button>
+
               <button
                 onClick={() => handleEditProduct(item._id)}
                 className='text-sm py-1 px-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 flex items-center transition duration-200 ease-in-out'

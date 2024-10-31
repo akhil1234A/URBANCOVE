@@ -8,9 +8,10 @@ const RelatedProducts = ({ category, subCategory, products }) => {
   useEffect(() => {
     if (products.length > 0) {
       const filteredProducts = products.filter(item => 
-        item.category === category && item.subCategory === subCategory
+        item.category._id === category && item.subCategory._id === subCategory
       );
 
+      // Limit to 5 related products
       setRelated(filteredProducts.slice(0, 5));
     }
   }, [products, category, subCategory]);
@@ -21,9 +22,19 @@ const RelatedProducts = ({ category, subCategory, products }) => {
         <Title text1={'RELATED'} text2={'PRODUCTS'} />
       </div>
       <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6'>
-        {related.map((item) => (
-          <ProductItem key={item._id} id={item._id} name={item.name} price={item.price} image={item.image} />
-        ))}
+        {related.length > 0 ? (
+          related.map(item => (
+            <ProductItem 
+              key={item._id} 
+              id={item._id} 
+              name={item.productName} 
+              price={item.price} 
+              image={item.images[0]} 
+            />
+          ))
+        ) : (
+          <p className="text-center col-span-full">No related products found.</p>
+        )}
       </div>
     </div>
   );

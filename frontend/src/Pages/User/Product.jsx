@@ -1,113 +1,168 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchProducts, selectProductById, selectProducts, selectLoading } from '../../slices/admin/productSlice';
 import { assets } from '../../assets/assets';
-import { products } from '../../assets/assets';
 import RelatedProducts from '../../components/User/RelatedProducts';
+import './zoom.css';
 
 const Product = () => {
   const { productID } = useParams();
-  const currency = '$';
-  const [productData, setProductData] = useState(null);
+  const dispatch = useDispatch();
+
+  const productData = useSelector((state) => selectProductById(state, productID));
+  const products = useSelector(selectProducts);
+  const loading = useSelector(selectLoading);
+
   const [image, setImage] = useState('');
-  const [size, setSize] = useState('');
   const [zoomPosition, setZoomPosition] = useState({});
   const [isZoomed, setIsZoomed] = useState(false);
+  const [activeSection, setActiveSection] = useState('description');
+  const [size, setSize] = useState('');
+
+  // Dummy reviews array
+  const dummyReviews = [
+    {
+      username: 'JohnDoe',
+      rating: 5,
+      comment: 'Excellent product, highly recommend!',
+    },
+    {
+      username: 'JaneSmith',
+      rating: 4,
+      comment: 'Good quality but slightly overpriced.',
+    },
+    {
+      username: 'MikeJohnson',
+      rating: 3,
+      comment: 'Average product, you get what you pay for.',
+    },
+  ];
 
   useEffect(() => {
-    const fetchProductData = () => {
-      const product = products.find((item) => item._id === productID);
-      if (product) {
-        setProductData(product);
-        setImage(product.image[0]);
-      }
-    };
-    fetchProductData();
-  }, [productID]);
+    if (!productData) {
+      dispatch(fetchProducts());
+    } else if (productData.images) {
+      setImage(productData.images[0]);
+    }
+  }, [dispatch, productData]);
 
   const handleMouseMove = (e) => {
     const { top, left, width, height } = e.target.getBoundingClientRect();
     const x = ((e.pageX - left) / width) * 100;
     const y = ((e.pageY - top) / height) * 100;
     setZoomPosition({
-      backgroundImage: `url(${image})`,
+      backgroundImage: `url(http://localhost:3000/${image})`,
       backgroundPosition: `${x}% ${y}%`,
     });
   };
 
-  return productData ? (
-    <div className='border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100'>
+  const renderStars = (rating) => (
+    <div className="flex">
+      {[...Array(5)].map((_, index) => (
+        <img
+          key={index}
+          src={index < rating ? assets.star_icon : assets.star_dull_icon}
+          alt="star"
+          className="w-5 h-5"
+        />
+      ))}
+    </div>
+  );
+
+  // Function to render reviews
+  const renderReviews = () => (
+    <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">
+      {dummyReviews.length > 0 ? (
+        dummyReviews.map((review, index) => (
+          <div key={index} className="border-b pb-4">
+            <div className="flex justify-between">
+              <p className="font-semibold">{review.username}</p>
+              <div>{renderStars(review.rating)}</div>
+            </div>
+            <p className="mt-2">{review.comment}</p>
+          </div>
+        ))
+      ) : (
+        <p>No reviews yet.</p>
+      )}
+    </div>
+  );
+
+  return loading ? (
+    <div>Loading product details...</div>
+  ) : productData ? (
+    <div className="border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100">
       <nav className="text-gray-600 text-sm mb-6">
         <Link to="/" className="hover:text-gray-800">Home</Link>
         <span> / </span>
-        <Link to={`/collection`} className="hover:text-gray-800">{productData.category}</Link>
-        {/* {productData.subCategory && (
-          <>
-            <span> / </span>
-            <Link to={`/category/${productData.category}/${productData.subCategory}`} className="hover:text-gray-800">
-              {productData.subCategory}
-            </Link>
-          </>
-        )} */}
+        <Link to={`/collection`} className="hover:text-gray-800">{productData.category?.category}</Link>
         <span> / </span>
-        <span className="text-gray-800">{productData.name}</span>
+        <span className="text-gray-800">{productData.productName}</span>
       </nav>
 
-      <div className='flex gap-12 sm:gap-12 flex-col sm:flex-row'>
-        
+      <div className="flex gap-12 sm:gap-12 flex-col sm:flex-row">
         {/* Product Images */}
-        <div className='flex-1 flex flex-col-reverse gap-3 sm:flex-row'>
-          <div className='flex sm:flex-col overflow-x-auto sm:overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full'>
-            {productData.image.map((item, index) => (
-              <img onClick={() => setImage(item)} src={item} key={index} className='w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer' />
+        <div className="flex-1 flex flex-col-reverse gap-3 sm:flex-row">
+          <div className="flex sm:flex-col overflow-x-auto sm:overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full">
+            {productData.images && productData.images.map((img, index) => (
+              <img
+                key={index}
+                onClick={() => setImage(img)}
+                src={`http://localhost:3000/${img}`}
+                onError={(e) => (e.target.src = 'path/to/fallback-image.jpg')}
+                className="w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer"
+                alt={productData.productName}
+              />
             ))}
           </div>
-          <div className='w-full sm:w-[80%] relative flex'>
+          <div className="w-full sm:w-[80%] relative flex">
             <div
               className="w-full h-auto cursor-crosshair relative"
               onMouseEnter={() => setIsZoomed(true)}
               onMouseLeave={() => setIsZoomed(false)}
               onMouseMove={handleMouseMove}
             >
-              <img className='w-full h-auto' src={image} alt={productData.name} />
+              <img className="w-full h-auto" src={`http://localhost:3000/${image}`} alt={productData.productName} />
             </div>
-
-            {/* Zoomed Image Display */}
             {isZoomed && (
               <div
-                className="zoom-box hidden sm:block absolute w-[200px] h-[200px] ml-4 mt-12 bg-no-repeat bg-cover border border-gray-200 shadow-lg"
+                className="zoom-box absolute w-[200px] h-[200px] ml-4 mt-12 bg-no-repeat bg-cover border border-gray-200 shadow-lg transition-opacity duration-300"
                 style={{
                   ...zoomPosition,
-                  backgroundSize: '200%',  // Adjust zoom level
+                  backgroundSize: '300%', // Increased for better zoom effect
                 }}
-              ></div>
+              />
             )}
           </div>
         </div>
 
         {/* Product Info */}
-        <div className='flex-1'>
-          <h1 className='font-medium text-2xl mt-2'>{productData.name}</h1>
-          <div className='flex item-center gap-1 mt-2'>
-            <img className='w-5 h-5' src={assets.star_icon} alt="star"/>
-            <img className='w-5 h-5' src={assets.star_icon} alt="star" />
-            <img className='w-5 h-5' src={assets.star_icon} alt="star" />
-            <img className='w-5 h-5' src={assets.star_icon} alt="star" />
-            <img className='w-5 h-5' src={assets.star_dull_icon} alt="star" />
-            <p className='pl-2'>(122)</p>
+        <div className="flex-1">
+          <h1 className="font-medium text-2xl mt-2">{productData.productName}</h1>
+          <div className="flex item-center gap-1 mt-2">
+            {renderStars(4)}
+            <p className="pl-2">(122)</p>
           </div>
-          <p className='mt-5 text-3xl font-medium'>{currency}{productData.price}</p>
-          <p className='mt-5 text-gray-500 md:w-4/5'>{productData.description}</p>
-          <div className='flex flex-col gap-4 my-8'>
+          <p className="mt-5 text-3xl font-medium">${productData.price}</p>
+          <p className="mt-5 text-gray-500 md:w-4/5">{productData.productDescription}</p>
+          <div className="flex flex-col gap-4 my-8">
             <p>Select Size</p>
-            <div className='flex gap-2'>
-              {productData.sizes.map((item, index) => (
-                <button onClick={() => setSize(item)} className={`border py-2 px-4 bg-gray-100 ${item === size ? 'border-orange-500' : ''}`} key={index}>{item}</button>
+            <div className="flex gap-2">
+              {productData.size && productData.size.map((s, index) => (
+                <button
+                  onClick={() => setSize(s)}
+                  className={`border py-2 px-4 bg-gray-100 ${s === size ? 'border-orange-500' : ''}`}
+                  key={index}
+                >
+                  {s}
+                </button>
               ))}
             </div>
           </div>
-          <button className='bg-black text-white px-8 py-3 text-sm active:bg-gray-700'>ADD TO CART</button>
-          <hr className='mt-8 sm:w-4/5' />
-          <div className='text-sm text-gray-500 mt-5 flex flex-col gap-1'>
+          <button className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700">ADD TO CART</button>
+          <hr className="mt-8 sm:w-4/5" />
+          <div className="text-sm text-gray-500 mt-5 flex flex-col gap-1">
             <p>100% Original product.</p>
             <p>Cash on delivery is available on this product.</p>
             <p>Easy return and exchange policy within 7 days.</p>
@@ -116,21 +171,42 @@ const Product = () => {
       </div>
 
       {/* Description & Review Section */}
-      <div className='mt-20'>
-        <div className='flex'>
-          <b className='border px-5 py-3 text-sm'>Description</b>
-          <p className='border px-5 py-3 text-sm'>Reviews (122)</p>
+      <div className="mt-20">
+        <div className="flex">
+          <b
+            className="border px-5 py-3 text-sm cursor-pointer"
+            onClick={() => setActiveSection('description')}
+          >
+            Description
+          </b>
+          <p
+            className="border px-5 py-3 text-sm cursor-pointer"
+            onClick={() => setActiveSection('reviews')}
+          >
+            Reviews ({dummyReviews.length})
+          </p>
         </div>
-        <div className='flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500'>
-          <p>An e-commerce website is an online platform where businesses sell goods and services directly to consumers...</p>
-          <p>With the growth of online shopping, e-commerce websites have become essential for retailers...</p>
-        </div>
+        {activeSection === 'description' ? (
+          <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">
+            <p>An e-commerce website is an online platform where businesses sell goods...</p>
+          </div>
+        ) : (
+          renderReviews() // Render the dummy reviews here
+        )}
       </div>
 
       {/* Related Products */}
-      <RelatedProducts category={productData.category} subCategory={productData.subCategory} products={products}/>
+      <RelatedProducts 
+        category={productData.category?._id} 
+        subCategory={productData.subCategory?._id} 
+        products={products} 
+      />
     </div>
-  ) : <div>Product not found</div>;
+ 
+
+  ) : (
+    <div>Product not found</div>
+  );
 };
 
 export default Product;

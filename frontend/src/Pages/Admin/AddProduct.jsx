@@ -37,7 +37,7 @@ const AddProduct = () => {
     const fetchCategories = async () => {
       const token = localStorage.getItem('adminToken'); // Retrieve the token from local storage
       try {
-        const response = await fetch('http://localhost:3000/admin/categories', {
+        const response = await fetch('http://localhost:3000/admin/categories?isActive-true', {
           headers: {
             'Authorization': `Bearer ${token}`, // Include the token in the headers
           },
@@ -63,7 +63,7 @@ const AddProduct = () => {
     const fetchSubCategories = async (categoryId) => {
       const token = localStorage.getItem('adminToken');
       try {
-        const response = await fetch(`http://localhost:3000/admin/categories/${categoryId}/subcategories`, {
+        const response = await fetch(`http://localhost:3000/admin/categories/${categoryId}/subcategories?isActive=true`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

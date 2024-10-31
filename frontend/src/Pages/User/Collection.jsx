@@ -1,21 +1,26 @@
-import React, {useState, useEffect} from 'react';
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchProducts, selectProducts, selectLoading } from '../../slices/admin/productSlice';
 import { assets } from '../../assets/assets';
 import Title from '../../components/User/Title';
 import ProductItem from '../../components/User/ProductItem';
-import { products } from '../../assets/assets'; 
 
 const Collection = () => {
-  
-  const [productList, setProductList] = useState([]);
-  
+  const dispatch = useDispatch();
+  const currency = '$';
+
+  // Retrieve product list and loading status from Redux
+  const productList = useSelector(selectProducts);
+  const loading = useSelector(selectLoading);
+
   useEffect(() => {
-    // Set latest products from dummy data instead of context or Redux store
-    setProductList(products);
-   
-  }, []);
+    // Dispatch an action to fetch products if not already loaded
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
-
-
+  if (loading) {
+    return <div>Loading products...</div>;
+  }
 
   return (
     <div className='flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t'>
@@ -65,7 +70,7 @@ const Collection = () => {
           <Title text1={'ALL'} text2={'COLLECTIONS'} />
           {/* Product sort */}
           <select className='border-2 border-gray-300 text-sm px-2'>
-            <option value="relavent">Sort by : Relavent</option>
+            <option value="relavent">Sort by : Relevant</option>
             <option value="low-high">Sort by : Low to High</option>
             <option value="high-low">Sort by : High to Low</option>
           </select>
@@ -73,8 +78,15 @@ const Collection = () => {
 
         {/* Map products */}
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6'>
-          {products.map((item) => (
-             <ProductItem key={item._id} id={item._id} name={item.name} price={item.price} image={item.image} />
+          {productList.map((item) => (
+             <ProductItem 
+             key={item._id} 
+             id={item._id} 
+             name={item.productName} 
+             price={item.price} 
+             image={item.images[0]} 
+             currency={currency}
+           />
           ))}
         </div>
       </div>

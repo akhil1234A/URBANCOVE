@@ -1,9 +1,10 @@
 import React, {useEffect} from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { logoutAdmin, adminLogin} from './slices/admin/adminSlice';
+import { fetchProducts, selectProducts} from './slices/admin/productSlice';
 
 // User Pages
 import UserLogin from './Pages/User/UserLogin';
@@ -26,6 +27,7 @@ import ProtectedRoute from './Routes/ProtectedRoutes';
 const App = () => {
 
   const dispatch = useDispatch();
+  const products = useSelector(selectProducts);
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -35,7 +37,7 @@ const App = () => {
       dispatch(logoutAdmin());
     } 
 
-    
+    dispatch(fetchProducts());
   }, [dispatch]);
 
 
@@ -67,7 +69,7 @@ const App = () => {
 
           
           {/* User Routes */}
-          <Route path="/*" element={<UserLayout />} />
+          <Route path="/*" element={<UserLayout products={products}/>} />
         </Routes>
       </Router>
     </div>
@@ -75,14 +77,14 @@ const App = () => {
 };
 
 // Separate layout for User routes
-const UserLayout = () => {
+const UserLayout = ({ products }) => {
   return (
     <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
       <Navbar />
       <SearchBar />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/collection" element={<Collection />} />
+        <Route path="/" element={<Home products={products}/>} />
+        <Route path="/collection" element={<Collection products={products}/>} />
         <Route path="/product/:productID" element={<Product />} />
         <Route path="/login" element={<UserLogin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

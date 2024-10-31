@@ -1,41 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const OtpVerification = ({ userEmail }) => {
   const [otp, setOtp] = useState('');
   const [isResendDisabled, setIsResendDisabled] = useState(true);
-  const [timer, setTimer] = useState(30); // countdown timer in seconds
+  const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-  // Start the timer whenever the component mounts or user resends OTP
-  useEffect(() => {
-    if (isResendDisabled) {
-      const countdown = setInterval(() => {
-        setTimer((prevTime) => {
-          if (prevTime <= 1) {
-            clearInterval(countdown);
-            setIsResendDisabled(false);
-            return 0;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
-    }
-  }, [isResendDisabled]);
+  // Custom hook for countdown
+  const useCountdown = (initialTime) => {
+    const [time, setTime] = useState(initialTime);
+    const [isActive, setIsActive] = useState(true);
 
-  // Function to handle OTP input change
-  const handleOtpChange = (e) => {
-    setOtp(e.target.value);
+    useEffect(() => {
+      if (isActive && time > 0) {
+        const countdown = setInterval(() => setTime((t) => t - 1), 1000);
+        return () => clearInterval(countdown);
+      } else if (time === 0) {
+        setIsActive(false);
+        setIsResendDisabled(false);
+      }
+    }, [isActive, time]);
+
+    return { time, reset: () => { setTime(initialTime); setIsActive(true); }};
   };
 
-  // Submit OTP for verification
+  const { time: timer, reset: resetTimer } = useCountdown(30);
+
+  const handleOtpChange = (e) => {
+    const input = e.target.value;
+    if (input.length <= 6) setOtp(input);
+  };
+
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:3000/api/user/verify-otp', { otp, email: userEmail });
+      const response = await axios.post(`${BASE_URL}/api/user/verify-otp`, { otp, email: userEmail });
       if (response.data.success) {
         toast.success('OTP verified successfully!');
-        // Redirect user after successful verification
         window.location.href = '/';
       } else {
         toast.error(response.data.message);
@@ -46,13 +48,11 @@ const OtpVerification = ({ userEmail }) => {
     }
   };
 
-  // Resend OTP function
   const handleResendOtp = async () => {
     try {
       setIsResendDisabled(true);
-      setTimer(30); // reset timer to 30 seconds
-
-      const response = await axios.post('http://localhost:3000/api/user/resend-otp', { email: userEmail });
+      resetTimer();
+      const response = await axios.post(`${BASE_URL}/api/user/resend-otp`, { email: userEmail });
       if (response.data.success) {
         toast.success('OTP resent successfully!');
       } else {
@@ -64,6 +64,7 @@ const OtpVerification = ({ userEmail }) => {
       setIsResendDisabled(false);
     }
   };
+
 
   return (
     <div className="flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4 text-gray-800">

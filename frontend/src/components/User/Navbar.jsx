@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux'; // Import necessary hooks
+import { logout } from '../../slices/user/authSlice'; // Import the logout action
 import { assets } from '../../assets/assets';
 
 const Navbar = () => {
   const [visible, setVisible] = useState(false);
+  const dispatch = useDispatch(); 
+  const { user } = useSelector((state) => state.auth);
+  console.log(user)
+
+  const handleLogout = () => {
+    dispatch(logout()); // Dispatch the logout action
+  };
 
   return (
     <div className='flex items-center justify-between py-5 font-medium'>
@@ -46,12 +55,17 @@ const Navbar = () => {
             src={assets.profile_icon} 
             alt="Profile" 
           />
-          {/* Profile dropdown (not functional) */}
+          {/* Profile dropdown */}
           <div className='group-hover:block hidden absolute dropdown-menu right-0 pt-4'>
             <div className='flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-500 rounded'>
               <p className='cursor-pointer hover:text-black'>My Profile</p>
               <p className='cursor-pointer hover:text-black'>Orders</p>
-              <p className='cursor-pointer hover:text-black'>Logout</p>
+              {/* Conditional rendering for Logout/Login */}
+              {user ? (
+                <p onClick={handleLogout} className='cursor-pointer hover:text-black'>Logout</p>
+              ) : (
+                <Link to='/login' className='cursor-pointer hover:text-black'>Login</Link>
+              )}
             </div>
           </div>
         </div>
@@ -82,6 +96,12 @@ const Navbar = () => {
           <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='/collection'>COLLECTION</NavLink>
           <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='/about'>ABOUT</NavLink>
           <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='/contact'>CONTACT</NavLink>
+          {/* Conditional rendering for Logout/Login in sidebar */}
+          {user ? (
+            <p onClick={handleLogout} className='py-2 pl-6 border cursor-pointer'>Logout</p>
+          ) : (
+            <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='/login'>Login</NavLink>
+          )}
         </div>
       </div>
     </div>

@@ -1,36 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Title from './Title';
 import ProductItem from './ProductItem';
-import { products } from '../../assets/assets'; // Adjust the path accordingly
 
-const LatestCollection = () => {
-  const [latestProducts, setLatestProducts] = useState([]);
+const LatestCollection = ({ products }) => {
   const currency = '$'; // Use your preferred currency symbol here
-
-  useEffect(() => {
-    // Set latest products from dummy data instead of context or Redux store
-    setLatestProducts(products.slice(0, 10));
-  }, []);
 
   return (
     <div className='my-10'>
       <div className='text-center py-8 text-3xl'>
         <Title text1={'LATEST'} text2={'COLLECTIONS'} />
         <p className='w-3/4 m-auto text-xs sm:text-sm md:text-base text-gray-600'>
-          Lorem Ipsum, is simply dummy text of the printing and typesetting industry.
+          Explore the latest additions to our collection, crafted with care and quality.
         </p>
       </div>
 
-      {/* Rendering products */}
+      {/* Render latest products passed as props */}
       <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6'>
-        {latestProducts.map((item, index) => (
+        {products.map((item) => (
           <ProductItem
-            key={index}
+            key={item._id}
             id={item._id}
-            image={item.image}
-            name={item.name}
+            image={item.images[0]}  // Assuming first image is the default
+            name={item.productName}
             price={item.price}
-            currency={currency} // Pass currency as a prop
+            currency={currency}
           />
         ))}
       </div>

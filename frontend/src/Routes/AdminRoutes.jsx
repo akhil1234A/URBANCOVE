@@ -15,8 +15,8 @@ import AddProduct from '../Pages/Admin/AddProduct';
 import ViewProducts from '../Pages/Admin/ViewProducts';
 import EditProduct from '../Pages/Admin/EditProduct';
 
-import Test from './Test';
-import Product from './Product';
+// import Test from './Test';
+// import Product from './Product';
 
 const AdminRoutes = () => {
 
@@ -75,8 +75,8 @@ const AdminRoutes = () => {
             <Route path="products/add" element={<AddProduct />} />
             <Route path="products/view" element={<ViewProducts />} />
             <Route path='products/:id/edit' element={<EditProduct />} />
-            <Route path='test' element={<Test/>} />
-            <Route path='/test/admin/product/:id' element={<Product/>} />
+            {/* <Route path='test' element={<Test/>} />
+            <Route path='/test/admin/product/:id' element={<Product/>} /> */}
           </Routes>
         </div>
       </div>

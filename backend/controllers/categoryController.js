@@ -2,15 +2,22 @@ const Category = require('../models/Category');
 
 //list all categories
 
-exports.listCategories = async(req,res)=>{
-  try{
-    const categories = await Category.find();
+exports.listCategories = async (req, res) => {
+  try {
+    // Check if the request has a query parameter 'isActive' set to true
+    const isActive = req.query.isActive === 'true';
+    
+    // Fetch categories based on the isActive status or fetch all if no query param is provided
+    const categories = isActive 
+      ? await Category.find({ isActive: true })
+      : await Category.find();
+
     res.status(200).json(categories);
-  } catch(error){
+  } catch (error) {
     console.log(error);
-    res.status(500).json({message: 'Server error', error});
+    res.status(500).json({ message: 'Server error', error });
   }
-}
+};
 
 // add a new category
 exports.addCategory = async(req,res)=>{

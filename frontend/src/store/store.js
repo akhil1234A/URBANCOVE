@@ -3,6 +3,8 @@ import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import adminReducer from '../slices/admin/adminSlice';
 import userReducer from '../slices/admin/userSlice';
+import productReducer from '../slices/admin/productSlice'
+import authReducer from '../slices/user/authSlice'
 
 const persistConfig = {
   key: 'root', 
@@ -16,6 +18,8 @@ export const store = configureStore({
   reducer: {
     admin: persistedAdminReducer,
     users: userReducer, 
+    products: productReducer,
+    auth: authReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }),

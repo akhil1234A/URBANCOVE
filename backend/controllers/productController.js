@@ -23,14 +23,34 @@ const processImage = async (filePath) => {
 // list all products
 exports.listProducts = async (req, res) => {
     try {
-        const {productId} = req.params;
-        const query = productId? {_id:productId} : {};
-        const products = await Product.find(query).populate('category subCategory');  //populating the category and sub category details
-        res.json(products);
+      const { type, productId } = req.params;
+  
+      // Build the query object based on conditions
+      let query = { isActive: true };
+      if (productId) {
+        query._id = productId;
+      } else {
+        if (type === 'latest') {
+          // Latest collection: filter by isActive, sort by creation date
+          query = { ...query }; // Only isActive filter applied
+        } else if (type === 'bestSeller') {
+          // Best Seller collection: filter by isActive and isBestSeller
+          query = { ...query, isBestSeller: true };
+        }
+        // No additional filters needed for the general collection
+      }
+  
+      // Fetch products based on the query and sort order
+      const products = await Product.find(query)
+        .populate('category subCategory')
+        .sort(type === 'latest' ? { createdAt: -1 } : {});  // Sort by creation date for latest collection
+  
+      res.json(products);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error });
+      res.status(500).json({ message: 'Server error', error });
     }
-};
+  };
+  
 
 // add a new product
 exports.addProduct = async (req, res) => {
@@ -63,39 +83,41 @@ exports.addProduct = async (req, res) => {
 
 // edit an existing product
 exports.editProduct = async (req, res) => {
-    const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller } = req.body;
-    let images;
+  const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller, isActive } = req.body;
+  let images;
 
-    try {
-        if (req.files) {
-            if (req.files.length < 3) return res.status(400).json({ message: 'At least 3 images are required' });
-            
-            images = await Promise.all(req.files.map(async (file) => await processImage(file.path)));
-        }
-
-        const updatedProduct = await Product.findByIdAndUpdate(
-            req.params.id,
-            { 
-                productName, 
-                productDescription, 
-                category, 
-                subCategory, 
-                price, 
-                stock, 
-                size: Array.isArray(size) ? size : [size], //size always an array  
-                ...(images && { images }), // Only update images if they exist
-                isBestSeller 
-            },
-            { new: true }
-        );
-
-        if (!updatedProduct) return res.status(404).json({ message: 'Product not found' });
-
-        res.json(updatedProduct);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error });
+  try {
+    if (req.files) {
+      if (req.files.length < 3) return res.status(400).json({ message: 'At least 3 images are required' });
+      
+      images = await Promise.all(req.files.map(async (file) => await processImage(file.path)));
     }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      { 
+        productName, 
+        productDescription, 
+        category, 
+        subCategory, 
+        price, 
+        stock, 
+        size: Array.isArray(size) ? size : [size], // Ensures size is always an array
+        ...(images && { images }), // Only update images if they exist
+        isBestSeller,
+        ...(typeof isActive !== 'undefined' && { isActive }) // Update isActive only if provided
+      },
+      { new: true }
+    );
+
+    if (!updatedProduct) return res.status(404).json({ message: 'Product not found' });
+
+    res.json(updatedProduct);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
 };
+
 
 // soft delete a product
 exports.deleteProduct = async (req, res) => {

@@ -6,7 +6,8 @@ const jwt = require('jsonwebtoken');
 
 const signUp = async (req, res) => {
     const { name, email, password } = req.body;
-
+    console.log(req.body)
+    console.log(name);
     try {
    
         const existingUser = await User.findOne({ email });
@@ -76,25 +77,35 @@ const verifyOtp = async (req, res) => {
 
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+    const { email, password } = req.body;
 
-  try {
-      const user = await User.findOne({ email });
-      if (!user || !user.isVerified) {
-          return res.status(400).json({ message: "Invalid credentials or user not verified." });
-      }
+    try {
+        const user = await User.findOne({ email });
+        
+        // Check if the user exists and if they are active
+        if (!user || !user.isActive) {
+            return res.status(400).json({ message: "User not found or account is blocked." });
+        }
 
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-          return res.status(400).json({ message: "Invalid credentials" });
-      }
+        // Check if the user has been verified
+        // if (!user.isVerified) {
+        //     return res.status(400).json({ message: "User not verified. Please verify your account." });
+        // }
 
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-      res.status(200).json({ message: "Login successful", token });
-  } catch (error) {
-      res.status(500).json({ error: error.message });
-  }
+        // Compare the provided password with the hashed password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: "Invalid credentials." });
+        }
+
+        // Generate a JWT token
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        res.status(200).json({ message: "Login successful", token });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 };
+
 
 module.exports = { signUp, verifyOtp, login };
 

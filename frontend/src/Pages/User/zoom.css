@@ -1,12 +1,4 @@
-.zoom-container {
-  position: relative;
-  overflow: hidden;
-}
-
-.zoomed-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  transition: transform 0.3s ease;
-  transform-origin: center;
+.zoom-box {
+  opacity: 0.8; /* Adjust opacity for visibility */
+  pointer-events: none; /* Prevent interference with mouse events */
 }

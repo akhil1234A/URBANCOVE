@@ -6,12 +6,18 @@ import OurPolicy from '../../components/User/OurPolicy'
 import Newsletter from '../../components/User/Newsletter'
 
 
-const Home = () => {
+const Home = ({ products }) => {
+
+  const latestCollection = [...products]
+  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  .slice(0, 8); 
+  
+  const bestSellers = products.filter(product => product.isBestSeller);
   return (
     <div>
       <Hero/>
-      <LatestCollection/>
-      <BestSeller/>
+      <LatestCollection products={latestCollection}/>
+      <BestSeller products={bestSellers}/>
       <OurPolicy/>
       <Newsletter/>
     </div>
