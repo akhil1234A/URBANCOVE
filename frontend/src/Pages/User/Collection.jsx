@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchProducts, selectProducts, selectLoading } from '../../slices/admin/productSlice';
+import { fetchProductsForUser, selectProducts, selectLoading } from '../../slices/admin/productSlice';
 import { assets } from '../../assets/assets';
 import Title from '../../components/User/Title';
 import ProductItem from '../../components/User/ProductItem';
@@ -15,7 +15,7 @@ const Collection = () => {
 
   useEffect(() => {
     // Dispatch an action to fetch products if not already loaded
-    dispatch(fetchProducts());
+    dispatch(fetchProductsForUser());
   }, [dispatch]);
 
   if (loading) {

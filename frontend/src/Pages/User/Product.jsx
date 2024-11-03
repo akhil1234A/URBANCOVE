@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchProducts, selectProductById, selectProducts, selectLoading } from '../../slices/admin/productSlice';
+import { fetchProductsForUser, selectProductById, selectProducts, selectLoading } from '../../slices/admin/productSlice';
 import { assets } from '../../assets/assets';
 import RelatedProducts from '../../components/User/RelatedProducts';
 import './zoom.css';
@@ -41,7 +41,7 @@ const Product = () => {
 
   useEffect(() => {
     if (!productData) {
-      dispatch(fetchProducts());
+      dispatch(fetchProductsForUser());
     } else if (productData.images) {
       setImage(productData.images[0]);
     }
@@ -200,6 +200,7 @@ const Product = () => {
         category={productData.category?._id} 
         subCategory={productData.subCategory?._id} 
         products={products} 
+        currentProductId={productID}
       />
     </div>
  

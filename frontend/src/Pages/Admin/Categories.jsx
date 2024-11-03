@@ -1,36 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCategories, addCategory, updateCategory, toggleCategoryStatus } from '../../slices/admin/categorySlice';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Categories = () => {
-  const [categories, setCategories] = useState([]);
+  const dispatch = useDispatch();
+  const { categories, loading } = useSelector((state) => state.categories);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentCategory, setCurrentCategory] = useState({ id: '', name: '', status: 'listed' });
-  const [loading, setLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState(false);
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
     const token = localStorage.getItem('adminToken');
-    console.log("Token retrieved:", token); // Log the token
-
-    try {
-      const response = await axios.get('http://localhost:3000/admin/categories', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      console.log("Fetched categories:", response.data); // Log the fetched data
-      setCategories(response.data);
-    } catch (error) {
-      console.error("Error fetching categories:", error); // Log the error details
-      toast.error(`Error fetching categories: ${error.response?.data?.message || error.message}`);
+    if (token) {
+      dispatch(fetchCategories(token));
     }
-  };
+  }, [dispatch]);
 
   const handleAddCategory = () => {
     setShowModal(true);
@@ -45,79 +32,58 @@ const Categories = () => {
   };
 
   const handleSave = async () => {
-    setLoading(true);
     const token = localStorage.getItem('adminToken');
 
+    const nameRegex = /^[A-Za-z\s]+$/; // Allows letters and spaces only
+
+    if (!currentCategory.name.trim()) {
+      toast.error('Category name is required');
+      return;
+    }
+
+  if (!nameRegex.test(currentCategory.name)) {
+    toast.error('Category name should contain only letters');
+    return;
+  }
+
+    setLoadingAction(true);
+  
     try {
+      // Dispatch action based on the `isEditing` state
       if (isEditing) {
-        const response = await axios.put(`http://localhost:3000/admin/categories/${currentCategory.id}`, {
-          category: currentCategory.name,
-          isActive: currentCategory.status === 'listed'
-        }, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        // Update the existing category in state
-        setCategories(prevCategories => 
-          prevCategories.map(cat => (cat._id === currentCategory.id ? response.data : cat))
-        );
+        await dispatch(updateCategory({
+          token,
+          categoryId: currentCategory.id,
+          category: { category: currentCategory.name, isActive: currentCategory.status === 'listed' }
+        })).unwrap(); // `unwrap` ensures rejection throws an error for `catch`
         toast.success('Category updated successfully');
       } else {
-        const response = await axios.post('http://localhost:3000/admin/categories', {
-          category: currentCategory.name,
-          isActive: currentCategory.status === 'listed'
-        }, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        // Log the entire response to ensure correct structure
-        console.log("Response from adding category:", response.data);
-        
-        // Extract the new category from the response
-        const newCategory = response.data.newCategory;
-
-        // Immediately update the categories state with the newly added category
-        setCategories(prevCategories => [...prevCategories, newCategory]);
+        await dispatch(addCategory({
+          token,
+          category: { category: currentCategory.name, isActive: currentCategory.status === 'listed' }
+        })).unwrap();
         toast.success('Category added successfully');
       }
     } catch (error) {
-      toast.error(`Error saving category: ${error.response?.data?.message || error.message}`);
+      toast.error(`Failed to save category: ${error.message || error}`); // Display error
     } finally {
-      setLoading(false);
+      setLoadingAction(false);
       setShowModal(false);
     }
   };
-
-  const handleChange = (e) => {
-    setCurrentCategory({ ...currentCategory, [e.target.name]: e.target.value });
-  };
-
-  const toggleStatus = async (categoryId) => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('adminToken'); // Use the correct token
-      const updatedCategory = categories.find(cat => cat._id === categoryId);
-      const response = await axios.put(`http://localhost:3000/admin/categories/${categoryId}`, {
-        ...updatedCategory,
-        isActive: !updatedCategory.isActive
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      setCategories(prevCategories => 
-        prevCategories.map(cat => (cat._id === categoryId ? response.data : cat))
-      );
-      toast.success(`Category ${response.data.isActive ? 'listed' : 'unlisted'} successfully`);
-    } catch (error) {
-      toast.error(`Error updating category status: ${error.response?.data?.message || error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+  
+  // const toggleStatus = async (categoryId, currentStatus) => {
+  //   const token = localStorage.getItem('adminToken');
+  //   setLoadingAction(true);
+  //   try {
+  //     await dispatch(toggleCategoryStatus({ token, categoryId, currentStatus }));
+  //     toast.success(`Category ${currentStatus ? 'unlisted' : 'listed'} successfully`);
+  //   } catch (error) {
+  //     toast.error('Failed to toggle category status: ' + error.message);
+  //   } finally {
+  //     setLoadingAction(false);
+  //   }
+  // };
 
   return (
     <div className="p-5">
@@ -129,7 +95,7 @@ const Categories = () => {
         Add Category
       </button>
 
-      {loading ? ( // Show loading state
+      {loading ? (
         <div>Loading categories...</div>
       ) : (
         <ul className="mb-4">
@@ -140,12 +106,7 @@ const Categories = () => {
             >
               <span className="text-lg">{category.category} ({category.isActive ? 'Listed' : 'Unlisted'})</span>
               <div>
-                <button 
-                  className={`text-white px-3 py-1 rounded ${category.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
-                  onClick={() => toggleStatus(category._id)}
-                >
-                  {category.isActive ? 'Unlist' : 'List'}
-                </button>
+                
                 <button 
                   className="bg-yellow-500 text-white px-3 py-1 rounded ml-2 hover:bg-yellow-600"
                   onClick={() => handleEditCategory(category)}
@@ -166,14 +127,14 @@ const Categories = () => {
               type="text" 
               name="name" 
               value={currentCategory.name} 
-              onChange={handleChange} 
+              onChange={(e) => setCurrentCategory({ ...currentCategory, name: e.target.value })}
               placeholder="Category Name" 
               className="border border-gray-300 p-2 w-full rounded mt-2"
             />
             <select 
               name="status" 
               value={currentCategory.status} 
-              onChange={handleChange} 
+              onChange={(e) => setCurrentCategory({ ...currentCategory, status: e.target.value })}
               className="border border-gray-300 p-2 w-full rounded mt-2"
             >
               <option value="listed">Listed</option>
@@ -182,16 +143,19 @@ const Categories = () => {
             <div className="flex justify-between mt-4">
               <button 
                 className="bg-gray-400 text-white px-4 py-2 rounded" 
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false);
+                  setCurrentCategory({ id: '', name: '', status: 'listed' }); // Reset state on close
+                }}
               >
                 Close
               </button>
               <button 
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                className={`bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ${loadingAction ? 'opacity-50 cursor-not-allowed' : ''}`}
                 onClick={handleSave}
-                disabled={loading}
+                disabled={loadingAction} // Disable while loading
               >
-                {loading ? 'Saving...' : 'Save Changes'}
+                {loadingAction ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>

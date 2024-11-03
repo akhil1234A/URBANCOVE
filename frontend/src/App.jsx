@@ -4,8 +4,8 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { logoutAdmin, adminLogin} from './slices/admin/adminSlice';
-import { fetchProducts, selectProducts} from './slices/admin/productSlice';
-
+import { fetchProductsForUser, selectProducts} from './slices/admin/productSlice';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 
 // Admin
@@ -28,7 +28,7 @@ const App = () => {
       dispatch(logoutAdmin());
     } 
 
-    dispatch(fetchProducts());
+    dispatch(fetchProductsForUser());
   }, [dispatch]);
 
 
@@ -60,7 +60,13 @@ const App = () => {
 
           
           {/* User Routes */}
-          <Route path="/*" element={<UserLayout products={products}/>} />
+          <Route 
+            path="/*" 
+            element={
+             
+                <UserLayout products={products} />
+            } 
+          />
         </Routes>
       </Router>
     </div>

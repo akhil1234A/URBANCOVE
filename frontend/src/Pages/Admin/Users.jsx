@@ -39,7 +39,7 @@ const Users = () => {
       <tbody>
         {users.map((user) => (
           <tr key={user._id}>
-            <td className="py-2 px-4 border-b text-center">{user.username}</td>
+            <td className="py-2 px-4 border-b text-center">{user.name}</td>
             <td className="py-2 px-4 border-b text-center">{user.email}</td>
             <td className="py-2 px-4 border-b text-center">
               {user.isActive ? 'Active' : 'Blocked'}

@@ -1,11 +1,19 @@
-// slices/productsSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import {fetchProducts, fetchAdminProducts, updateProductStatusService}from '../../services/admin/productService'
 
-export const fetchProducts = createAsyncThunk('products/fetchProducts', async () => {
-  const response = await fetch('http://localhost:3000/admin/products?isActive=true');
-  if (!response.ok) throw new Error('Failed to fetch products');
-  return response.json();
+export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async () => {
+  return await fetchProducts();
 });
+
+export const fetchProductsForAdmin = createAsyncThunk('products/fetchAdminProducts', async (token) => {
+  return await fetchAdminProducts(token)
+});
+
+export const updateProductStatus = createAsyncThunk( 'products/updateProductStatus', async ({ productId, isActive, token }) => {
+    const updatedProduct = await updateProductStatusService(productId, isActive, token);
+    return { productId, isActive: updatedProduct.isActive };
+  }
+);
 
 const productsSlice = createSlice({
   name: 'products',
@@ -13,14 +21,40 @@ const productsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchProducts.pending, (state) => {
+      .addCase(fetchProductsForUser.pending, (state) => {
         state.loading = true;
       })
-      .addCase(fetchProducts.fulfilled, (state, action) => {
+      .addCase(fetchProductsForUser.fulfilled, (state, action) => {
         state.loading = false;
         state.items = action.payload;
       })
-      .addCase(fetchProducts.rejected, (state, action) => {
+      .addCase(fetchProductsForUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(fetchProductsForAdmin.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchProductsForAdmin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+      .addCase(fetchProductsForAdmin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+
+      builder
+      .addCase(updateProductStatus.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateProductStatus.fulfilled, (state, action) => {
+        state.loading = false;
+        const { productId, isActive } = action.payload;
+        const product = state.items.find((item) => item._id === productId);
+        if (product) product.isActive = isActive;
+      })
+      .addCase(updateProductStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
       });

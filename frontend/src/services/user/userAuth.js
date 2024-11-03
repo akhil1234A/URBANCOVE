@@ -1,5 +1,7 @@
 
 import axios from 'axios';
+import {auth, googleProvider} from '../../firebase/firebase';
+import {signInWithPopup} from 'firebase/auth'
 
 const API_BASE_URL = 'http://localhost:3000/user';
 
@@ -19,9 +21,30 @@ export const loginUser = (credentials) => {
 };
 
 
+export const signInWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const userData = {
+      uid: result.user.uid,
+      name: result.user.displayName,
+      email: result.user.email,
+    };
+
+    const response = await axios.post(`${API_BASE_URL}/googleUser`, userData);
+    console.log("Google login successful, response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error with Google sign-in:", error);
+    throw error;
+  }
+};
+
+
+
 // export const resendUserOtp = (email) => {
 //   return axios.post(`${API_BASE_URL}/resend-otp`, { email }).then(response => response.data);
 // };
+
 export const resendUserOtp = (email) => {
   console.log("Attempting to resend OTP to email:", email); // Debugging
   return axios.post(`${API_BASE_URL}/resend-otp`, { email })

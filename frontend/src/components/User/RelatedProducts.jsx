@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import Title from './Title';
 import ProductItem from './ProductItem';
 
-const RelatedProducts = ({ category, subCategory, products }) => {
+const RelatedProducts = ({ category, subCategory, products, currentProductId}) => {
   const [related, setRelated] = useState([]);
 
   useEffect(() => {
     if (products.length > 0) {
       const filteredProducts = products.filter(item => 
-        item.category._id === category && item.subCategory._id === subCategory
+        item.category?._id === category && item.subCategory?._id === subCategory && item._id !== currentProductId
       );
 
       // Limit to 5 related products

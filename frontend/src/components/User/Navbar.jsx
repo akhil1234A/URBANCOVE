@@ -4,12 +4,11 @@ import { useDispatch, useSelector } from 'react-redux'; // Import necessary hook
 import { logout } from '../../slices/user/authSlice'; // Import the logout action
 import { assets } from '../../assets/assets';
 
-const Navbar = () => {
+const Navbar = ({toggleSearchBar}) => {
   const [visible, setVisible] = useState(false);
   const dispatch = useDispatch(); 
   const { user } = useSelector((state) => state.auth);
-  // console.log(user)
-
+  
   const handleLogout = () => {
     dispatch(logout()); // Dispatch the logout action
   };
@@ -44,6 +43,7 @@ const Navbar = () => {
 
       <div className='flex items-center gap-6'>
         <img 
+          onClick={toggleSearchBar}
           src={assets.search_icon} 
           className='w-5 cursor-pointer' 
           alt="Search" 

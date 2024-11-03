@@ -1,90 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { FaEdit } from 'react-icons/fa';
+import { fetchProductsForAdmin, updateProductStatus, selectProducts } from '../../slices/admin/productSlice';
+import { useNavigate } from 'react-router-dom';
 
 const ViewProducts = () => {
-  const [list, setList] = useState([]);
+  const dispatch = useDispatch();
+  const products = useSelector(selectProducts);
   const navigate = useNavigate();
-  const formatPath = (path) => path.replace(/\\/g, '/');
-
-
-  // Function to fetch products from API
-  const fetchProducts = async () => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      toast.error("Authorization token not found. Please log in again.");
-      return;
-    }
-
-    try {
-      const response = await fetch('http://localhost:3000/admin/products/', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
-
-      const data = await response.json();
-      setList(data); // Assuming data is an array of products
-    } catch (error) {
-      console.error(error);
-      toast.error('Error fetching products. Please try again later.');
-    }
-  };
+  const token = localStorage.getItem('adminToken');
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const toggleProductStatus = async (id, currentIsActive) => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
+    if (token) {
+      dispatch(fetchProductsForAdmin(token));
+    } else {
       toast.error("Authorization token not found. Please log in again.");
-      return;
     }
-  
-    try {
-      const newIsActive = !currentIsActive;
-  
-      const response = await fetch(`http://localhost:3000/admin/products/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ isActive: newIsActive })
-      });
-  
-      if (!response.ok) throw new Error('Failed to update product status');
-  
-      const updatedProduct = await response.json();
-  
-      // Update the product list in the UI
-      setList((prevList) =>
-        prevList.map((item) =>
-          item._id === id ? { ...item, isActive: updatedProduct.isActive } : item
-        )
-      );
-  
-      toast.success(`Product is now ${newIsActive ? 'active' : 'inactive'}`);
-    } catch (error) {
-      console.error(error);
-      toast.error('Error updating product status. Please try again later.');
-    }
-  };
-  
+  }, [dispatch, token]);
 
   const handleEditProduct = (id) => {
     navigate(`/admin/products/${id}/edit`);
   };
 
+  const toggleProductStatus = (id, currentIsActive) => {
+    const newIsActive = !currentIsActive;
+    dispatch(updateProductStatus({ productId: id, isActive: newIsActive, token }))
+      .unwrap()
+      .then(() => {
+        toast.success(`Product is now ${newIsActive ? 'active' : 'inactive'}`);
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(error.message || 'Error updating product status. Please try again later.');
+      });
+  };
+
   return (
-    <>
+    <div>
       <p className='mb-2'>All Products List</p>
       <div className='flex flex-col gap-2'>
         <div className='hidden md:grid grid-cols-[1fr_3fr_1fr_1fr_1fr_1fr] items-center py-1 px-2 border bg-gray-100 text-sm'>
@@ -96,28 +49,27 @@ const ViewProducts = () => {
           <b className='text-center'>Actions</b>
         </div>
 
-        {list.map((item) => (
+        {products.map((item) => (
           <div
             className={`grid grid-cols-[1fr_3fr_1fr] md:grid-cols-[1fr_3fr_1fr_1fr_1fr_1fr] items-center gap-2 py-1 px-2 border text-sm ${
               item.status === 'unlisted' ? 'opacity-50' : ''
             }`}
             key={item._id}
           >
-            <img className='w-12' src={`http://localhost:3000/${formatPath(item.images[0])}`} />
+            <img className='w-12' src={`http://localhost:3000/${item.images[0]}`} />
             <p>{item.productName}</p>
             <p>{item.category?.category || 'Unknown'}</p>
             <p>${item.price}</p>
-            <p>{item.status}</p>
+            <p>{item.isActive ? 'Listed' : 'Unlisted'}</p>
             <div className='flex gap-2 justify-center'>
               <button
                 onClick={() => toggleProductStatus(item._id, item.isActive)}
-                className={`text-sm py-1 px-3 rounded-md 
-                ${item.isActive ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-green-500 text-white hover:bg-green-600'} 
-                transition duration-200 ease-in-out`}
+                className={`text-sm py-1 px-3 rounded-md ${
+                  item.isActive ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-green-500 text-white hover:bg-green-600'
+                } transition duration-200 ease-in-out`}
               >
                 {item.isActive ? 'Unlist' : 'List'}
               </button>
-
               <button
                 onClick={() => handleEditProduct(item._id)}
                 className='text-sm py-1 px-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 flex items-center transition duration-200 ease-in-out'
@@ -128,7 +80,7 @@ const ViewProducts = () => {
           </div>
         ))}
       </div>
-    </>
+    </div>
   );
 };
 

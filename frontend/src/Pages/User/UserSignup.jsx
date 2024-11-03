@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link} from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
-import { signUp } from '../../slices/user/authSlice';
+import { signUp, loginWithGoogle} from '../../slices/user/authSlice';
+import { GoogleLogin } from '@react-oauth/google';
 
 const UserSignup = () => {
   const [formData, setFormData] = useState({
@@ -38,7 +39,23 @@ const UserSignup = () => {
     }
   };
 
-
+  const handleGoogleLoginSuccess = async (googleResponse) => {
+    try {
+      // Extract the credential token from the response
+      const credential = googleResponse.credential;
+      
+      // Dispatch the loginWithGoogle action
+      const response = await dispatch(loginWithGoogle(credential)).unwrap();
+      if (response.success) {
+        toast.success('Google login successful!');
+        navigate('/');
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      toast.error(error.message || 'Google login failed');
+    }
+  };
   return (
     <form onSubmit={onSubmitHandler} className="flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4 text-gray-800">
       <div className="inline-flex items-center gap-2 mb-2 mt-10">
@@ -83,6 +100,21 @@ const UserSignup = () => {
       </div>
 
       <button className="bg-black text-white font-light px-8 py-2 mt-4">Sign Up</button>
+
+      <div className="flex items-center w-full my-4">
+        <hr className="flex-grow border-t border-gray-400" />
+        <span className="mx-4 text-gray-600">OR</span>
+        <hr className="flex-grow border-t border-gray-400" />
+      </div>
+
+      <div className="mt-4">
+        {/* Uncomment when Google Auth is ready */}
+        <GoogleLogin 
+          onSuccess={handleGoogleLoginSuccess}
+          onError={() => toast.error('Google Sign-In failed')}
+        />
+      </div>
+
     </form>
   );
 };

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
-import { login } from '../../slices/user/authSlice';
+import { login, loginWithGoogle} from '../../slices/user/authSlice';
 
 const UserLogin = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -30,7 +30,21 @@ const UserLogin = () => {
   };
 
   const handleGoogleLoginSuccess = async (googleResponse) => {
-    // Google login handler here...
+    try {
+      // Extract the credential token from the response
+      const credential = googleResponse.credential;
+      
+      // Dispatch the loginWithGoogle action
+      const response = await dispatch(loginWithGoogle(credential)).unwrap();
+      if (response.success) {
+        toast.success('Google login successful!');
+        navigate('/');
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      toast.error(error.message || 'Google login failed');
+    }
   };
 
   return (
@@ -70,11 +84,17 @@ const UserLogin = () => {
 
       <button className="bg-black text-white font-light px-8 py-2 mt-4">Sign In</button>
 
+      <div className="flex items-center w-full my-4">
+        <hr className="flex-grow border-t border-gray-400" />
+        <span className="mx-4 text-gray-600">OR</span>
+        <hr className="flex-grow border-t border-gray-400" />
+      </div>
+
       <div className="mt-4">
         {/* Uncomment when Google Auth is ready */}
-        <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
+        
           <GoogleLogin onSuccess={handleGoogleLoginSuccess} onError={() => toast.error('Google Sign-In failed')} />
-        </GoogleOAuthProvider>
+     
       </div>
     </form>
   );

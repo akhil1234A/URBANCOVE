@@ -18,7 +18,7 @@ const AdminLogin = () => {
   useEffect(() => {
     if (isAuthenticated) {
       localStorage.setItem('adminToken', token);
-      navigate('/admin/dashboard'); 
+      navigate('/admin/'); 
       toast.success("Login successful!");
     }
     if (error) {
