@@ -4,7 +4,127 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchProductsForUser, selectProductById, selectProducts, selectLoading } from '../../slices/admin/productSlice';
 import { assets } from '../../assets/assets';
 import RelatedProducts from '../../components/User/RelatedProducts';
-// import './zoom.css';
+
+// Sub-components
+const ProductImageGallery = ({ images, currentImage, onImageClick }) => (
+  <div className="flex sm:flex-col overflow-x-auto sm:overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full">
+    {images.map((img, index) => (
+      <img
+        key={index}
+        onClick={() => onImageClick(img)}
+        src={`http://localhost:3000/${img}`}
+        onError={(e) => (e.target.src = 'path/to/fallback-image.jpg')}
+        className="w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer"
+        alt={`Image of ${img}`}
+      />
+    ))}
+  </div>
+);
+
+const StarRating = ({ rating }) => (
+  <div className="flex">
+    {[...Array(5)].map((_, index) => (
+      <img
+        key={index}
+        src={index < rating ? assets.star_icon : assets.star_dull_icon}
+        alt="star"
+        className="w-5 h-5"
+      />
+    ))}
+  </div>
+);
+
+const Reviews = ({ reviews }) => (
+  <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">
+    {reviews.length > 0 ? (
+      reviews.map((review, index) => (
+        <div key={index} className="border-b pb-4">
+          <div className="flex justify-between">
+            <p className="font-semibold">{review.username}</p>
+            <StarRating rating={review.rating} />
+          </div>
+          <p className="mt-2">{review.comment}</p>
+        </div>
+      ))
+    ) : (
+      <p>No reviews yet.</p>
+    )}
+  </div>
+);
+
+const ProductInfo = ({ productData, size, setSize }) => {
+  const isOutOfStock = productData.stock <= 0;
+  const isRunningLow = productData.stock > 0 && productData.stock < 5; // You can adjust the threshold
+
+  //sample to show working 
+  const hasDiscount = productData.discountPrice !== undefined;
+
+  return (
+    <div className="flex-1">
+      <h1 className="font-medium text-2xl mt-2">{productData.productName}</h1>
+      <div className="flex item-center gap-1 mt-2">
+        <StarRating rating={4} />
+        <p className="pl-2">(122)</p>
+      </div>
+
+       {/* Display price with discount if applicable */}
+       <p className="mt-5 text-3xl font-medium">
+        {hasDiscount ? (
+          <>
+            <span className="line-through text-gray-500">${productData.price.toFixed(2)}</span> {/* Original Price */}
+            <span className="text-red-600 ml-2">${productData.discountPrice.toFixed(2)}</span> {/* Discounted Price */}
+          </>
+        ) : (
+          <span>${productData.price.toFixed(2)}</span> // Regular price
+        )}
+      </p>
+
+      {/* <p className="mt-5 text-3xl font-medium">${productData.price}</p> */}
+      <p className="mt-5 text-gray-500 md:w-4/5">{productData.productDescription}</p>
+      
+      {/* Stock Status */}
+      <div className="mt-4 text-sm text-gray-600">
+        {isOutOfStock && <p className="text-red-600">Sold Out</p>}
+        {isRunningLow && <p className="text-orange-600">Only {productData.stock} left in stock!</p>}
+        {!isOutOfStock && !isRunningLow && (
+          <p className="text-green-600">Available Stock: {productData.stock}</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-4 my-8">
+        <p>Select Size</p>
+        <div className="flex gap-2">
+          {productData.size.map((s, index) => (
+            <button
+              onClick={() => setSize(s)}
+              className={`border py-2 px-4 bg-gray-100 ${s === size ? 'border-orange-500' : ''}`}
+              key={index}
+              disabled={isOutOfStock} // Disable size selection if out of stock
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      {/* Add to Cart Button */}
+      <button 
+        className={`bg-black text-white px-8 py-3 text-sm ${isOutOfStock ? 'opacity-50 cursor-not-allowed' : 'active:bg-gray-700'}`} 
+        disabled={isOutOfStock}
+      >
+        {isOutOfStock ? 'Out of Stock' : 'ADD TO CART'}
+      </button>
+      
+      <hr className="mt-8 sm:w-4/5" />
+      <div className="text-sm text-gray-500 mt-5 flex flex-col gap-1">
+        <p>100% Original product.</p>
+        <p>Cash on delivery is available on this product.</p>
+        <p>Easy return and exchange policy within 7 days.</p>
+      </div>
+    </div>
+  );
+};
+
 
 const Product = () => {
   const { productID } = useParams();
@@ -14,69 +134,30 @@ const Product = () => {
   const products = useSelector(selectProducts);
   const loading = useSelector(selectLoading);
 
-  const [image, setImage] = useState('');
+  const [currentImage, setCurrentImage] = useState('');
   const [activeSection, setActiveSection] = useState('description');
   const [size, setSize] = useState('');
 
   // Dummy reviews array
   const dummyReviews = [
-    {
-      username: 'JohnDoe',
-      rating: 5,
-      comment: 'Excellent product, highly recommend!',
-    },
-    {
-      username: 'JaneSmith',
-      rating: 4,
-      comment: 'Good quality but slightly overpriced.',
-    },
-    {
-      username: 'MikeJohnson',
-      rating: 3,
-      comment: 'Average product, you get what you pay for.',
-    },
+    { username: 'JohnDoe', rating: 5, comment: 'Excellent product, highly recommend!' },
+    { username: 'JaneSmith', rating: 4, comment: 'Good quality but slightly overpriced.' },
+    { username: 'MikeJohnson', rating: 3, comment: 'Average product, you get what you pay for.' },
   ];
+
+
 
   useEffect(() => {
     if (!productData) {
       dispatch(fetchProductsForUser());
     } else if (productData.images) {
-      setImage(productData.images[0]);
+      setCurrentImage(productData.images[0]);
     }
   }, [dispatch, productData]);
 
-
-  const renderStars = (rating) => (
-    <div className="flex">
-      {[...Array(5)].map((_, index) => (
-        <img
-          key={index}
-          src={index < rating ? assets.star_icon : assets.star_dull_icon}
-          alt="star"
-          className="w-5 h-5"
-        />
-      ))}
-    </div>
-  );
-
-  // Function to render reviews
-  const renderReviews = () => (
-    <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">
-      {dummyReviews.length > 0 ? (
-        dummyReviews.map((review, index) => (
-          <div key={index} className="border-b pb-4">
-            <div className="flex justify-between">
-              <p className="font-semibold">{review.username}</p>
-              <div>{renderStars(review.rating)}</div>
-            </div>
-            <p className="mt-2">{review.comment}</p>
-          </div>
-        ))
-      ) : (
-        <p>No reviews yet.</p>
-      )}
-    </div>
-  );
+  const discountPercentage = 40; // Example discount percentage
+  const dummyPrice = productData.price; // Example original price
+  const discountPrice = dummyPrice - (dummyPrice * (discountPercentage / 100)); 
 
   return loading ? (
     <div>Loading product details...</div>
@@ -93,54 +174,22 @@ const Product = () => {
       <div className="flex gap-12 sm:gap-12 flex-col sm:flex-row">
         {/* Product Images */}
         <div className="flex-1 flex flex-col-reverse gap-3 sm:flex-row">
-          <div className="flex sm:flex-col overflow-x-auto sm:overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full">
-            {productData.images && productData.images.map((img, index) => (
-              <img
-                key={index}
-                onClick={() => setImage(img)}
-                src={`http://localhost:3000/${img}`}
-                onError={(e) => (e.target.src = 'path/to/fallback-image.jpg')}
-                className="w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer"
-                alt={productData.productName}
-              />
-            ))}
-          </div>
+          <ProductImageGallery
+            images={productData.images}
+            currentImage={currentImage}
+            onImageClick={setCurrentImage}
+          />
           <div className="w-full sm:w-[80%] relative flex">
-            <img className="w-full h-auto" src={`http://localhost:3000/${image}`} alt={productData.productName} />
+            <img className="w-full h-auto" src={`http://localhost:3000/${currentImage}`} alt={productData.productName} />
           </div>
         </div>
 
         {/* Product Info */}
-        <div className="flex-1">
-          <h1 className="font-medium text-2xl mt-2">{productData.productName}</h1>
-          <div className="flex item-center gap-1 mt-2">
-            {renderStars(4)}
-            <p className="pl-2">(122)</p>
-          </div>
-          <p className="mt-5 text-3xl font-medium">${productData.price}</p>
-          <p className="mt-5 text-gray-500 md:w-4/5">{productData.productDescription}</p>
-          <div className="flex flex-col gap-4 my-8">
-            <p>Select Size</p>
-            <div className="flex gap-2">
-              {productData.size && productData.size.map((s, index) => (
-                <button
-                  onClick={() => setSize(s)}
-                  className={`border py-2 px-4 bg-gray-100 ${s === size ? 'border-orange-500' : ''}`}
-                  key={index}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-          <button className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700">ADD TO CART</button>
-          <hr className="mt-8 sm:w-4/5" />
-          <div className="text-sm text-gray-500 mt-5 flex flex-col gap-1">
-            <p>100% Original product.</p>
-            <p>Cash on delivery is available on this product.</p>
-            <p>Easy return and exchange policy within 7 days.</p>
-          </div>
-        </div>
+        <ProductInfo  productData={{ 
+            ...productData, 
+            discountPrice: discountPrice,
+            price: dummyPrice 
+          }}  size={size} setSize={setSize} />
       </div>
 
       {/* Description & Review Section */}
@@ -164,20 +213,18 @@ const Product = () => {
             <p>An e-commerce website is an online platform where businesses sell goods...</p>
           </div>
         ) : (
-          renderReviews() // Render the dummy reviews here
+          <Reviews reviews={dummyReviews} />
         )}
       </div>
 
       {/* Related Products */}
-      <RelatedProducts 
-        category={productData.category?._id} 
-        subCategory={productData.subCategory?._id} 
-        products={products} 
+      <RelatedProducts
+        category={productData.category?._id}
+        subCategory={productData.subCategory?._id}
+        products={products}
         currentProductId={productID}
       />
     </div>
- 
-
   ) : (
     <div>Product not found</div>
   );
