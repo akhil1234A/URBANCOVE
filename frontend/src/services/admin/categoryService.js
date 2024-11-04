@@ -49,7 +49,7 @@ export const updateCategory = async (token, categoryId, category) => {
 
 export const fetchSubCategoriesByCategoryId = async (categoryId, token) => {
   try {
-    const response = await axios.get(`${SUBCATEGORY_API_URL}/${categoryId}/subcategories`, {
+    const response = await axios.get(`${API_URL}/${categoryId}/subcategories`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;

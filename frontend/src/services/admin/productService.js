@@ -1,5 +1,5 @@
 
-const API_BASE_URL = ' http://localhost:3000'
+const API_BASE_URL = 'http://localhost:3000'
 
 export const fetchProducts = async () => {
   const response = await fetch(`${API_BASE_URL}/admin/products?isActive=true`);
@@ -40,9 +40,8 @@ export const addProductService = async (productData, token) => {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(productData),
+    body: productData,
   });
   
   if (!response.ok) {

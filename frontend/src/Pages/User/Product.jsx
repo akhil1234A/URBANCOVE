@@ -155,12 +155,13 @@ const Product = () => {
 
 
   useEffect(() => {
+    console.log('changed',productID);
     if (!productData) {
       dispatch(fetchProductsForUser());
     } else if (productData.images) {
       setCurrentImage(productData.images[0]);
     }
-  }, [dispatch, productData]);
+  }, [productID, dispatch, productData,]);
 
   const handleImageClick = () => setIsZoomed(true);  // Open zoom modal on image click
   const handleCloseZoom = () => setIsZoomed(false);   // Close zoom modal on close click
