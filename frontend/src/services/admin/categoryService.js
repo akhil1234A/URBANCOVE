@@ -47,6 +47,18 @@ export const updateCategory = async (token, categoryId, category) => {
   }
 };
 
+export const fetchSubCategoriesByCategoryId = async (categoryId, token) => {
+  try {
+    const response = await axios.get(`${SUBCATEGORY_API_URL}/${categoryId}/subcategories`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+
 // // Function to toggle category status
 // export const toggleCategoryStatus = async (token, categoryId, currentStatus) => {
 //   try {

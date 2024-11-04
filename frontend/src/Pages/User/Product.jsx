@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchProductsForUser, selectProductById, selectProducts, selectLoading } from '../../slices/admin/productSlice';
 import { assets } from '../../assets/assets';
 import RelatedProducts from '../../components/User/RelatedProducts';
-import './zoom.css';
+// import './zoom.css';
 
 const Product = () => {
   const { productID } = useParams();
@@ -15,8 +15,6 @@ const Product = () => {
   const loading = useSelector(selectLoading);
 
   const [image, setImage] = useState('');
-  const [zoomPosition, setZoomPosition] = useState({});
-  const [isZoomed, setIsZoomed] = useState(false);
   const [activeSection, setActiveSection] = useState('description');
   const [size, setSize] = useState('');
 
@@ -47,15 +45,6 @@ const Product = () => {
     }
   }, [dispatch, productData]);
 
-  const handleMouseMove = (e) => {
-    const { top, left, width, height } = e.target.getBoundingClientRect();
-    const x = ((e.pageX - left) / width) * 100;
-    const y = ((e.pageY - top) / height) * 100;
-    setZoomPosition({
-      backgroundImage: `url(http://localhost:3000/${image})`,
-      backgroundPosition: `${x}% ${y}%`,
-    });
-  };
 
   const renderStars = (rating) => (
     <div className="flex">
@@ -117,23 +106,7 @@ const Product = () => {
             ))}
           </div>
           <div className="w-full sm:w-[80%] relative flex">
-            <div
-              className="w-full h-auto cursor-crosshair relative"
-              onMouseEnter={() => setIsZoomed(true)}
-              onMouseLeave={() => setIsZoomed(false)}
-              onMouseMove={handleMouseMove}
-            >
-              <img className="w-full h-auto" src={`http://localhost:3000/${image}`} alt={productData.productName} />
-            </div>
-            {isZoomed && (
-              <div
-                className="zoom-box absolute w-[200px] h-[200px] ml-4 mt-12 bg-no-repeat bg-cover border border-gray-200 shadow-lg transition-opacity duration-300"
-                style={{
-                  ...zoomPosition,
-                  backgroundSize: '300%', // Increased for better zoom effect
-                }}
-              />
-            )}
+            <img className="w-full h-auto" src={`http://localhost:3000/${image}`} alt={productData.productName} />
           </div>
         </div>
 

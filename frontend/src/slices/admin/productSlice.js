@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import {fetchProducts, fetchAdminProducts, updateProductStatusService}from '../../services/admin/productService'
+import {fetchProducts, fetchAdminProducts, updateProductStatusService, addProductService, editProductService }from '../../services/admin/productService'
 
 export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async () => {
   return await fetchProducts();
@@ -14,6 +14,30 @@ export const updateProductStatus = createAsyncThunk( 'products/updateProductStat
     return { productId, isActive: updatedProduct.isActive };
   }
 );
+
+export const addProduct = createAsyncThunk(
+  'products/addProduct',
+  async ({ productData, token }, { rejectWithValue }) => {
+    try {
+      return await addProductService(productData, token);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Edit Product thunk
+export const editProduct = createAsyncThunk(
+  'products/editProduct',
+  async ({ productId, productData, token }, { rejectWithValue }) => {
+    try {
+      return await editProductService(productId, productData, token);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 
 const productsSlice = createSlice({
   name: 'products',
@@ -57,6 +81,33 @@ const productsSlice = createSlice({
       .addCase(updateProductStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
+      })
+
+      .addCase(addProduct.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(addProduct.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items.push(action.payload);
+      })
+      .addCase(addProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Edit Product
+      .addCase(editProduct.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(editProduct.fulfilled, (state, action) => {
+        state.loading = false;
+        const updatedProduct = action.payload;
+        const index = state.items.findIndex((item) => item._id === updatedProduct._id);
+        if (index !== -1) state.items[index] = updatedProduct;
+      })
+      .addCase(editProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import axios from 'axios';
 
@@ -20,36 +20,7 @@ import EditProduct from '../Pages/Admin/EditProduct';
 
 const AdminRoutes = () => {
 
-  const [categories, setCategories] = useState([])
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const token = localStorage.getItem('adminToken');
-      // console.log('Admin Token:', token); 
-      try {
-        const response = await axios.get('http://localhost:3000/admin/categories', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        console.log('Fetched Categories:', response.data); 
-        setCategories(response.data); 
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-   
-        if (error.response) {
-          console.error("Response data:", error.response.data);
-          console.error("Response status:", error.response.status);
-          console.error("Response headers:", error.response.headers);
-        } else {
-          console.error("Error message:", error.message);
-        }
-      }
-    };
-    
-
-    fetchCategories();
-  }, []);
+ 
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -71,7 +42,7 @@ const AdminRoutes = () => {
             <Route path="/" element={<AdminDashboard />} />
             <Route path="users" element={<Users />} />
             <Route path="categories" element={<Categories />} />
-            <Route path="subcategories" element={<SubCategory categories={categories}/>} />
+            <Route path="subcategories" element={<SubCategory />} />
             <Route path="products/add" element={<AddProduct />} />
             <Route path="products/view" element={<ViewProducts />} />
             <Route path='products/:id/edit' element={<EditProduct />} />

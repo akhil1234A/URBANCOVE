@@ -52,9 +52,17 @@ export const toggleCategoryStatus = createAsyncThunk(
   }
 );
 
+export const fetchSubCategoriesByCategory = createAsyncThunk(
+  'subcategories/fetchByCategory',
+  async ({ categoryId, token }) => {
+    return await categoryService.fetchSubCategoriesByCategoryId(categoryId, token);
+  }
+);
+
+
 const categoriesSlice = createSlice({
   name: 'categories',
-  initialState: {
+  initialState: {  
     categories: [],
     loading: false,
     error: null,
@@ -97,6 +105,18 @@ const categoriesSlice = createSlice({
       })
       .addCase(toggleCategoryStatus.rejected, (state, action) => {
         state.error = action.payload; 
+      })
+
+      .addCase(fetchSubCategoriesByCategory.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchSubCategoriesByCategory.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+      .addCase(fetchSubCategoriesByCategory.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
       });
   },
 });
