@@ -4,6 +4,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchProductsForUser, selectProductById, selectProducts, selectLoading } from '../../slices/admin/productSlice';
 import { assets } from '../../assets/assets';
 import RelatedProducts from '../../components/User/RelatedProducts';
+import ZoomModal from '../../components/User/ZoomModal';
+
 
 // Sub-components
 const ProductImageGallery = ({ images, currentImage, onImageClick }) => (
@@ -52,12 +54,16 @@ const Reviews = ({ reviews }) => (
   </div>
 );
 
-const ProductInfo = ({ productData, size, setSize }) => {
+const ProductInfo = ({ productData, size, setSize}) => {
   const isOutOfStock = productData.stock <= 0;
   const isRunningLow = productData.stock > 0 && productData.stock < 5; // You can adjust the threshold
 
   //sample to show working 
-  const hasDiscount = productData.discountPrice !== undefined;
+  const hasDiscount = true;
+
+  const discountPercentage = 40; // Example discount percentage
+  const dummyPrice = productData.price; // Example original price
+  const discountPrice = dummyPrice - (dummyPrice * (discountPercentage / 100));
 
   return (
     <div className="flex-1">
@@ -72,7 +78,7 @@ const ProductInfo = ({ productData, size, setSize }) => {
         {hasDiscount ? (
           <>
             <span className="line-through text-gray-500">${productData.price.toFixed(2)}</span> {/* Original Price */}
-            <span className="text-red-600 ml-2">${productData.discountPrice.toFixed(2)}</span> {/* Discounted Price */}
+            <span className="text-red-600 ml-2">${discountPrice.toFixed(2)}</span> {/* Discounted Price */}
           </>
         ) : (
           <span>${productData.price.toFixed(2)}</span> // Regular price
@@ -137,6 +143,7 @@ const Product = () => {
   const [currentImage, setCurrentImage] = useState('');
   const [activeSection, setActiveSection] = useState('description');
   const [size, setSize] = useState('');
+  const [isZoomed, setIsZoomed] = useState(false);
 
   // Dummy reviews array
   const dummyReviews = [
@@ -155,9 +162,8 @@ const Product = () => {
     }
   }, [dispatch, productData]);
 
-  const discountPercentage = 40; // Example discount percentage
-  const dummyPrice = productData.price; // Example original price
-  const discountPrice = dummyPrice - (dummyPrice * (discountPercentage / 100)); 
+  const handleImageClick = () => setIsZoomed(true);  // Open zoom modal on image click
+  const handleCloseZoom = () => setIsZoomed(false);   // Close zoom modal on close click
 
   return loading ? (
     <div>Loading product details...</div>
@@ -179,18 +185,30 @@ const Product = () => {
             currentImage={currentImage}
             onImageClick={setCurrentImage}
           />
+          {/* Zoom */}
           <div className="w-full sm:w-[80%] relative flex">
-            <img className="w-full h-auto" src={`http://localhost:3000/${currentImage}`} alt={productData.productName} />
+            <img
+              className="w-full h-auto cursor-pointer"
+              src={`http://localhost:3000/${currentImage}`}
+              alt={productData.productName}
+              onClick={handleImageClick} // Open zoom modal on image click
+            />
           </div>
+          {/* Zoom */}
+          {/* <div className="w-full sm:w-[80%] relative flex">
+            <img className="w-full h-auto" src={`http://localhost:3000/${currentImage}`} alt={productData.productName} />
+          </div> */}
         </div>
 
         {/* Product Info */}
-        <ProductInfo  productData={{ 
-            ...productData, 
-            discountPrice: discountPrice,
-            price: dummyPrice 
-          }}  size={size} setSize={setSize} />
+        <ProductInfo  productData={ productData}  size={size} setSize={setSize} />
       </div>
+
+
+        {/* Zoom Modal */}
+        {isZoomed && (
+        <ZoomModal imageSrc={`http://localhost:3000/${currentImage}`} onClose={handleCloseZoom} />
+      )}
 
       {/* Description & Review Section */}
       <div className="mt-20">
