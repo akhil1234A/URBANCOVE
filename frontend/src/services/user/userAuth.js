@@ -21,23 +21,6 @@ export const loginUser = (credentials) => {
 };
 
 
-export const signInWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const userData = {
-      uid: result.user.uid,
-      name: result.user.displayName,
-      email: result.user.email,
-    };
-
-    const response = await axios.post(`${API_BASE_URL}/googleUser`, userData);
-    console.log("Google login successful, response:", response.data);
-    return response.data;
-  } catch (error) {
-    console.error("Error with Google sign-in:", error);
-    throw error;
-  }
-};
 
 
 
@@ -56,4 +39,22 @@ export const resendUserOtp = (email) => {
       console.error("Error resending OTP:", error.response ? error.response.data : error.message); // Log any errors
       throw error; // Rethrow the error to handle it in the slice
     });
+};
+
+export const googleAuth = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    const userData = {
+      name: user.displayName,
+      email: user.email,
+      googleID: user.uid,
+    };
+
+    const response = await axios.post(`${API_BASE_URL}/google-auth`, userData);
+    return response.data; // Ensure backend sends { success, token, user } structure
+  } catch (error) {
+    console.error("Error during Google Auth:", error);
+    throw error;
+  }
 };

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { FaGoogle } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
-import { login, loginWithGoogle} from '../../slices/user/authSlice';
+import { login, googleLogin} from '../../slices/user/authSlice';
+
 
 const UserLogin = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -29,21 +30,17 @@ const UserLogin = () => {
     }
   };
 
-  const handleGoogleLoginSuccess = async (googleResponse) => {
+  const handleGoogleSignIn = async () => {
     try {
-      // Extract the credential token from the response
-      const credential = googleResponse.credential;
-      
-      // Dispatch the loginWithGoogle action
-      const response = await dispatch(loginWithGoogle(credential)).unwrap();
+      const response = await dispatch(googleLogin()).unwrap();
       if (response.success) {
-        toast.success('Google login successful!');
+        toast.success('Login successful!');
         navigate('/');
       } else {
         toast.error(response.message);
       }
     } catch (error) {
-      toast.error(error.message || 'Google login failed');
+      toast.error(error.message || 'An error occurred during Google login');
     }
   };
 
@@ -92,9 +89,11 @@ const UserLogin = () => {
 
       <div className="mt-4">
         {/* Uncomment when Google Auth is ready */}
-        
-          <GoogleLogin onSuccess={handleGoogleLoginSuccess} onError={() => toast.error('Google Sign-In failed')} />
-     
+        <div className="flex gap-2 items-center justify-center w-fit px-3 h-12 border-2 border-black rounded cursor-pointer" onClick={handleGoogleSignIn}>
+              <FaGoogle className="text-black text-xl" />
+              Continue With Google
+            </div>
+          
       </div>
     </form>
   );

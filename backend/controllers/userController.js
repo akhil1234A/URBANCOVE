@@ -175,55 +175,52 @@ const login = async (req, res) => {
     }
 };
 
-
-
-const storeGoogleUser = async (req, res) => {
-  try {
-    const { uid, name, email } = req.body;
-
-    // Search for user by Google ID first
-    let user = await User.findOne({ googleID: uid });
-
-    // If user doesn’t exist, check by email to avoid duplicate accounts
-    if (!user) {
-      user = await User.findOne({ email });
-      if (user) {
-        return res.status(409).json({
-          success: false,
-          message: "A user with this email already exists. Please use that account to sign in.",
-        });
+const googleLogin = async (req, res) => {
+    const { email, name, googleID } = req.body;
+  
+    try {
+      let user = await User.findOne({ email });
+      if (!user) {
+        // If user does not exist, create a new user
+        user = await User.create({ email, name, googleID });
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      } else {
+        // If user exists, update the Google ID
+        user.googleID = googleID;
+        await user.save();
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
       }
       
-      // If user does not exist by googleID or email, create a new user
-      user = new User({ googleID: uid, username: name, email });
-      await user.save();
-      console.log("New Google user registered and logged in.");
-    } else {
-      console.log("Existing Google user logged in:", user);
+      // Return success response
+      res.json({ success: true, user, token});
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: 'Server error' });
     }
+  };
 
-    // Generate token for the session
-    const token = jwt.sign({ id: user._id, googleID: user.googleID }, process.env.JWT_SECRET, {
-      expiresIn: '1h', // Set token expiration as needed
-    });
+  const googleAuth = async (req, res) => {
+    const { email, name, googleID } = req.body;
+    try {
+        let user = await User.findOne({ email });
+        if (!user) {
+            // Create new user if not found
+            user = await User.create({ email, name, googleID });
+        } else {
+            // Update Google ID if user exists
+            user.googleID = googleID;
+            await user.save();
+        }
+        // Generate token after user is saved
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    // Send back user data along with the token
-    return res.status(200).json({
-      success: true,
-      message: user.isNew ? "New user registered and logged in" : "User logged in successfully",
-      user: { id: user._id, username: user.username, email: user.email }, // Avoid sending sensitive info like googleID
-      token,
-    });
-
-  } catch (error) {
-    console.error("Error with Google sign-in:", error);
-    return res.status(500).json({ success: false, message: "Failed to log in user" });
-  }
+        // Return success response
+        res.json({ success: true, user, token });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server error during Google authentication' });
+    }
 };
 
-
-  
-
-
-module.exports = { signUp, verifyOtp, login, resendOtp, storeGoogleUser};
+module.exports = { signUp, verifyOtp, login, resendOtp, googleAuth };
 

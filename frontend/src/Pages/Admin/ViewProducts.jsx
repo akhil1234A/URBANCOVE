@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { FaEdit } from 'react-icons/fa';
@@ -11,6 +11,10 @@ const ViewProducts = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem('adminToken');
 
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const [totalPages, setTotalPages] = useState(0);
+  // const itemsPerPage = 10; // Adjust this value as needed
+
   useEffect(() => {
     if (token) {
       dispatch(fetchProductsForAdmin(token));
@@ -18,6 +22,23 @@ const ViewProducts = () => {
       toast.error("Authorization token not found. Please log in again.");
     }
   }, [dispatch, token]);
+
+  // useEffect(() => {
+  //   if (token) {
+  //     dispatch(fetchProductsForAdmin({ token, page: currentPage, limit: itemsPerPage }))
+  //       .unwrap()
+  //       .then((data) => {
+  //         console.log('Fetched products:', data); // Log to ensure products are fetched
+  //       })
+  //       .catch((error) => {
+  //         console.error('Error fetching products:', error);
+  //         toast.error(error.message || 'Error fetching products. Please try again later.');
+  //       });
+  //   } else {
+  //     toast.error("Authorization token not found. Please log in again.");
+  //   }
+  // }, [dispatch, token, currentPage]);
+  
 
   const handleEditProduct = (id) => {
     navigate(`/admin/products/${id}/edit`);
@@ -34,6 +55,12 @@ const ViewProducts = () => {
         console.error(error);
         toast.error(error.message || 'Error updating product status. Please try again later.');
       });
+  };
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
 
   return (
@@ -79,6 +106,25 @@ const ViewProducts = () => {
             </div>
           </div>
         ))}
+
+{/* <div className="pagination flex justify-center mt-4">
+          <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
+            Previous
+          </button>
+          {Array.from({ length: totalPages }, (_, index) => (
+            <button
+              key={index + 1}
+              onClick={() => handlePageChange(index + 1)}
+              className={currentPage === index + 1 ? 'active' : ''}
+            >
+              {index + 1}
+            </button>
+          ))}
+          <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
+            Next
+          </button>
+        </div> */}
+
       </div>
     </div>
   );

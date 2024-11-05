@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate, Link} from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
-import { signUp, loginWithGoogle} from '../../slices/user/authSlice';
-import { GoogleLogin } from '@react-oauth/google';
+import { signUp, googleLogin} from '../../slices/user/authSlice';
+import {FaGoogle} from 'react-icons/fa'
+
 
 const UserSignup = () => {
   const [formData, setFormData] = useState({
@@ -11,15 +12,61 @@ const UserSignup = () => {
     email: '',
     password: ''
   });
+
+ 
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'name':
+        if (!value) return 'Name is required';
+        if (value.length < 3) return 'Name must be at least 3 characters';
+        break;
+      case 'email':
+        const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!value) return 'Email is required';
+        if (!emailPattern.test(value)) return 'Invalid email format';
+        break;
+      case 'password':
+        if (!value) return 'Password is required';
+        if (value.length < 8) return 'Password must be at least 8 characters';
+        break;
+      default:
+        return '';
+    }
+  };
+
   const onInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    validateField(name, value);
+  };
+
+  const validateForm = () => {
+    const { name, email, password } = formData;
+    let isValid = true;
+
+    // Validate each field and show error if invalid
+    ['name', 'email', 'password'].forEach((field) => {
+      const error = validateField(field, formData[field]);
+      if (error) {
+        toast.error(error);
+        isValid = false;
+      }
+    });
+    return isValid;
   };
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
+   
+
+    if (!validateForm()) return;
+
+    
+
     try {
       const response = await dispatch(signUp(formData)).unwrap();
       
@@ -39,23 +86,20 @@ const UserSignup = () => {
     }
   };
 
-  const handleGoogleLoginSuccess = async (googleResponse) => {
+  const handleGoogleSignIn = async () => {
     try {
-      // Extract the credential token from the response
-      const credential = googleResponse.credential;
-      
-      // Dispatch the loginWithGoogle action
-      const response = await dispatch(loginWithGoogle(credential)).unwrap();
+      const response = await dispatch(googleLogin()).unwrap();
       if (response.success) {
-        toast.success('Google login successful!');
+        toast.success('Login successful!');
         navigate('/');
       } else {
         toast.error(response.message);
       }
     } catch (error) {
-      toast.error(error.message || 'Google login failed');
+      toast.error(error.message || 'An error occurred during Google login');
     }
   };
+
   return (
     <form onSubmit={onSubmitHandler} className="flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4 text-gray-800">
       <div className="inline-flex items-center gap-2 mb-2 mt-10">
@@ -70,7 +114,7 @@ const UserSignup = () => {
         type="text"
         className="w-full px-3 py-2 border border-gray-800"
         placeholder="Name"
-        required
+        
       />
       <input
         name="email"
@@ -79,7 +123,7 @@ const UserSignup = () => {
         type="email"
         className="w-full px-3 py-2 border border-gray-800"
         placeholder="Email"
-        required
+        
       />
       <input
         name="password"
@@ -88,7 +132,7 @@ const UserSignup = () => {
         type="password"
         className="w-full px-3 py-2 border border-gray-800"
         placeholder="Password"
-        required
+        
       />
       <div className="w-full flex justify-between text-sm mt-[-8px]">
         <Link to="/forgot-password" className="cursor-pointer hover:underline">
@@ -109,10 +153,12 @@ const UserSignup = () => {
 
       <div className="mt-4">
         {/* Uncomment when Google Auth is ready */}
-        <GoogleLogin 
-          onSuccess={handleGoogleLoginSuccess}
-          onError={() => toast.error('Google Sign-In failed')}
-        />
+        <div className="flex gap-2 items-center justify-center w-fit px-3 h-12 border-2 border-black rounded cursor-pointer" onClick={handleGoogleSignIn}>
+              <FaGoogle className="text-black text-xl" />
+              Continue With Google
+        </div>
+          
+      
       </div>
 
     </form>

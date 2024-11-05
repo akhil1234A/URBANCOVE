@@ -50,6 +50,45 @@ exports.listProducts = async (req, res) => {
       res.status(500).json({ message: 'Server error', error });
     }
   };
+
+// exports.listProducts = async (req, res) => {
+//   try {
+//     const { type, productId } = req.params;
+//     const { page = 1, limit = 10 } = req.query; // Add pagination parameters
+//     const skip = (page - 1) * limit; // Calculate how many documents to skip
+
+//     // Build the query object based on conditions
+//     let query = { isActive: true };
+//     if (productId) {
+//       query._id = productId;
+//     } else {
+//       if (type === 'latest') {
+//         // Latest collection: filter by isActive, sort by creation date
+//       } else if (type === 'bestSeller') {
+//         // Best Seller collection: filter by isActive and isBestSeller
+//         query.isBestSeller = true;
+//       }
+//     }
+
+//     // Fetch products based on the query and sort order with pagination
+//     const products = await Product.find(query)
+//       .populate('category subCategory')
+//       .sort(type === 'latest' ? { createdAt: -1 } : {})
+//       .skip(skip) // Apply skip for pagination
+//       .limit(Number(limit)); // Limit number of results per page
+
+//     const totalProducts = await Product.countDocuments(query); // Count total products for pagination
+
+//     res.json({
+//       products,
+//       totalPages: Math.ceil(totalProducts / limit), // Calculate total pages
+//       currentPage: Number(page),
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server error', error });
+//   }
+// };
+
   
 
 // add a new product
@@ -85,10 +124,10 @@ exports.addProduct = async (req, res) => {
 exports.editProduct = async (req, res) => {
   const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller, isActive } = req.body;
   let images;
-
+  console.log(req.body)
   try {
     if (req.files) {
-      if (req.files.length < 3) return res.status(400).json({ message: 'At least 3 images are required' });
+      // if (req.files.length < 3) return res.status(400).json({ message: 'At least 3 images are required' });
       
       images = await Promise.all(req.files.map(async (file) => await processImage(file.path)));
     }
@@ -111,7 +150,7 @@ exports.editProduct = async (req, res) => {
     );
 
     if (!updatedProduct) return res.status(404).json({ message: 'Product not found' });
-
+    console.log(updatedProduct)
     res.json(updatedProduct);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });

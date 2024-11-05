@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { signUpUser, verifyUserOtp, loginUser, resendUserOtp, signInWithGoogle } from '../../services/user/userAuth';
+import { signUpUser, verifyUserOtp, loginUser, resendUserOtp, googleAuth} from '../../services/user/userAuth';
 
 export const signUp = createAsyncThunk('auth/signUp', async (userData, { rejectWithValue }) => {
   try {
@@ -44,17 +44,17 @@ export const resendOtp = createAsyncThunk('auth/resendOtp', async (email, { reje
   }
 });
 
-
-export const loginWithGoogle = createAsyncThunk('auth/loginWithGoogle', async (_, { rejectWithValue }) => {
+export const googleLogin = createAsyncThunk('auth/googleLogin', async (_, { rejectWithValue }) => {
   try {
-    const response = await signInWithGoogle();
-    return response;
+    return await googleAuth();
   } catch (error) {
     const errorMessage = error.response?.data?.message || 'Google login failed';
-    console.error("Error during Google login:", errorMessage);
     return rejectWithValue({ message: errorMessage });
   }
 });
+
+
+
 
 
 const authSlice = createSlice({
@@ -130,16 +130,18 @@ const authSlice = createSlice({
         state.error = payload?.message || 'Failed to resend OTP';
         console.error("Error while resending OTP:", payload); 
       })
-      .addCase(loginWithGoogle.pending, (state) => {
+
+      .addCase(googleLogin.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(loginWithGoogle.fulfilled, (state, { payload }) => {
+      .addCase(googleLogin.fulfilled, (state, { payload }) => {
         state.isLoading = false;
-        state.user = payload.user || payload;
-        state.token = payload.token || null;
-        if (state.token) localStorage.setItem('token', state.token);
+        state.user = payload.user;
+        state.token = payload.token;
+        localStorage.setItem('token', payload.token);
+        localStorage.setItem('user', JSON.stringify(payload.user));
       })
-      .addCase(loginWithGoogle.rejected, (state, { payload }) => {
+      .addCase(googleLogin.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload?.message || 'Google login failed';
       });

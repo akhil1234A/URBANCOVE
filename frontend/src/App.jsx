@@ -5,7 +5,6 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { logoutAdmin, adminLogin} from './slices/admin/adminSlice';
 import { fetchProductsForUser, selectProducts} from './slices/admin/productSlice';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 
 
 // Admin

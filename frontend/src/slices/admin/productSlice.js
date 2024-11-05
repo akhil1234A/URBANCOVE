@@ -9,6 +9,13 @@ export const fetchProductsForAdmin = createAsyncThunk('products/fetchAdminProduc
   return await fetchAdminProducts(token)
 });
 
+// export const fetchProductsForAdmin = createAsyncThunk(
+//   'products/fetchAdminProducts',
+//   async ({ token, page = 1, limit = 10 }) => {
+//     return await fetchAdminProducts(token, page, limit);
+//   }
+// );
+
 export const updateProductStatus = createAsyncThunk( 'products/updateProductStatus', async ({ productId, isActive, token }) => {
     const updatedProduct = await updateProductStatusService(productId, isActive, token);
     return { productId, isActive: updatedProduct.isActive };
@@ -62,6 +69,8 @@ const productsSlice = createSlice({
       .addCase(fetchProductsForAdmin.fulfilled, (state, action) => {
         state.loading = false;
         state.items = action.payload;
+        // state.items = action.payload.products; 
+        // state.totalPages = action.payload.totalPages;
       })
       .addCase(fetchProductsForAdmin.rejected, (state, action) => {
         state.loading = false;
