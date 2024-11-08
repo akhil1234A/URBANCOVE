@@ -78,9 +78,8 @@ export const editProductService = async (productId, productData, token) => {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(productData),
+    body: productData,
   });
   
   if (!response.ok) {

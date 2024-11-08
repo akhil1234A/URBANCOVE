@@ -125,6 +125,7 @@ exports.editProduct = async (req, res) => {
   const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller, isActive } = req.body;
   let images;
   console.log(req.body)
+  console.log(req.files);
   try {
     if (req.files) {
       // if (req.files.length < 3) return res.status(400).json({ message: 'At least 3 images are required' });
@@ -153,7 +154,8 @@ exports.editProduct = async (req, res) => {
     console.log(updatedProduct)
     res.json(updatedProduct);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: 'Server error', error: error.message });
+
   }
 };
 

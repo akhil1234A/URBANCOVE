@@ -6,10 +6,11 @@ import { toast } from 'react-toastify';
 import { fetchCategories, fetchSubCategoriesByCategory } from '../../slices/admin/categorySlice';
 import { updateProductStatus } from '../../slices/admin/productSlice';
 import {useParams} from 'react-router-dom'
+` `
 const EditProduct = () => {
   const dispatch = useDispatch();
   const {id: productId} = useParams();
-  console.log('productId',productId);
+
   const categories = useSelector((state) => state.categories.categories);
   const [subCategories, setSubCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -21,7 +22,7 @@ const EditProduct = () => {
   const [cropperOpen, setCropperOpen] = useState([false, false, false, false]);
 
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState('');  
   const [price, setPrice] = useState(0);
   const [bestseller, setBestseller] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -46,12 +47,7 @@ const EditProduct = () => {
     setTotalStock(total);
   }, [sizes, stock]);
   
-  useEffect(() => {
-    console.log("Sizes:", sizes);
-    console.log("Stock:", stock);
-    console.log("Calculated Total Stock:", totalStock);
-  }, [sizes, stock, totalStock]);
-  
+ 
   const handleSizeSelection = (size) => {
     setSizes((prevSizes) => {
       const newSizes = prevSizes.includes(size)
@@ -101,32 +97,24 @@ const EditProduct = () => {
         return;
       }
 
-      // if (croppedImages.filter(Boolean).length < 3) {
-      //   toast.error('Please upload and crop at least 3 images.');
-      //   return;
-      // }
-
       const formData = new FormData();
       formData.append('productName', name);
       formData.append('productDescription', description);
       formData.append('category', selectedCategory);
       formData.append('subCategory', selectedSubCategory);
-      formData.append('isBestSeller', bestseller);
-      formData.append('isActive', true);
       formData.append('price', parseFloat(price));
-
-      // const totalStock = sizes.reduce((acc, size) => acc + (stock[size] || 0), 0);
       formData.append('stock', totalStock);
+      formData.append('isBestSeller', bestseller);
+
+      sizes.forEach((size) => {
+        formData.append('size[]', size); // Ensure sizes are appended correctly
+      });
 
       croppedImages.forEach((croppedImage) => {
         if (croppedImage) {
           const file = dataURLToBlob(croppedImage);
           formData.append('images', file, `processed-${Date.now()}.png`);
         }
-      });
-
-      sizes.forEach((size) => {
-        formData.append('size[]', size);
       });
 
       const resultAction = await dispatch(updateProductStatus({ productId, productData: formData, token }));
@@ -138,12 +126,13 @@ const EditProduct = () => {
         toast.error(resultAction.payload || 'Error updating product. Please try again.');
       }
     } catch (error) {
-      console.error(error);
+      console.error('API Error:', error);
       toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+};
+
 
   const resetForm = () => {
     setName('');
@@ -151,12 +140,13 @@ const EditProduct = () => {
     setPrice('');
     setImages([null, null, null, null]);
     setCroppedImages([null, null, null, null]);
-    setSizes(['L', 'XL']);
+    setSizes(['L', 'XL']);  // Or preserve the fetched sizes
     setBestseller(false);
     setCropperOpen([false, false, false, false]);
     setStock(defaultQuantities);
     setSubCategories([]);
-  };
+};
+
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -179,40 +169,42 @@ const EditProduct = () => {
 
   useEffect(() => {
     const fetchProduct = async () => {
-      const token = localStorage.getItem('adminToken');
-      try {
-        const response = await fetch(`http://localhost:3000/admin/products/${productId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const token = localStorage.getItem('adminToken');
+        try {
+            const response = await fetch(`http://localhost:3000/admin/products/${productId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const productData = await response.json();
 
-        const productData = await response.json();
-
-        console.log(productData)
-        if (response.ok && productData) {
-          setName(productData[0].productName);
-          setDescription(productData[0].productDescription);
-          setPrice(productData[0].price);
-          // setStock(productData[0].stock);
-          setCStock(productData[0].stock);
-          setBestseller(productData[0].isBestSeller);
-          setSizes(productData[0].size || []);
-          setSelectedCategory(productData[0].category._id);
-          setSelectedSubCategory(productData[0].subCategory);
-          setLoadingData(false)
-        } else {
-          toast.error(productData.message || 'Failed to load product');
+            if (response.ok && productData) {
+                setName(productData[0].productName);
+                setDescription(productData[0].productDescription);
+                setPrice(productData[0].price);
+                setStock((prev) => ({
+                    ...prev,
+                    ...productData[0].stockQuantities,  // Ensure stockQuantities aligns with your data structure
+                }));
+                setCStock(productData[0].stock);
+                setBestseller(productData[0].isBestSeller);
+                setSizes(productData[0].sizes || []);  // Populate sizes from fetched data
+                setSelectedCategory(productData[0].category._id);
+                setSelectedSubCategory(productData[0].subCategory);
+                setLoadingData(false);
+            } else {
+                toast.error(productData.message || 'Failed to load product');
+            }
+        } catch (error) {
+            toast.error('An error occurred while fetching the product');
+            console.error(error);
+            setLoadingData(false);
         }
-      } catch (error) {
-        toast.error('An error occurred while fetching the product');
-        console.error(error);
-        setLoadingData(false)
-      }
     };
-    
+
     fetchProduct();
-  }, [productId]);
+}, [productId]);
+
 
   // const totalStock = stock && sizes ? sizes.reduce((acc, size) => acc + (stock[size] || 0), 0) : 0;
 

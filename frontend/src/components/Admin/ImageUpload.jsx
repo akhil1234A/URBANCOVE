@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify'
 
 const ImageUpload = ({ images, setImages, setCropperOpen }) => {
   const [cropIndex, setCropIndex] = useState(null); // To track which image is currently being cropped
@@ -6,6 +7,13 @@ const ImageUpload = ({ images, setImages, setCropperOpen }) => {
   const handleImageChange = (files) => {
     const newImages = [...images];
     Array.from(files).forEach((file, index) => {
+
+      if (!file.type.startsWith('image/')) {
+        toast.error('Only image files are allowed');
+        alert('only image files are allowed')
+        return;
+      }
+
       newImages[index] = URL.createObjectURL(file);
       setImages(newImages);
     });
