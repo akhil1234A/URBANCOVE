@@ -4,9 +4,9 @@ import ImageUpload from '../../components/Admin/ImageUpload';
 import ImageCropper from '../../components/Admin/ImageCropper';
 import { toast } from 'react-toastify';
 import { fetchCategories, fetchSubCategoriesByCategory } from '../../slices/admin/categorySlice';
-import { updateProductStatus } from '../../slices/admin/productSlice';
+import { editProduct } from '../../slices/admin/productSlice';
 import {useParams} from 'react-router-dom'
-` `
+
 const EditProduct = () => {
   const dispatch = useDispatch();
   const {id: productId} = useParams();
@@ -22,7 +22,7 @@ const EditProduct = () => {
   const [cropperOpen, setCropperOpen] = useState([false, false, false, false]);
 
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');  
+  const [description, setDescription] = useState('');
   const [price, setPrice] = useState(0);
   const [bestseller, setBestseller] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -117,9 +117,12 @@ const EditProduct = () => {
         }
       });
 
-      const resultAction = await dispatch(updateProductStatus({ productId, productData: formData, token }));
+      formData.forEach((value,key)=>{
+        console.log(`${key}: ${value}`)
+      })
 
-      if (updateProductStatus.fulfilled.match(resultAction)) {
+      const resultAction = await dispatch(editProduct({productId, productData: formData, token}))
+      if (editProduct.fulfilled.match(resultAction)) {
         toast.success('Product updated successfully!');
         resetForm();
       } else {
