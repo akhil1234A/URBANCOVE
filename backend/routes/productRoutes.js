@@ -23,7 +23,7 @@ const upload = multer({ storage });
 router.get('/', listProducts);
 
 // Route to fetch a specific product by ID
-router.get('/:productId', listProducts);
+router.get('/:productId?', listProducts);
 
 router.post('/', adminAuth, upload.array('images', 4), addProduct);
 

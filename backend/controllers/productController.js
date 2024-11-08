@@ -11,11 +11,11 @@ const processImage = async (filePath) => {
     const outputPath = path.join(outputDir, outputFilename);
 
     await sharp(filePath)
-        .resize(390, 450) // Resize to the specified dimensions
-        .toFormat('png')  // Convert to PNG format
+        .resize(390, 450) 
+        .toFormat('png')  
         .toFile(outputPath);
 
-    fs.unlinkSync(filePath); // Remove the original file after processing
+    fs.unlinkSync(filePath); 
     return outputPath;
 };
 
@@ -23,71 +23,47 @@ const processImage = async (filePath) => {
 // list all products
 exports.listProducts = async (req, res) => {
     try {
+
       const { type, productId } = req.params;
-  
-      // Build the query object based on conditions
+      const { page = 1, limit = 10} = req.query;
+      
       let query = { isActive: true };
+
       if (productId) {
         query._id = productId;
       } else {
         if (type === 'latest') {
-          // Latest collection: filter by isActive, sort by creation date
-          query = { ...query }; // Only isActive filter applied
+          query = { ...query }; 
         } else if (type === 'bestSeller') {
-          // Best Seller collection: filter by isActive and isBestSeller
           query = { ...query, isBestSeller: true };
         }
-        // No additional filters needed for the general collection
       }
+
+      const options = {
+        limit: parseInt(limit),
+        skip: (parseInt(page) - 1) * parseInt(limit),
+        sort: type === 'latest' ? { createdAt: -1 } : {}
+    };
   
-      // Fetch products based on the query and sort order
       const products = await Product.find(query)
         .populate('category subCategory')
-        .sort(type === 'latest' ? { createdAt: -1 } : {});  // Sort by creation date for latest collection
+        .limit(options.limit)
+        .skip(options.skip)
+        .sort(options.sort); 
   
-      res.json(products);
+
+      const totalCount = await Product.countDocuments(query);
+      res.json({
+        products,
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCount / limit),
+        totalItems: totalCount
+    });
     } catch (error) {
       res.status(500).json({ message: 'Server error', error });
     }
   };
 
-// exports.listProducts = async (req, res) => {
-//   try {
-//     const { type, productId } = req.params;
-//     const { page = 1, limit = 10 } = req.query; // Add pagination parameters
-//     const skip = (page - 1) * limit; // Calculate how many documents to skip
-
-//     // Build the query object based on conditions
-//     let query = { isActive: true };
-//     if (productId) {
-//       query._id = productId;
-//     } else {
-//       if (type === 'latest') {
-//         // Latest collection: filter by isActive, sort by creation date
-//       } else if (type === 'bestSeller') {
-//         // Best Seller collection: filter by isActive and isBestSeller
-//         query.isBestSeller = true;
-//       }
-//     }
-
-//     // Fetch products based on the query and sort order with pagination
-//     const products = await Product.find(query)
-//       .populate('category subCategory')
-//       .sort(type === 'latest' ? { createdAt: -1 } : {})
-//       .skip(skip) // Apply skip for pagination
-//       .limit(Number(limit)); // Limit number of results per page
-
-//     const totalProducts = await Product.countDocuments(query); // Count total products for pagination
-
-//     res.json({
-//       products,
-//       totalPages: Math.ceil(totalProducts / limit), // Calculate total pages
-//       currentPage: Number(page),
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Server error', error });
-//   }
-// };
 
   
 

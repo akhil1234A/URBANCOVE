@@ -10,7 +10,7 @@ const Collection = () => {
   const currency = '$';
 
   // Retrieve product list and loading status from Redux
-  const productList = useSelector(selectProducts);
+  const productList = useSelector(selectProducts).products;
   const loading = useSelector(selectLoading);
 
   useEffect(() => {
@@ -78,7 +78,7 @@ const Collection = () => {
 
         {/* Map products */}
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6'>
-          {productList.map((item) => (
+          {Array.isArray(productList) && productList.map((item) => (
              <ProductItem 
              key={item._id} 
              id={item._id} 

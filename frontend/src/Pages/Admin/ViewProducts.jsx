@@ -8,36 +8,22 @@ import { useNavigate } from 'react-router-dom';
 const ViewProducts = () => {
   const dispatch = useDispatch();
   const products = useSelector(selectProducts);
+  console.log(products)
   const navigate = useNavigate();
   const token = localStorage.getItem('adminToken');
 
-  // const [currentPage, setCurrentPage] = useState(1);
-  // const [totalPages, setTotalPages] = useState(0);
-  // const itemsPerPage = 10; // Adjust this value as needed
-
+  const currentPage = useSelector((state) => state.products.currentPage); // get currentPage from Redux
+  const totalPages = useSelector((state) => state.products.totalPages); // get totalPages from Redux
+  const itemsPerPage = 10; // Number of items per page
+  
   useEffect(() => {
     if (token) {
-      dispatch(fetchProductsForAdmin(token));
+      dispatch(fetchProductsForAdmin({ token, page: currentPage, limit: itemsPerPage }));
     } else {
       toast.error("Authorization token not found. Please log in again.");
     }
-  }, [dispatch, token]);
+  }, [dispatch, token, currentPage]);
 
-  // useEffect(() => {
-  //   if (token) {
-  //     dispatch(fetchProductsForAdmin({ token, page: currentPage, limit: itemsPerPage }))
-  //       .unwrap()
-  //       .then((data) => {
-  //         console.log('Fetched products:', data); // Log to ensure products are fetched
-  //       })
-  //       .catch((error) => {
-  //         console.error('Error fetching products:', error);
-  //         toast.error(error.message || 'Error fetching products. Please try again later.');
-  //       });
-  //   } else {
-  //     toast.error("Authorization token not found. Please log in again.");
-  //   }
-  // }, [dispatch, token, currentPage]);
   
 
   const handleEditProduct = (id) => {
@@ -59,7 +45,7 @@ const ViewProducts = () => {
 
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) {
-      setCurrentPage(page);
+      dispatch(fetchProductsForAdmin({ token, page, limit: itemsPerPage }));
     }
   };
 
@@ -76,7 +62,7 @@ const ViewProducts = () => {
           <b className='text-center'>Actions</b>
         </div>
 
-        {products.map((item) => (
+        {Array.isArray(products) &&  products.map((item) => (
           <div
             className={`grid grid-cols-[1fr_3fr_1fr] md:grid-cols-[1fr_3fr_1fr_1fr_1fr_1fr] items-center gap-2 py-1 px-2 border text-sm ${
               item.status === 'unlisted' ? 'opacity-50' : ''
@@ -107,23 +93,37 @@ const ViewProducts = () => {
           </div>
         ))}
 
-{/* <div className="pagination flex justify-center mt-4">
-          <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
+        <div className="pagination flex justify-center items-center mt-4 space-x-2">
+          {/* Previous Button */}
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`py-2 px-4 bg-gray-200 rounded-lg ${currentPage === 1 ? 'cursor-not-allowed text-gray-400' : 'hover:bg-gray-300'} transition duration-300`}
+          >
             Previous
           </button>
+
+          {/* Page Number Buttons */}
           {Array.from({ length: totalPages }, (_, index) => (
             <button
               key={index + 1}
               onClick={() => handlePageChange(index + 1)}
-              className={currentPage === index + 1 ? 'active' : ''}
+              className={`py-2 px-4 rounded-lg ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition duration-300`}
             >
               {index + 1}
             </button>
           ))}
-          <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
+
+          {/* Next Button */}
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`py-2 px-4 bg-gray-200 rounded-lg ${currentPage === totalPages ? 'cursor-not-allowed text-gray-400' : 'hover:bg-gray-300'} transition duration-300`}
+          >
             Next
           </button>
-        </div> */}
+        </div>
+
 
       </div>
     </div>

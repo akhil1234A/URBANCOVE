@@ -5,16 +5,15 @@ export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', a
   return await fetchProducts();
 });
 
-export const fetchProductsForAdmin = createAsyncThunk('products/fetchAdminProducts', async (token) => {
-  return await fetchAdminProducts(token)
-});
+export const fetchProductsForAdmin = createAsyncThunk(
+  'products/fetchAdminProducts',
+  async ({ token, page = 1, limit = 10 }) => {
+    return await fetchAdminProducts(token, page, limit);
+  }
+);
 
-// export const fetchProductsForAdmin = createAsyncThunk(
-//   'products/fetchAdminProducts',
-//   async ({ token, page = 1, limit = 10 }) => {
-//     return await fetchAdminProducts(token, page, limit);
-//   }
-// );
+
+
 
 export const updateProductStatus = createAsyncThunk( 'products/updateProductStatus', async ({ productId, isActive, token }) => {
     const updatedProduct = await updateProductStatusService(productId, isActive, token);
@@ -48,7 +47,14 @@ export const editProduct = createAsyncThunk(
 
 const productsSlice = createSlice({
   name: 'products',
-  initialState: { items: [], loading: false, error: null },
+  initialState: {
+    items: [],
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    loading: false,
+    error: null
+  },
   reducers: {},
   extraReducers: (builder) => {
     builder
@@ -68,9 +74,10 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProductsForAdmin.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
-        // state.items = action.payload.products; 
-        // state.totalPages = action.payload.totalPages;
+        state.items = action.payload.products;
+        state.currentPage = action.payload.currentPage;
+        state.totalPages = action.payload.totalPages;
+        state.totalItems = action.payload.totalItems;
       })
       .addCase(fetchProductsForAdmin.rejected, (state, action) => {
         state.loading = false;
@@ -126,6 +133,6 @@ export const selectLoading = (state) => state.products.loading;
 
 
 export const selectProductById = (state, productID) =>
-  state.products.items.find((product) => product._id === productID);
+  state.products.items.products.find((product) => product._id === productID);
 
 export default productsSlice.reducer;

@@ -8,11 +8,13 @@ import Newsletter from '../../components/User/Newsletter'
 
 const Home = ({ products }) => {
 
-  const latestCollection = [...products]
+  const latestCollection = Array.isArray(products) ? [...products] : []
   .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
   .slice(0, 8); 
+
+  console.log(products);
   
-  const bestSellers = products.filter(product => product.isBestSeller);
+  const bestSellers = Array.isArray(products) ? products.filter(product => product.isBestSeller) : [];
   return (
     <div>
       <Hero/>
