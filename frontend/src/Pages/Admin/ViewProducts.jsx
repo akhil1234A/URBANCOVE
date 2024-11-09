@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 const ViewProducts = () => {
   const dispatch = useDispatch();
   const products = useSelector(selectProducts);
-  console.log(products)
+ 
   const navigate = useNavigate();
   const token = localStorage.getItem('adminToken');
 

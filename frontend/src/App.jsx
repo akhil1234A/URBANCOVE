@@ -17,9 +17,8 @@ import UserLayout from './Routes/UserLayout'
 const App = () => {
 
   const dispatch = useDispatch();
-  const products = useSelector(selectProducts).products;
-  console.log('app',products)
-
+  const products = useSelector(selectProducts);
+  
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     // console.log(token);

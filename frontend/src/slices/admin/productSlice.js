@@ -63,7 +63,7 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProductsForUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
+        state.items = action.payload.products;
       })
       .addCase(fetchProductsForUser.rejected, (state, action) => {
         state.loading = false;
@@ -133,6 +133,6 @@ export const selectLoading = (state) => state.products.loading;
 
 
 export const selectProductById = (state, productID) =>
-  state.products.items.products.find((product) => product._id === productID);
+  state.products.items.find((product) => product._id === productID);
 
 export default productsSlice.reducer;

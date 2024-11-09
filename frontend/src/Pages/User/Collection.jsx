@@ -10,7 +10,7 @@ const Collection = () => {
   const currency = '$';
 
   // Retrieve product list and loading status from Redux
-  const productList = useSelector(selectProducts).products;
+  const productList = useSelector(selectProducts);
   const loading = useSelector(selectLoading);
 
   useEffect(() => {
