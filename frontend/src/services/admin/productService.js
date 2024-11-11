@@ -1,9 +1,10 @@
 
 const API_BASE_URL = 'http://localhost:3000'
 
-export const fetchProducts = async () => {
-  const response = await fetch(`${API_BASE_URL}/admin/products?isActive=true`);
+export const fetchProducts = async (page = 1, limit = 100) => {
+  const response = await fetch(`${API_BASE_URL}/admin/products?isActive=true&page=${page}&limit=${limit}`);
   if (!response.ok) throw new Error('Failed to fetch products');
+  
   return response.json();
 };
 

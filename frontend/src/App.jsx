@@ -17,7 +17,7 @@ import UserLayout from './Routes/UserLayout'
 const App = () => {
 
   const dispatch = useDispatch();
-  const products = useSelector(selectProducts);
+ 
   
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -63,7 +63,7 @@ const App = () => {
             path="/*" 
             element={
              
-                <UserLayout products={products} />
+                <UserLayout />
             } 
           />
         </Routes>

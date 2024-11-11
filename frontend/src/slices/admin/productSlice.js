@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import {fetchProducts, fetchAdminProducts, updateProductStatusService, addProductService, editProductService }from '../../services/admin/productService'
 
-export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async () => {
-  return await fetchProducts();
+export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async ({page = 1, limit = 100}) => {
+  return await fetchProducts(page,limit);
 });
 
 export const fetchProductsForAdmin = createAsyncThunk(
@@ -55,7 +55,10 @@ const productsSlice = createSlice({
     loading: false,
     error: null
   },
-  reducers: {},
+  reducers: { 
+    setCurrentPage: (state, action) => {
+    state.currentPage = action.payload;
+  },},
   extraReducers: (builder) => {
     builder
       .addCase(fetchProductsForUser.pending, (state) => {
@@ -64,6 +67,9 @@ const productsSlice = createSlice({
       .addCase(fetchProductsForUser.fulfilled, (state, action) => {
         state.loading = false;
         state.items = action.payload.products;
+        state.currentPage = action.payload.currentPage;
+        state.totalPages = action.payload.totalPages;
+        state.totalItems = action.payload.totalItems;
       })
       .addCase(fetchProductsForUser.rejected, (state, action) => {
         state.loading = false;
@@ -135,4 +141,6 @@ export const selectLoading = (state) => state.products.loading;
 export const selectProductById = (state, productID) =>
   state.products.items.find((product) => product._id === productID);
 
+
+export const {setCurrentPage} = productsSlice.actions;
 export default productsSlice.reducer;

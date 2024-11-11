@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from '../components/User/Navbar';
 import Footer from '../components/User/Footer';
@@ -11,10 +11,25 @@ import ForgotPassword from '../Pages/User/ForgotPassword';
 import OtpVerification from '../Pages/User/OtpVerification';
 import UserSignup from '../Pages/User/UserSignUp';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchProductsForUser, selectProducts } from '../slices/admin/productSlice';
 
-const UserLayout = ({ products }) => {
+const UserLayout = () => {
 
   const [searchVisible, setSearchVisible] = useState(false);
+
+  const dispatch = useDispatch();
+
+  const products = useSelector(selectProducts);
+
+  
+
+  useEffect(() => {
+    dispatch(fetchProductsForUser(
+      {page:1, limit:100}
+    ));
+  }, [dispatch]);
+
 
   const toggleSearchBar = () => {
     setSearchVisible((prev) => !prev);
@@ -25,8 +40,8 @@ const UserLayout = ({ products }) => {
       <Navbar toggleSearchBar={toggleSearchBar}/>
       {searchVisible && <SearchBar toggleSearchBar={toggleSearchBar} />}
       <Routes>
-        <Route path="/" element={<Home products={products} />} />
-        <Route path="/collection" element={<Collection products={products} />} />
+        <Route path="/" element={<Home  products={products}/>} />
+        <Route path="/collection" element={<Collection  />} />
         <Route path="/product/:productID" element={<Product />} />
         
         {/* Wrapping only login and signup in GoogleOAuthProvider */}

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchProductsForUser, selectProducts, selectLoading } from '../../slices/admin/productSlice';
+import { fetchProductsForUser, selectProducts, selectLoading, setCurrentPage} from '../../slices/admin/productSlice';
 import { assets } from '../../assets/assets';
 import Title from '../../components/User/Title';
 import ProductItem from '../../components/User/ProductItem';
@@ -13,10 +13,22 @@ const Collection = () => {
   const productList = useSelector(selectProducts);
   const loading = useSelector(selectLoading);
 
+  const currentPage = useSelector((state) => state.products.currentPage); // get currentPage from Redux
+  const totalPages = useSelector((state) => state.products.totalPages); // get totalPages from Redux
+  const itemsPerPage = 12; // Number of items per page
+
+  
+
   useEffect(() => {
     // Dispatch an action to fetch products if not already loaded
-    dispatch(fetchProductsForUser());
-  }, [dispatch]);
+    dispatch(fetchProductsForUser({page: currentPage, limit: itemsPerPage}));
+  }, [dispatch, currentPage]);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      dispatch(setCurrentPage(page));  
+    }
+  };
 
   if (loading) {
     return <div>Loading products...</div>;
@@ -88,6 +100,33 @@ const Collection = () => {
              currency={currency}
            />
           ))}
+        </div>
+        <div className="pagination flex justify-center items-center mt-4 space-x-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`py-2 px-4 bg-gray-200 rounded-lg ${currentPage === 1 ? 'cursor-not-allowed text-gray-400' : 'hover:bg-gray-300'} transition duration-300`}
+          >
+            Previous
+          </button>
+          
+          {Array.from({ length: totalPages }, (_, index) => (
+            <button
+              key={index + 1}
+              onClick={() => handlePageChange(index + 1)}
+              className={`py-2 px-4 rounded-lg ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition duration-300`}
+            >
+              {index + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`py-2 px-4 bg-gray-200 rounded-lg ${currentPage === totalPages ? 'cursor-not-allowed text-gray-400' : 'hover:bg-gray-300'} transition duration-300`}
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>
