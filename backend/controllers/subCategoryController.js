@@ -4,8 +4,8 @@ const Category = require('../models/Category');
 
 exports.addSubCategory = async (req, res) => {
     const { subCategory, category} = req.body;
-    console.log(req.body)
-    console.log(category);
+    // console.log(req.body)
+    // console.log(category);
 
     try {
         const existingcategory = await Category.findById(category);

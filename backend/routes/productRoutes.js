@@ -31,6 +31,6 @@ router.post('/', adminAuth, upload.array('images', 4), addProduct);
 router.put('/:id', adminAuth, upload.array('images', 4), editProduct);
 
 
-router.delete('/:id', adminAuth, deleteProduct);
+router.put('/:productId/delete', adminAuth, deleteProduct);
 
 module.exports = router;

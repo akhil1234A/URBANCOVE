@@ -10,6 +10,7 @@ import {useParams} from 'react-router-dom'
 const EditProduct = () => {
   const dispatch = useDispatch();
   const {id: productId} = useParams();
+  console.log(productId);
 
   const categories = useSelector((state) => state.categories.categories);
   const [subCategories, setSubCategories] = useState([]);
@@ -174,12 +175,14 @@ const EditProduct = () => {
     const fetchProduct = async () => {
         const token = localStorage.getItem('adminToken');
         try {
-            const response = await fetch(`http://localhost:3000/admin/products/${productId}`, {
+            const response = await fetch(`http://localhost:3000/admin/products?productId=${productId}&isAdmin=true`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            const productData = await response.json();
+            const productX = await response.json();
+            const productData = productX.products;
+            
 
             if (response.ok && productData) {
                 setName(productData[0].productName);

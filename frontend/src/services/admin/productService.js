@@ -2,14 +2,14 @@
 const API_BASE_URL = 'http://localhost:3000'
 
 export const fetchProducts = async (page = 1, limit = 100) => {
-  const response = await fetch(`${API_BASE_URL}/admin/products?isActive=true&page=${page}&limit=${limit}`);
+  const response = await fetch(`${API_BASE_URL}/admin/products?isActive=true&page=${page}&limit=${limit}&isAdmin=false`);
   if (!response.ok) throw new Error('Failed to fetch products');
   
   return response.json();
 };
 
 export const fetchAdminProducts = async (token, page = 1, limit = 10) => {
-  const response = await fetch(`${API_BASE_URL}/admin/products?page=${page}&limit=${limit}`, {
+  const response = await fetch(`${API_BASE_URL}/admin/products?page=${page}&limit=${limit}&isAdmin=true`, {
     method: 'GET',
     headers: { 'Authorization': `Bearer ${token}` }
   });
@@ -19,7 +19,7 @@ export const fetchAdminProducts = async (token, page = 1, limit = 10) => {
 
 
 export const updateProductStatusService = async (productId, isActive, token) => {
-  const response = await fetch(`${API_BASE_URL}/admin/products/${productId}`, {
+  const response = await fetch(`${API_BASE_URL}/admin/products/${productId}/delete`, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,

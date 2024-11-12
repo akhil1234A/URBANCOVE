@@ -23,11 +23,14 @@ const processImage = async (filePath) => {
 // list all products
 exports.listProducts = async (req, res) => {
     try {
+      // console.log(req.query);
+      const { type } = req.params;
+      const { page = 1, limit = 10, isAdmin = false, productId} = req.query;      
 
-      const { type, productId } = req.params;
-      const { page = 1, limit = 10} = req.query;
-      
-      let query = { isActive: true };
+    
+
+      let query = isAdmin === 'true' ? {} : { isActive: true };
+
 
       if (productId) {
         query._id = productId;
@@ -38,6 +41,7 @@ exports.listProducts = async (req, res) => {
           query = { ...query, isBestSeller: true };
         }
       }
+     
 
       const options = {
         limit: parseInt(limit),
@@ -53,6 +57,7 @@ exports.listProducts = async (req, res) => {
   
 
       const totalCount = await Product.countDocuments(query);
+      
       res.json({
         products,
         currentPage: parseInt(page),
@@ -138,16 +143,21 @@ exports.editProduct = async (req, res) => {
 
 // soft delete a product
 exports.deleteProduct = async (req, res) => {
-    try {
-        const product = await Product.findById(req.params.id);
-        if (!product) return res.status(404).json({ message: 'Product not found' });
+  try {
+    const { isActive } = req.body;
+    const { productId } = req.params;
 
-        product.isActive = !product.isActive;  // soft deleting
-        await product.save();
+    
 
-        res.json({ message: 'Product has been soft deleted' });
-    } catch (error) {
-      
-        res.status(500).json({ message: 'Server error', error });
-    }
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    // Update only isActive status
+    product.isActive = isActive;
+    await product.save();
+
+    res.json({ isActive: product.isActive, message: `Product has been ${isActive ? 'listed' : 'unlisted'}` });
+} catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+}
 };
