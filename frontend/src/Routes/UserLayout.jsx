@@ -13,6 +13,11 @@ import UserSignup from '../Pages/User/UserSignUp';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProductsForUser, selectProducts } from '../slices/admin/productSlice';
+import PlaceOrder from '../Pages/User/PlaceOrder';
+
+import UserAccount from '../Pages/User/UserAccount';
+import Cart from '../Pages/User/Cart';
+import OrderSuccess from '../Pages/User/OrderSuccess';
 
 const UserLayout = () => {
 
@@ -43,6 +48,10 @@ const UserLayout = () => {
         <Route path="/" element={<Home  products={products}/>} />
         <Route path="/collection" element={<Collection  />} />
         <Route path="/product/:productID" element={<Product />} />
+        <Route path="/account" element={<UserAccount />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<PlaceOrder />} />
+        <Route path="/success" element={<OrderSuccess />} />
         
         {/* Wrapping only login and signup in GoogleOAuthProvider */}
         <Route path="/login" element={
