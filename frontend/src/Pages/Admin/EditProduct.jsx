@@ -5,22 +5,57 @@ import ImageCropper from '../../components/Admin/ImageCropper';
 import { toast } from 'react-toastify';
 import { fetchCategories, fetchSubCategoriesByCategory } from '../../slices/admin/categorySlice';
 import { editProduct } from '../../slices/admin/productSlice';
-import {useParams} from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom';
 
 const EditProduct = () => {
   const dispatch = useDispatch();
-  const {id: productId} = useParams();
-  console.log(productId);
+  const { id: productId } = useParams();
+  const navigate = useNavigate();
 
   const categories = useSelector((state) => state.categories.categories);
   const [subCategories, setSubCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
-  const [loading, setLoading] = useState(false);
 
+  const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([null, null, null, null]);
   const [croppedImages, setCroppedImages] = useState([null, null, null, null]);
   const [cropperOpen, setCropperOpen] = useState([false, false, false, false]);
+
+  const setCroppedImage = (index, croppedImage) => {
+    const newCroppedImages = [...croppedImages];
+    newCroppedImages[index] = croppedImage;
+    setCroppedImages(newCroppedImages);
+  };
+
+  const handleCropComplete = (index) => {
+    setCropperOpen((prev) => {
+      const newOpen = [...prev];
+      newOpen[index] = false;
+      return newOpen;
+    });
+  };
+
+  const dataURLToBlob = (dataURL) => {
+    try {
+      if (!dataURL.startsWith('data:')) {
+        console.error('Invalid data URL:', dataURL);
+        return null;
+      }
+      const arr = dataURL.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8arr], { type: mime });
+    } catch (error) {
+      console.error('Error converting data URL to Blob:', error);
+      return null;
+    }
+  };
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -60,32 +95,9 @@ const EditProduct = () => {
     });
   };
 
-  const setCroppedImage = (index, croppedImage) => {
-    const newCroppedImages = [...croppedImages];
-    newCroppedImages[index] = croppedImage;
-    setCroppedImages(newCroppedImages);
-  };
-
-  const handleCropComplete = (index) => {
-    setCropperOpen((prev) => {
-      const newOpen = [...prev];
-      newOpen[index] = false;
-      return newOpen;
-    });
-  };
-
-  const dataURLToBlob = (dataURL) => {
-    const byteString = atob(dataURL.split(',')[1]);
-    const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i);
-    }
-
-    return new Blob([ab], { type: mimeString });
-  };
+const [initialSizes, setInitialSizes] = useState([]);
+const [initialTotalStock, setInitialTotalStock] = useState(0);
+const [initialSubCategory, setInitialSubCategory] = useState('');
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
@@ -93,38 +105,70 @@ const EditProduct = () => {
     const token = localStorage.getItem('adminToken');
 
     try {
+      // Validate required fields
       if (!name || !selectedCategory || price <= 0) {
         toast.error('Ensure all fields are filled, and price is positive');
         return;
       }
+      // Check if each image exists and has been cropped if required
+      for (let index = 0; index < images.length; index++) {
+        if (images[index] && !croppedImages[index]) {
+          toast.error(`Please crop the image at index ${index + 1} before submitting.`);
+          return;
+        }
+      }
 
       const formData = new FormData();
+
       formData.append('productName', name);
       formData.append('productDescription', description);
       formData.append('category', selectedCategory);
-      formData.append('subCategory', selectedSubCategory);
+      formData.append('subCategory', selectedSubCategory || initialSubCategory);
       formData.append('price', parseFloat(price));
-      formData.append('stock', totalStock);
       formData.append('isBestSeller', bestseller);
+  
+      if (JSON.stringify(sizes) !== JSON.stringify(initialSizes)) {
+        sizes.forEach((size) => {
+          formData.append('size[]', size);
+        });
+      }
+  
+      // Append stock if it has changed
+      if (totalStock !== initialTotalStock) {
+        formData.append('stock', totalStock);
+      }
+      // Handle images (ensure they are either original or cropped)
+      for (let index = 0; index < images.length; index++) {
+        let file;
 
-      sizes.forEach((size) => {
-        formData.append('size[]', size); // Ensure sizes are appended correctly
-      });
+        if (croppedImages[index]) {
+          console.log(`Using cropped image at index ${index}`);
+          file = dataURLToBlob(croppedImages[index]);
+        } else if (images[index]) {
+          console.log(`Using original image at index ${index}`);
 
-      croppedImages.forEach((croppedImage) => {
-        if (croppedImage) {
-          const file = dataURLToBlob(croppedImage);
-          formData.append('images', file, `processed-${Date.now()}.png`);
+          if (images[index] instanceof File) {
+            file = images[index];
+          } else if (typeof images[index] === 'string' && images[index].startsWith('data:')) {
+            file = dataURLToBlob(images[index]);
+          }
         }
-      });
 
-      formData.forEach((value,key)=>{
-        console.log(`${key}: ${value}`)
-      })
+        if (file) {
+          console.log('Appending image to FormData:', file);
+          formData.append('images', file, `image-${Date.now()}-${index}.png`);
+        }
+      }
 
-      const resultAction = await dispatch(editProduct({productId, productData: formData, token}))
+      console.log('images:', images);
+      console.log('croppedImages:', croppedImages);
+
+      // Send the request
+      const resultAction = await dispatch(editProduct({ productId, productData: formData, token }));
+
       if (editProduct.fulfilled.match(resultAction)) {
         toast.success('Product updated successfully!');
+        navigate(`/admin/products/view`);
         resetForm();
       } else {
         toast.error(resultAction.payload || 'Error updating product. Please try again.');
@@ -135,8 +179,7 @@ const EditProduct = () => {
     } finally {
       setLoading(false);
     }
-};
-
+  };
 
   const resetForm = () => {
     setName('');
@@ -149,8 +192,7 @@ const EditProduct = () => {
     setCropperOpen([false, false, false, false]);
     setStock(defaultQuantities);
     setSubCategories([]);
-};
-
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -164,6 +206,9 @@ const EditProduct = () => {
         .then((response) => {
           if (fetchSubCategoriesByCategory.fulfilled.match(response)) {
             setSubCategories(response.payload);
+            if (selectedSubCategory) {
+              setSelectedSubCategory(selectedSubCategory._id);
+            }
           } else {
             toast.error('Error fetching subcategories.');
           }
@@ -173,82 +218,68 @@ const EditProduct = () => {
 
   useEffect(() => {
     const fetchProduct = async () => {
-        const token = localStorage.getItem('adminToken');
-        try {
-            const response = await fetch(`http://localhost:3000/admin/products?productId=${productId}&isAdmin=true`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const productX = await response.json();
-            const productData = productX.products;
-            
+      const token = localStorage.getItem('adminToken');
+      try {
+        const response = await fetch(`http://localhost:3000/admin/products?productId=${productId}&isAdmin=true`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const productX = await response.json();
+        const productData = productX.products;
+        console.log(productData);
+        if (response.ok && productData) {
+          setName(productData[0].productName);
+          setDescription(productData[0].productDescription);
+          setPrice(productData[0].price);
+          setStock((prev) => ({
+              ...prev,
+              ...productData[0].stockQuantities,  // Ensure stockQuantities aligns with your data structure
+          }));
+          setCStock(productData[0].stock);
+          setBestseller(productData[0].isBestSeller);
+          setSizes(productData[0].sizes || []);  // Populate sizes from fetched data
+          setSelectedCategory(productData[0].category._id);
+          setSelectedSubCategory(productData[0].subCategory._id);
+          setInitialSizes(productData[0].sizes || []);
+          setInitialTotalStock(totalStock);
+          setInitialSubCategory(productData[0].subCategory._id);
+          setLoadingData(false);
+      } else {
+          toast.error(productData.message || 'Failed to load product');
+      }
 
-            if (response.ok && productData) {
-                setName(productData[0].productName);
-                setDescription(productData[0].productDescription);
-                setPrice(productData[0].price);
-                setStock((prev) => ({
-                    ...prev,
-                    ...productData[0].stockQuantities,  // Ensure stockQuantities aligns with your data structure
-                }));
-                setCStock(productData[0].stock);
-                setBestseller(productData[0].isBestSeller);
-                setSizes(productData[0].sizes || []);  // Populate sizes from fetched data
-                setSelectedCategory(productData[0].category._id);
-                setSelectedSubCategory(productData[0].subCategory);
-                setLoadingData(false);
-            } else {
-                toast.error(productData.message || 'Failed to load product');
-            }
-        } catch (error) {
-            toast.error('An error occurred while fetching the product');
-            console.error(error);
-            setLoadingData(false);
-        }
+
+      } catch (error) {
+        toast.error('An error occurred while fetching the product');
+        console.error(error);
+        setLoadingData(false);
+      }
     };
 
     fetchProduct();
-}, [productId]);
+  }, [productId]);
 
-
-  // const totalStock = stock && sizes ? sizes.reduce((acc, size) => acc + (stock[size] || 0), 0) : 0;
-
-  useEffect(() => {
-    if (!loadingData) {
-      console.log("Product Data:", { name, description, price, stock, sizes, selectedCategory, selectedSubCategory });
-    }
-  }, [loadingData]);
-
-  if (loadingData) return <p>Loading...</p>
-
-  
   return (
     <form onSubmit={onSubmitHandler} className="flex flex-col w-full items-start gap-4 p-5 bg-white rounded shadow-md">
       <h1 className="text-2xl font-bold mb-4">Edit Product</h1>
 
       <ImageUpload images={images} setImages={setImages} setCropperOpen={setCropperOpen} />
 
-      {images.map((image, index) =>
-        cropperOpen[index] && (
+      {images.map((image, index) => {
+        return cropperOpen[index] ? (
           <ImageCropper
             key={index}
             imageURL={image}
             setCroppedImage={(croppedImage) => setCroppedImage(index, croppedImage)}
-            setCropperOpen={() =>
-              setCropperOpen((prev) => {
-                const newOpen = [...prev];
-                newOpen[index] = false;
-                return newOpen;
-              })
-            }
+            setCropperOpen={setCropperOpen}
             onCropComplete={() => handleCropComplete(index)}
           />
-        )
-      )}
+        ) : null;
+      })}
 
-      {/* Product name */}
-      <div className="w-full">
+       {/* Product name */}
+       <div className="w-full">
         <label className="block mb-2">Product Name</label>
         <input
           onChange={(e) => setName(e.target.value)}
@@ -374,9 +405,7 @@ const EditProduct = () => {
       <button
         type="submit"
         disabled={loading}
-        className={`mt-4 w-full max-w-md px-4 py-2 text-white bg-blue-600 rounded ${
-          loading ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
+        className={`mt-4 w-full max-w-md px-4 py-2 text-white bg-blue-600 rounded ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         {loading ? 'Updating...' : 'Update Product'}
       </button>

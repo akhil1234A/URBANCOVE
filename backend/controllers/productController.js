@@ -101,17 +101,24 @@ exports.addProduct = async (req, res) => {
     }
 };
 
-// edit an existing product
+
 exports.editProduct = async (req, res) => {
   const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller, isActive } = req.body;
   let images;
-  console.log(req.body)
-  console.log(req.files);
+  console.log('form body', req.body);
+  console.log('form files', req.files);
+
   try {
     if (req.files) {
-      // if (req.files.length < 3) return res.status(400).json({ message: 'At least 3 images are required' });
-      
-      images = await Promise.all(req.files.map(async (file) => await processImage(file.path)));
+      // Ensure at least 3 images are uploaded
+      // if (Array.isArray(req.files) && req.files.length < 3) {
+      //   return res.status(400).json({ message: 'At least 3 images are required' });
+      // }
+
+      // Handle single or multiple file uploads
+      if (Array.isArray(req.files) && req.files.length>0) {
+        images = await Promise.all(req.files.map(async (file) => await processImage(file.path)));
+      } 
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(
@@ -122,8 +129,8 @@ exports.editProduct = async (req, res) => {
         category, 
         subCategory, 
         price, 
-        stock, 
-        size: Array.isArray(size) ? size : [size], // Ensures size is always an array
+        ...(stock && { stock }),
+        ...(size && { size: Array.isArray(size) ? size : [size] }), // Ensures size is always an array
         ...(images && { images }), // Only update images if they exist
         isBestSeller,
         ...(typeof isActive !== 'undefined' && { isActive }) // Update isActive only if provided
@@ -131,14 +138,19 @@ exports.editProduct = async (req, res) => {
       { new: true }
     );
 
-    if (!updatedProduct) return res.status(404).json({ message: 'Product not found' });
-    console.log(updatedProduct)
-    res.json(updatedProduct);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    if (!updatedProduct) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
 
+    console.log('Updated product:', updatedProduct);
+    res.json(updatedProduct);
+
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 
 // soft delete a product
