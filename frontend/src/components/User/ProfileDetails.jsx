@@ -1,40 +1,60 @@
 import React, { useState } from 'react';
+import { useSelector, useDispatch} from 'react-redux';
+import {toast} from 'react-toastify'
+import { updatePasswordThunk } from '../../slices/user/authSlice';
 
 const ProfileDetails = () => {
-  const [isEditing, setIsEditing] = useState(false); // For toggling edit mode
-  const [name, setName] = useState('Richard Doe');
-  const [email, setEmail] = useState('richard@gmail.com');
-  const [password, setPassword] = useState('Pass Key');
+
+  const dispatch = useDispatch();
+  
+  const {user, token} = useSelector((state)=>state.auth);
+
+ 
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [password, setPassword] = useState('pass-key');
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleChange = (field, value) => {
-    if (field === 'name') setName(value);
-    if (field === 'email') setEmail(value);
-  };
-
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
-  };
+  
 
   const handlePasswordModalToggle = () => {
     setIsPasswordModalOpen(!isPasswordModalOpen);
   };
 
+ 
   const handlePasswordSave = () => {
-    if (newPassword === confirmPassword) {
-      setPassword(newPassword);
-      handlePasswordModalToggle();
-      setNewPassword('');
-      setConfirmPassword('');
-    } else {
-      alert("Passwords don't match. Please try again.");
+    if (!newPassword || !confirmPassword) {
+      toast.error("Password fields can't be empty.");
+      return;
     }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords don't match. Please try again.");
+      return;
+    }
+
+    console.log(newPassword)
+
+    // Dispatch updatePassword action
+    dispatch(updatePasswordThunk({ token, passwordData: { newPassword } }))
+      .unwrap()
+      .then(() => {
+        setPassword('newPassword');
+        handlePasswordModalToggle();
+        setNewPassword('');
+        setConfirmPassword('');
+        toast.success('Password updated successfully!');
+      })
+      .catch((error) => {
+        toast.error(error.message || 'Failed to update password');
+      });
   };
 
+
   return (
-    <div className="p-6 max-w-3xl mx-auto bg-white shadow-md rounded-lg">
+    <div className="p-6 max-w-3xl mx-auto">
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">Profile Details</h2>
 
       <form>
@@ -49,15 +69,9 @@ const ProfileDetails = () => {
                 className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={name}
                 onChange={(e) => handleChange('name', e.target.value)}
-                readOnly={!isEditing}
+                readOnly
               />
-              <button
-                type="button"
-                className="ml-4 py-2 px-4 bg-blue-600 text-white rounded-md transition duration-200 ease-in-out hover:bg-blue-500"
-                onClick={handleEditToggle}
-              >
-                {isEditing ? 'Save' : 'Change'}
-              </button>
+              
             </div>
           </div>
 
@@ -71,15 +85,9 @@ const ProfileDetails = () => {
                 className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={email}
                 onChange={(e) => handleChange('email', e.target.value)}
-                readOnly={!isEditing}
+                readOnly
               />
-              <button
-                type="button"
-                className="ml-4 py-2 px-4 bg-blue-600 text-white rounded-md transition duration-200 ease-in-out hover:bg-blue-500"
-                onClick={handleEditToggle}
-              >
-                {isEditing ? 'Save' : 'Change'}
-              </button>
+             
             </div>
           </div>
 
@@ -106,14 +114,7 @@ const ProfileDetails = () => {
         </div>
       </form>
 
-      {!isEditing && (
-        <button
-          className="mt-6 w-full py-3 px-4 bg-green-600 text-white rounded-lg font-semibold transition duration-200 ease-in-out hover:bg-green-500"
-          onClick={handleEditToggle}
-        >
-          Edit Profile
-        </button>
-      )}
+      
 
       {/* Password Change Modal */}
       {isPasswordModalOpen && (

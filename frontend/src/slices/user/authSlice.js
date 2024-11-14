@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { signUpUser, verifyUserOtp, loginUser, resendUserOtp, googleAuth} from '../../services/user/userAuth';
+import { signUpUser, verifyUserOtp, loginUser, resendUserOtp, googleAuth, updatePassword} from '../../services/user/userAuth';
 
 export const signUp = createAsyncThunk('auth/signUp', async (userData, { rejectWithValue }) => {
   try {
@@ -53,14 +53,21 @@ export const googleLogin = createAsyncThunk('auth/googleLogin', async (_, { reje
   }
 });
 
-
+export const updatePasswordThunk = createAsyncThunk('auth/updatePassword', async ({ token, passwordData }, { rejectWithValue }) => {
+  try {
+    return await updatePassword(token, passwordData);
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Failed to update password';
+    return rejectWithValue({ message: errorMessage });
+  }
+});
 
 
 
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
-    user: localStorage.getItem('user') || null,
+    user: JSON.parse(localStorage.getItem('user')) || null,
     token: localStorage.getItem('token') || null,
     isLoading: false,
     error: null,
@@ -98,7 +105,7 @@ const authSlice = createSlice({
       .addCase(verifyOtp.fulfilled, (state, { payload }) => {
         state.isLoading = false;
         localStorage.setItem('token', payload.token);
-        localStorage.setItem('user', payload.user);
+        localStorage.setItem('user',  JSON.stringify(payload.user));
       })
       .addCase(verifyOtp.rejected, (state, { payload }) => {
         state.isLoading = false;
@@ -112,7 +119,7 @@ const authSlice = createSlice({
         state.user = payload.user;
         state.token = payload.token;
         localStorage.setItem('token', payload.token);
-        localStorage.setItem('user', payload.user);
+        localStorage.setItem('user',  JSON.stringify(payload.user));
       })
       .addCase(login.rejected, (state, { payload }) => {
         state.isLoading = false;
@@ -144,6 +151,17 @@ const authSlice = createSlice({
       .addCase(googleLogin.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload?.message || 'Google login failed';
+      })
+      .addCase(updatePasswordThunk.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updatePasswordThunk.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null; // Clear any existing errors
+      })
+      .addCase(updatePasswordThunk.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload?.message || 'Failed to update password';
       });
   },
 });

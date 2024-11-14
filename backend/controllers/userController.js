@@ -70,7 +70,7 @@ const verifyOtp = async (req, res) => {
         user.otpExpiry = undefined;
         await user.save();
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '12h' });
         res.status(200).json({ 
             success: true, 
             message: "User registered successfully.",
@@ -157,7 +157,7 @@ const login = async (req, res) => {
         }
         console.log(isMatch);
         // JWT generation
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '12h' });
         res.status(200).json({ 
             success: true, 
             message: "Login successful", 
@@ -175,29 +175,7 @@ const login = async (req, res) => {
     }
 };
 
-const googleLogin = async (req, res) => {
-    const { email, name, googleID } = req.body;
-  
-    try {
-      let user = await User.findOne({ email });
-      if (!user) {
-        // If user does not exist, create a new user
-        user = await User.create({ email, name, googleID });
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-      } else {
-        // If user exists, update the Google ID
-        user.googleID = googleID;
-        await user.save();
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-      }
-      
-      // Return success response
-      res.json({ success: true, user, token});
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ success: false, message: 'Server error' });
-    }
-  };
+
 
   const googleAuth = async (req, res) => {
     const { email, name, googleID } = req.body;
@@ -212,7 +190,7 @@ const googleLogin = async (req, res) => {
             await user.save();
         }
         // Generate token after user is saved
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '12h' });
 
         // Return success response
         res.json({ success: true, user, token });
@@ -222,5 +200,39 @@ const googleLogin = async (req, res) => {
     }
 };
 
-module.exports = { signUp, verifyOtp, login, resendOtp, googleAuth };
+
+const updatePassword = async (req,res)=>{
+    const { newPassword } = req.body;
+    const userId = req.user.id; 
+
+
+    try {
+        // Find the user in the database
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Check if the new password is the same as the old password
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+        if (isSamePassword) {
+            return res.status(400).json({ message: "New password cannot be the same as the old password" });
+        }
+
+        // Hash the new password and update it in the database
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedNewPassword;
+
+        // Save the updated user record
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Password updated successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+}
+
+
+module.exports = { signUp, verifyOtp, login, resendOtp, googleAuth, updatePassword };
 

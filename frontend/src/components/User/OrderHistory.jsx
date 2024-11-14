@@ -47,7 +47,7 @@ const OrderHistory = () => {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto bg-white shadow-md rounded-lg">
+    <div className="p-6 max-w-3xl mx-auto ">
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">Order History</h2>
       
       <div className="space-y-4">

@@ -21,6 +21,19 @@ export const loginUser = (credentials) => {
 };
 
 
+export const updatePassword = (token, passwordData) => {
+  return axios.put(`${API_BASE_URL}/update-password`, passwordData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.data)
+  .catch(error => {
+    console.error('Error updating password:', error.response ? error.response.data : error.message);
+    throw error;
+  });
+};
 
 
 
