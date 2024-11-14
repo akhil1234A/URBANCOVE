@@ -40,6 +40,9 @@ app.use('/admin/products',productRoutes);
 const userRoutes = require('./routes/userRoutes');
 app.use('/user',userRoutes);
 
+const addressRoutes = require('./routes/addressRoutes');
+app.use('/user/address',addressRoutes);
+
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
