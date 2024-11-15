@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layout, Menu } from 'antd';
-import { UserOutlined, AppstoreOutlined, ShoppingOutlined } from '@ant-design/icons';
+import { UserOutlined, AppstoreOutlined, ShoppingOutlined, FileTextOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
 const { Sider } = Layout;
@@ -32,6 +32,14 @@ const Sidebar = () => {
       children: [
         { key: '4', label: <Link to="/admin/products/add">Add Product</Link> },
         { key: '5', label: <Link to="/admin/products/view">View Products</Link> },
+      ],
+    },
+    {
+      key: 'sub4', // New key for Orders
+      icon: <FileTextOutlined />, // New icon for Orders
+      label: 'Orders Management',
+      children: [
+        { key: '6', label: <Link to="/admin/orders">View Orders</Link> }
       ],
     },
   ];
