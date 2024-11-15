@@ -18,6 +18,7 @@ import PlaceOrder from '../Pages/User/PlaceOrder';
 import UserAccount from '../Pages/User/UserAccount';
 import Cart from '../Pages/User/Cart';
 import OrderSuccess from '../Pages/User/OrderSuccess';
+import UserProtectedRoutes from './UserProtectedRoutes';
 
 const UserLayout = () => {
 
@@ -48,10 +49,11 @@ const UserLayout = () => {
         <Route path="/" element={<Home  products={products}/>} />
         <Route path="/collection" element={<Collection  />} />
         <Route path="/product/:productID" element={<Product />} />
-        <Route path="/account" element={<UserAccount />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<PlaceOrder />} />
-        <Route path="/success" element={<OrderSuccess />} />
+
+        <Route path="/account" element={<UserProtectedRoutes element={<UserAccount />} />} />
+        <Route path="/cart" element={<UserProtectedRoutes element={<Cart />} />} />
+        <Route path="/checkout" element={<UserProtectedRoutes element={<PlaceOrder />} />} />
+        <Route path="/success" element={<UserProtectedRoutes element={<OrderSuccess />} />} />
         
         {/* Wrapping only login and signup in GoogleOAuthProvider */}
         <Route path="/login" element={

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux'; // Import necessary hooks
 import { logout } from '../../slices/user/authSlice'; // Import the logout action
 import { assets } from '../../assets/assets';
@@ -8,9 +8,11 @@ const Navbar = ({toggleSearchBar}) => {
   const [visible, setVisible] = useState(false);
   const dispatch = useDispatch(); 
   const { user } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
   
   const handleLogout = () => {
-    dispatch(logout()); // Dispatch the logout action
+    dispatch(logout()); 
+    navigate('/login');
   };
 
   return (

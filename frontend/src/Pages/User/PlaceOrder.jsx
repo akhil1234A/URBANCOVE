@@ -3,13 +3,19 @@ import Title from "../../components/User/Title";
 import { assets } from "../../assets/assets";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAddresses, addNewAddress, setDefault } from "../../slices/user/addressSlice";
+import { placeOrder } from '../../slices/admin/orderSlice';
 import CartTotal from "../../components/User/CartTotal";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const PlaceOrder = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const { addresses, loading, error } = useSelector((state) => state.address);
   const { cartItems, total} = useSelector((state) => state.cart);
+ 
+
 
   const [method, setMethod] = useState("cod");
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -102,6 +108,28 @@ const PlaceOrder = () => {
     setShowModal(false);
   };
   
+  const handlePlaceOrder = async(e) => {
+    e.preventDefault();
+
+    if (!selectedAddress) {
+      toast.error("Please select a delivery address.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    const orderData = {
+      addressId: selectedAddress,
+      paymentMethod: method,
+      cartItems,
+      total: finalTotal
+    };
+
+    console.log("Order Data Sent to API:", orderData);
+
+    await dispatch(placeOrder(orderData)).unwrap();
+    navigate('/success');
+     
+  };
 
   if (loading) {
     return <div>Loading...</div>; // Add a loading state while addresses are being fetched
@@ -112,7 +140,7 @@ const PlaceOrder = () => {
   }
 
   return (
-    <form className="flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t">
+    <form onSubmit={handlePlaceOrder} className="flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t">
       {/* Left Side - Address Selection */}
       <div className="flex flex-col gap-4 w-full sm:max-w-[480px]">
         <div className="text-xl sm:text-2xl my-3">

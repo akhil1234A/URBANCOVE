@@ -34,7 +34,7 @@ const OrderSuccess = ({ orderNumber, estimatedDeliveryDate }) => {
         {/* Action Buttons */}
         <div className="space-y-3">
           <button
-            onClick={() => navigate("/orders")}
+            onClick={() => navigate("/account")}
             className="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition w-full font-medium text-lg"
           >
             View Order Details
