@@ -7,21 +7,24 @@ import {
   getUserCart,
   updateCartItemQuantity,
   removeFromCart,
-  clearCartError
+  clearCartError,
+  setCartTotal
 } from "../../slices/user/cartSlice";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // Access cart items and error state from Redux store
-  const { cartItems, error } = useSelector((state) => state.cart);
+  const { cartItems, total, error } = useSelector((state) => state.cart);
   const loading = false
  
 
   useEffect(() => {
     dispatch(getUserCart());
-  }, [dispatch,cartItems]);
+  }, [dispatch]);
 
   // Display error as toast if error exists in the store
   useEffect(() => {
@@ -30,6 +33,10 @@ const Cart = () => {
       dispatch(clearCartError());
     }
   }, [error, dispatch]);
+
+  useEffect(() => {
+    dispatch(setCartTotal());
+  }, [cartItems, dispatch]);
 
   const handleQuantityChange = (productId, newQuantity) => {
     if (newQuantity < 1) {
@@ -61,16 +68,18 @@ const Cart = () => {
     dispatch(removeFromCart(productId));
   };
 
-   // Calculate the subtotal (sum of all items' price * quantity)
-   const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+
 
    // Set delivery fee (you can adjust this as needed)
    const deliveryFee = 10; // Static delivery fee, can be calculated dynamically
  
-   // Calculate total
-   const total = subtotal + deliveryFee;
+
 
   const currency = "$";
+
+  const handleCheckout = () => {
+    navigate("/checkout");
+  };
 
   return (
     <div className="border-t pt-14">
@@ -130,9 +139,10 @@ const Cart = () => {
 
       <div className="flex justify-end my-20">
         <div className="w-full sm:w-[450px]">
-            <CartTotal subtotal={subtotal} deliveryFee={deliveryFee} total={total} />
+            <CartTotal subtotal={total} deliveryFee={deliveryFee} total={total+deliveryFee} />
           <div className="w-full text-end">
             <button
+              onClick={handleCheckout}
               className="bg-black text-white text-sm my-8 px-8 py-3"
               disabled={loading} // Disable button if loading
             >

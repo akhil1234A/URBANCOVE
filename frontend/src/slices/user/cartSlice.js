@@ -6,7 +6,8 @@ export const addToCart = createAsyncThunk(
   'cart/addToCart',
   async ({ productId, quantity }, { rejectWithValue }) => {
     try {
-      return await cartService.addToCart(productId, quantity);
+      const response = await cartService.addToCart(productId, quantity);
+      dispatch(setCartTotal());
     } catch (error) {
       return rejectWithValue(error.response.data.message);
     }
@@ -50,10 +51,15 @@ const cartSlice = createSlice({
   name: 'cart',
   initialState: {
     cartItems: [],
+    total:0,
     loading: false,
     error: null,
   },
   reducers: {
+    setCartTotal: (state) => {
+      const total = state.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      state.total = total;
+    },
     clearCartError: (state) => {
       state.error = null;
     },
@@ -118,5 +124,5 @@ const cartSlice = createSlice({
   },
 });
 
-export const { clearCartError } = cartSlice.actions;
+export const { setCartTotal, clearCartError } = cartSlice.actions;
 export default cartSlice.reducer;

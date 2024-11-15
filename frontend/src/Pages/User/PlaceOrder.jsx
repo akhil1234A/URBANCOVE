@@ -1,28 +1,50 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Title from "../../components/User/Title";
-import CartTotal from "../../components/User/CartTotal";
 import { assets } from "../../assets/assets";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAddresses, addNewAddress, setDefault } from "../../slices/user/addressSlice";
+import CartTotal from "../../components/User/CartTotal";
 
 const PlaceOrder = () => {
+  const dispatch = useDispatch();
+
+  const { addresses, loading, error } = useSelector((state) => state.address);
+  const { cartItems, total} = useSelector((state) => state.cart);
+
   const [method, setMethod] = useState("cod");
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [addresses, setAddresses] = useState([
-    { id: 1, street: "123 Main St", city: "New York", state: "NY", zipcode: "10001", country: "USA", phone: "123-456-7890", isDefault: true },
-    { id: 2, street: "456 Maple Dr", city: "Los Angeles", state: "CA", zipcode: "90001", country: "USA", phone: "987-654-3210", isDefault: false }
-  ]);
   const [showModal, setShowModal] = useState(false);
   const [newAddress, setNewAddress] = useState({
     street: "",
     city: "",
     state: "",
-    zipcode: "",
     country: "",
-    phone: ""
+    phoneNumber: "",
+    postcode: ""
   });
+
+  const [addressErrors, setAddressErrors] = useState({
+    street: "",
+    city: "",
+    state: "",
+    country: "",
+    phoneNumber: "",
+    postcode: "",
+  });
+  
+  const deliveryFee = 10; // This can be dynamic based on your logic
+  const finalTotal = total + deliveryFee;
+
+  // Fetch addresses on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    dispatch(fetchAddresses(token));
+  }, [dispatch]);
 
   const handleAddressChange = (id) => {
     setSelectedAddress(id);
-    setAddresses(addresses.map(addr => ({ ...addr, isDefault: addr.id === id })));
+    const selected = addresses.find((address) => address._id === id);
+    dispatch(setDefault(selected)); // Update default address in Redux
   };
 
   const handleNewAddress = () => {
@@ -38,11 +60,56 @@ const PlaceOrder = () => {
     setNewAddress((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveNewAddress = () => {
-    const newAddr = { ...newAddress, id: addresses.length + 1, isDefault: false };
-    setAddresses((prev) => [...prev, newAddr]);
+  const validateAddress = () => {
+    let errors = {};
+    let isValid = true;
+  
+    // Check if each field is empty
+    Object.keys(newAddress).forEach((field) => {
+      if (!newAddress[field]) {
+        errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
+        isValid = false;
+      } else {
+        errors[field] = ""; // Clear error if valid
+      }
+    });
+  
+    // Specific validation for phone number (simple length check for this example)
+    if (newAddress.phoneNumber && newAddress.phoneNumber.length !== 10) {
+      errors.phoneNumber = "Phone number should be 10 digits";
+      isValid = false;
+    }
+  
+    // Specific validation for postcode (should be 5 digits)
+    if (newAddress.postcode && newAddress.postcode.length !== 5) {
+      errors.postcode = "Postcode should be 5 digits";
+      isValid = false;
+    }
+  
+    setAddressErrors(errors);
+    return isValid;
+  };
+  
+  const handleSaveNewAddress = (e) => {
+    // If validation fails, exit early and don't proceed
+    e.preventDefault();
+    if (!validateAddress()) {
+      return; // Prevent further execution
+    }
+    
+    const token = localStorage.getItem('token');
+    dispatch(addNewAddress({ token, addressData: newAddress }));
     setShowModal(false);
   };
+  
+
+  if (loading) {
+    return <div>Loading...</div>; // Add a loading state while addresses are being fetched
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>; // Handle error if there was an issue fetching addresses
+  }
 
   return (
     <form className="flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t">
@@ -56,20 +123,20 @@ const PlaceOrder = () => {
           <div className="flex flex-col gap-4">
             {addresses.map((address) => (
               <div
-                key={address.id}
-                onClick={() => handleAddressChange(address.id)}
-                className={`border p-4 rounded cursor-pointer ${selectedAddress === address.id || address.isDefault ? "border-green-500 bg-green-50" : "border-gray-300"}`}
+                key={address._id}
+                onClick={() => handleAddressChange(address._id)}
+                className={`border p-4 rounded cursor-pointer ${selectedAddress === address._id || address.isDefault ? "border-green-500 bg-green-50" : "border-gray-300"}`}
               >
                 <div className="flex justify-between">
-                  <p>{address.street}, {address.city}, {address.state}, {address.zipcode}</p>
+                  <p>{address.street}, {address.city}, {address.state}, {address.postcode}</p>
                   <input
                     type="radio"
                     name="address"
-                    checked={selectedAddress === address.id || address.isDefault}
-                    onChange={() => handleAddressChange(address.id)}
+                    checked={selectedAddress === address._id || address.isDefault}
+                    onChange={() => handleAddressChange(address._id)}
                   />
                 </div>
-                <p className="text-sm text-gray-600">{address.phone}, {address.country}</p>
+                <p className="text-sm text-gray-600">{address.phoneNumber}, {address.country}</p>
                 {address.isDefault && <span className="text-green-600 text-xs">Default</span>}
               </div>
             ))}
@@ -85,13 +152,12 @@ const PlaceOrder = () => {
         >
           + Add New Address
         </button>
-
       </div>
 
       {/* Right Side - Payment and Cart Summary */}
       <div className="mt-8">
         <div className="mt-8 min-w-80">
-          <CartTotal />
+        <CartTotal subtotal={total} deliveryFee={deliveryFee} total={finalTotal} />
         </div>
 
         <div className="mt-12">
@@ -145,6 +211,8 @@ const PlaceOrder = () => {
                 placeholder="Street"
                 className="border p-2 rounded"
               />
+              {addressErrors.street && <p className="text-red-500 text-sm">{addressErrors.street}</p>}
+
               <input
                 type="text"
                 name="city"
@@ -153,6 +221,8 @@ const PlaceOrder = () => {
                 placeholder="City"
                 className="border p-2 rounded"
               />
+              {addressErrors.city && <p className="text-red-500 text-sm">{addressErrors.city}</p>}
+
               <input
                 type="text"
                 name="state"
@@ -161,14 +231,16 @@ const PlaceOrder = () => {
                 placeholder="State"
                 className="border p-2 rounded"
               />
+              {addressErrors.state && <p className="text-red-500 text-sm">{addressErrors.state}</p>}
               <input
                 type="text"
-                name="zipcode"
-                value={newAddress.zipcode}
+                name="postcode"
+                value={newAddress.postcode}
                 onChange={handleInputChange}
                 placeholder="Zip Code"
                 className="border p-2 rounded"
               />
+              {addressErrors.postcode && <p className="text-red-500 text-sm">{addressErrors.postcode}</p>}
               <input
                 type="text"
                 name="country"
@@ -177,14 +249,16 @@ const PlaceOrder = () => {
                 placeholder="Country"
                 className="border p-2 rounded"
               />
+               {addressErrors.country && <p className="text-red-500 text-sm">{addressErrors.country}</p>}
               <input
                 type="text"
-                name="phone"
-                value={newAddress.phone}
+                name="phoneNumber"
+                value={newAddress.phoneNumber}
                 onChange={handleInputChange}
                 placeholder="Phone Number"
                 className="border p-2 rounded"
               />
+              {addressErrors.phoneNumber && <p className="text-red-500 text-sm">{addressErrors.phoneNumber}</p>}
             </div>
             <div className="flex justify-end gap-3 mt-4">
               <button
