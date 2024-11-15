@@ -2,9 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProductsForUser, selectProductById, selectProducts, selectLoading } from '../../slices/admin/productSlice';
+import { addToCart } from '../../slices/user/cartSlice'
 import { assets } from '../../assets/assets';
 import RelatedProducts from '../../components/User/RelatedProducts';
 import ZoomModal from '../../components/User/ZoomModal';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 
 // Sub-components
@@ -54,16 +58,13 @@ const Reviews = ({ reviews }) => (
   </div>
 );
 
-const ProductInfo = ({ productData, size, setSize}) => {
+const ProductInfo = ({ productData, size, setSize, onAddToCart}) => {
   const isOutOfStock = productData.stock <= 0;
   const isRunningLow = productData.stock > 0 && productData.stock < 5; // You can adjust the threshold
 
-  //sample to show working 
   const hasDiscount = true;
-
-  const discountPercentage = 40; // Example discount percentage
-  const dummyPrice = productData.price; // Example original price
-  const discountPrice = dummyPrice - (dummyPrice * (discountPercentage / 100));
+  const discountPercentage = 40;  
+  const discountPrice = productData.price - (productData.price * (discountPercentage / 100));
 
   return (
     <div className="flex-1">
@@ -115,6 +116,7 @@ const ProductInfo = ({ productData, size, setSize}) => {
       
       {/* Add to Cart Button */}
       <button 
+      onClick={onAddToCart}
         className={`bg-black text-white px-8 py-3 text-sm ${isOutOfStock ? 'opacity-50 cursor-not-allowed' : 'active:bg-gray-700'}`} 
         disabled={isOutOfStock}
       >
@@ -163,6 +165,21 @@ const Product = () => {
     }
   }, [productID, dispatch, productData,]);
 
+  const handleAddToCart = () => {
+    if (!size) {
+      toast.error('Please select a size before adding to cart.');
+      return;
+    }
+    if (productData) {
+      if (productData.stock > 0) {
+        dispatch(addToCart({ productId: productData._id, quantity: 1 }));
+       
+      } else {
+        toast.error('This product is currently out of stock.');
+      }
+    }
+  };
+
   const handleImageClick = () => setIsZoomed(true);  // Open zoom modal on image click
   const handleCloseZoom = () => setIsZoomed(false);   // Close zoom modal on close click
 
@@ -202,7 +219,7 @@ const Product = () => {
         </div>
 
         {/* Product Info */}
-        <ProductInfo  productData={ productData}  size={size} setSize={setSize} />
+        <ProductInfo  productData={ productData}  size={size} setSize={setSize} onAddToCart={handleAddToCart}/>
       </div>
 
 
