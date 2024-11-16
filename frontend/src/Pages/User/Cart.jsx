@@ -99,7 +99,7 @@ const Cart = () => {
                 // Access first image from productId.images array, or fallback to placeholder
                 src={
                   item.productId.images?.length
-                    ? `http://localhost:3000/${item.productId.images[0]}`
+                    ? item.productId.images[0]
                     : "https://via.placeholder.com/80"
                 }
                 alt={item.productId.productName}

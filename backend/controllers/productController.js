@@ -3,20 +3,17 @@ const Category = require('../models/Category');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
+const uploadToCloudinary = require('../utils/cloudinaryUploader')
 
 
 const processImage = async (filePath) => {
-    const outputDir = path.join('uploads', 'products');
-    const outputFilename = `processed-${Date.now()}.png`;
-    const outputPath = path.join(outputDir, outputFilename);
-
-    await sharp(filePath)
-        .resize(390, 450) 
-        .toFormat('png')  
-        .toFile(outputPath);
-
+  try {
+    const url = await uploadToCloudinary(filePath, 'products'); 
     fs.unlinkSync(filePath); 
-    return outputPath;
+    return url;
+  } catch (error) {
+    throw new Error('Image processing failed');
+  }
 };
 
 
