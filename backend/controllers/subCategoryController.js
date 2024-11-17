@@ -9,7 +9,7 @@ exports.addSubCategory = async (req, res) => {
 
     try {
         const existingcategory = await Category.findById(category);
-        console.log('category',category)
+        // console.log('category',category)
         if (!existingcategory) {
             return res.status(404).json({ message: 'Category not found' });
         }

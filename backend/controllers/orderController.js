@@ -57,7 +57,7 @@ const placeOrder = async (req, res) => {
 // Controller for Users to view all their orders
 const viewUserOrders = async (req, res) => {
   const userId = req.user.id;  
-  console.log(userId);
+  // console.log(userId);
   try {
     // Find all orders placed by the user
     const orders = await Order.find({ user: userId }).populate('items.productId', 'name price'); // Optionally populate product details

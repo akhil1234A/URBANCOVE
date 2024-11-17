@@ -89,7 +89,7 @@ exports.removeFromCart = async (req, res) => {
     const { productId } = req.params;
     const userId = req.user.id;
 
-    console.log('Product ID:', productId, 'User ID:', userId);
+    // console.log('Product ID:', productId, 'User ID:', userId);
 
     
  
@@ -98,11 +98,11 @@ exports.removeFromCart = async (req, res) => {
         // Ensure that the cart item actually exists
         const cartItem = await Cart.findOne({ userId, productId });
         if (!cartItem) {
-            console.log('No cart item found for user:', userId, 'and product:', productId);
+            // console.log('No cart item found for user:', userId, 'and product:', productId);
             return res.status(404).json({ message: 'Cart item not found' });
         }
 
-        console.log('Cart item found:', cartItem);
+        // console.log('Cart item found:', cartItem);
 
         // Delete the cart item
         await Cart.findOneAndDelete({ userId, productId });

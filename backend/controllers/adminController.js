@@ -4,7 +4,7 @@ const { generateToken } = require('../services/authService');
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
-    console.log('req body',req.body)
+   //  console.log('req body',req.body)
 
     try {
        

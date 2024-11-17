@@ -75,12 +75,12 @@ exports.listProducts = async (req, res) => {
 // add a new product
 exports.addProduct = async (req, res) => {
     const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller } = req.body;
-    console.log(req.body);
-    console.log(req.files);
+    // console.log(req.body);
+    // console.log(req.files);
     try {
         if (req.files.length < 3) return res.status(400).json({ message: 'At least 3 images are required' });
         const images = await Promise.all(req.files.map(async (file) => await processImage(file.path)));
-        console.log(images);
+        // console.log(images);
         const newProduct = new Product({ 
             productName, 
             productDescription, 
@@ -92,7 +92,7 @@ exports.addProduct = async (req, res) => {
             images, 
             isBestSeller 
         });
-        console.log(newProduct);
+        // console.log(newProduct);
         await newProduct.save();
         res.status(201).json(newProduct);
     } catch (error) {
@@ -105,8 +105,8 @@ exports.addProduct = async (req, res) => {
 exports.editProduct = async (req, res) => {
   const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller, isActive } = req.body;
   let images;
-  console.log('form body', req.body);
-  console.log('form files', req.files);
+  // console.log('form body', req.body);
+  // console.log('form files', req.files);
 
   try {
     if (req.files) {

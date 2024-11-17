@@ -141,7 +141,7 @@ const login = async (req, res) => {
     const { email, password } = req.body;
     try {
         const user = await User.findOne({ email });
-        console.log(user);
+        // console.log(user);
         // Account and verification checks
         if (!user || !user.isActive) {
             return res.status(400).json({ message: "User not found or account is blocked." });
@@ -155,7 +155,7 @@ const login = async (req, res) => {
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid credentials." });
         }
-        console.log(isMatch);
+        // console.log(isMatch);
         // JWT generation
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '12h' });
         res.status(200).json({ 

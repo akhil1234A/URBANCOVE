@@ -51,7 +51,7 @@ const updateAddress = async (req, res) => {
     const { addressId } = req.params;
     const { street, city, state, postcode, country, phoneNumber, isDefault } = req.body;
     const userId = req.user.id;
-    console.log('update',userId);
+    // console.log('update',userId);
 
     // Ensure the address belongs to the user
     const address = await Address.findOne({ _id: addressId, user: userId });
