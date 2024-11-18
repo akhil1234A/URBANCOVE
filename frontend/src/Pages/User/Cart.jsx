@@ -87,6 +87,13 @@ const Cart = () => {
         <Title text1={"YOUR"} text2={"CART"} />
       </div>
 
+    {cartItems.length === 0 ? (
+       <div className="text-center text-xl font-medium text-gray-600">
+       Your cart is currently empty. Start shopping now!
+     </div>
+    ) : (
+      <>
+        
       <div>
         {cartItems.map((item) => (
           <div
@@ -136,6 +143,7 @@ const Cart = () => {
           </div>
         ))}
       </div>
+    
 
       <div className="flex justify-end my-20">
         <div className="w-full sm:w-[450px]">
@@ -151,6 +159,8 @@ const Cart = () => {
           </div>
         </div>
       </div>
+      </>
+    )}
     </div>
   );
 };
