@@ -121,11 +121,11 @@ exports.editProduct = async (req, res) => {
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
       { 
-        productName, 
-        productDescription, 
-        category, 
-        subCategory, 
-        price, 
+        ...(productName && { productName }),
+        ...(productDescription && { productDescription }),
+        ...(category && { category }),
+        ...(subCategory && { subCategory }),
+        ...(price && { price }),
         ...(stock && { stock }),
         ...(size && { size: Array.isArray(size) ? size : [size] }), // Ensures size is always an array
         ...(images && { images }), // Only update images if they exist

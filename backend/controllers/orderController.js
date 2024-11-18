@@ -60,7 +60,7 @@ const viewUserOrders = async (req, res) => {
   console.log(userId);
   try {
     // Find all orders placed by the user
-    const orders = await Order.find({ user: userId }).populate('items.productId', 'name price'); // Optionally populate product details
+    const orders = await Order.find({ user: userId }).populate('items.productId', 'productName price'); 
 
     if (orders.length === 0) {
       return res.status(404).json({ message: 'No orders found for this user' });
@@ -106,7 +106,7 @@ const cancelOrder = async (req, res) => {
 // Controller for Admin to view all orders
 const viewAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate('user', 'name email'); 
+    const orders = await Order.find().populate('user', 'name email').populate('items.productId','productName'); 
     res.status(200).json({ orders });
   } catch (error) {
     res.status(500).json({ message: error.message });
