@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { cancelOrder, viewUserOrders } from '../../slices/admin/orderSlice';
+import { AiOutlineShoppingCart, AiOutlineClockCircle } from 'react-icons/ai'; // Icons for no orders and processing status
+import { MdError } from 'react-icons/md'; // Icon for errors
 
 const OrderHistory = () => {
   const dispatch = useDispatch();
@@ -38,24 +40,43 @@ const OrderHistory = () => {
     }
   };
 
+  // Helper function to safely access error and success message
+  const getMessage = (message) => {
+    if (typeof message === 'object' && message !== null) {
+      return message.message || JSON.stringify(message); // Fallback to stringify if it's an object
+    }
+    return message;
+  };
+
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">Order History</h2>
 
       {/* Display success message */}
       {successMessage && (
-        <div className="text-green-500 mb-4">{successMessage}</div>
+        <div className="text-green-500 mb-4">{getMessage(successMessage)}</div>
       )}
 
       {/* Display error message */}
-      {error && <div className="text-red-500 mb-4">{error}</div>}
+      {error && (
+        <div className="flex items-center text-red-500 mb-4">
+          <MdError className="mr-2" />
+          {getMessage(error)}
+        </div>
+      )}
 
       <div className="space-y-4">
         {loading ? (
-          <p>Loading orders...</p>
+          <p className="flex items-center justify-center text-gray-500">
+            <AiOutlineClockCircle className="animate-spin mr-2" />
+            Loading orders...
+          </p>
         ) : (
           orders.length === 0 ? (
-            <p>No orders found</p>
+            <div className="flex items-center justify-center text-gray-500">
+              <AiOutlineShoppingCart className="mr-2 text-4xl" />
+              No orders found
+            </div>
           ) : (
             orders.map((order) => (
               <div key={order._id} className="p-4 border border-gray-300 rounded-lg">
