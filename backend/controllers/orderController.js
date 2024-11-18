@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Address = require('../models/Address');
+const Cart = require('../models/Cart')
 
 // Controller for Users to place an order
 const placeOrder = async (req, res) => {
@@ -46,6 +47,7 @@ const placeOrder = async (req, res) => {
       status: 'Pending',
     });
     
+    await Cart.deleteMany({userId});
     res.status(201).json({ message: 'Order placed successfully', order: newOrder });
   } catch (error) {
     console.error(error); // Log the error for debugging
