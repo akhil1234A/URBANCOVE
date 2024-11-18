@@ -18,7 +18,7 @@ const ProductImageGallery = ({ images, currentImage, onImageClick }) => (
       <img
         key={index}
         onClick={() => onImageClick(img)}
-        src={`http://localhost:3000/${img}`}
+        src={img}
         onError={(e) => (e.target.src = 'path/to/fallback-image.jpg')}
         className="w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer"
         alt={`Image of ${img}`}
@@ -207,7 +207,7 @@ const Product = () => {
           <div className="w-full sm:w-[80%] relative flex">
             <img
               className="w-full h-auto cursor-pointer"
-              src={`http://localhost:3000/${currentImage}`}
+              src={currentImage}
               alt={productData.productName}
               onClick={handleImageClick} // Open zoom modal on image click
             />
@@ -225,7 +225,7 @@ const Product = () => {
 
         {/* Zoom Modal */}
         {isZoomed && (
-        <ZoomModal imageSrc={`http://localhost:3000/${currentImage}`} onClose={handleCloseZoom} />
+        <ZoomModal imageSrc={currentImage} onClose={handleCloseZoom} />
       )}
 
       {/* Description & Review Section */}

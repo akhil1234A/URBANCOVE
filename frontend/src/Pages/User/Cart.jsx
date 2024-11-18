@@ -87,6 +87,13 @@ const Cart = () => {
         <Title text1={"YOUR"} text2={"CART"} />
       </div>
 
+    {cartItems.length === 0 ? (
+       <div className="text-center text-xl font-medium text-gray-600">
+       Your cart is currently empty. Start shopping now!
+     </div>
+    ) : (
+      <>
+        
       <div>
         {cartItems.map((item) => (
           <div
@@ -99,7 +106,7 @@ const Cart = () => {
                 // Access first image from productId.images array, or fallback to placeholder
                 src={
                   item.productId.images?.length
-                    ? `http://localhost:3000/${item.productId.images[0]}`
+                    ? item.productId.images[0]
                     : "https://via.placeholder.com/80"
                 }
                 alt={item.productId.productName}
@@ -136,6 +143,7 @@ const Cart = () => {
           </div>
         ))}
       </div>
+    
 
       <div className="flex justify-end my-20">
         <div className="w-full sm:w-[450px]">
@@ -151,6 +159,8 @@ const Cart = () => {
           </div>
         </div>
       </div>
+      </>
+    )}
     </div>
   );
 };

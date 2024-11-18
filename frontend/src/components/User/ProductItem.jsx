@@ -8,7 +8,7 @@ const ProductItem = ({ id, image, name, price, currency }) => {
       <div className='overflow-hidden'>
           <img
       className='hover:scale-110 transition ease-in-out'
-      src={`http://localhost:3000/${image}`}
+      src={image}
       onError={(e) => {
         e.target.onerror = null; // Prevent looping
         e.target.src = 'fallback-image-url'; // Replace with your actual fallback image URL

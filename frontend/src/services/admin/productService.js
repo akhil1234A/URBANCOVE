@@ -20,7 +20,7 @@ export const fetchAdminProducts = async (token, page = 1, limit = 10) => {
 
 export const updateProductStatusService = async (productId, isActive, token) => {
   const response = await fetch(`${API_BASE_URL}/admin/products/${productId}/delete`, {
-    method: 'PUT',
+    method: 'PATCH',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ export const addProductService = async (productData, token) => {
 
 export const editProductService = async (productId, productData, token) => {
   const response = await fetch(`${API_BASE_URL}/admin/products/${productId}`, {
-    method: 'PUT',
+    method: 'PATCH',
     headers: {
       'Authorization': `Bearer ${token}`,
     },

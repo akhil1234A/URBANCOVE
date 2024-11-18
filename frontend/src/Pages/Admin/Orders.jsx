@@ -50,7 +50,7 @@ const Orders = () => {
                 {order.items.map((item, idx) => {
                   return (
                     <p className="py-0.5" key={idx}>
-                      {item.name} x {item.quantity} <span> {item.size} </span>
+                      {item.productId.productName} x {item.quantity} <span> {item.size} </span>
                       {idx < order.items.length - 1 && ', '}
                     </p>
                   );

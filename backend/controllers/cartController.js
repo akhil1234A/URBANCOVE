@@ -38,8 +38,8 @@ exports.addToCart = async (req, res) => {
         await cartItem.save();
 
         // Decrease product stock after successful addition to cart
-        product.stock -= quantity;
-        await product.save();
+        // product.stock -= quantity;
+        // await product.save();
 
         res.status(201).json({ message: 'Item added to cart', cartItem });
     } catch (error) {
@@ -70,8 +70,8 @@ exports.updateCartItemQuantity = async (req, res) => {
         }
 
         // Adjust stock based on quantity change
-        product.stock += cartItem.quantity - quantity;
-        await product.save();
+        // product.stock += cartItem.quantity - quantity;
+        // await product.save();
 
         cartItem.quantity = quantity;
         await cartItem.save();

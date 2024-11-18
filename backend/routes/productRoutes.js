@@ -28,9 +28,9 @@ router.get('/:productId?', listProducts);
 router.post('/', adminAuth, upload.array('images', 4), addProduct);
 
 
-router.put('/:id', adminAuth, upload.array('images', 4), editProduct);
+router.patch('/:id', adminAuth, upload.array('images', 4), editProduct);
 
 
-router.put('/:productId/delete', adminAuth, deleteProduct);
+router.patch('/:productId/delete', adminAuth, deleteProduct);
 
 module.exports = router;

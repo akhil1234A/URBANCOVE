@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Address = require('../models/Address');
+const Cart = require('../models/Cart')
 
 // Controller for Users to place an order
 const placeOrder = async (req, res) => {
@@ -46,6 +47,7 @@ const placeOrder = async (req, res) => {
       status: 'Pending',
     });
     
+    await Cart.deleteMany({userId});
     res.status(201).json({ message: 'Order placed successfully', order: newOrder });
   } catch (error) {
     console.error(error); // Log the error for debugging
@@ -60,7 +62,7 @@ const viewUserOrders = async (req, res) => {
   // console.log(userId);
   try {
     // Find all orders placed by the user
-    const orders = await Order.find({ user: userId }).populate('items.productId', 'name price'); // Optionally populate product details
+    const orders = await Order.find({ user: userId }).populate('items.productId', 'productName price'); 
 
     if (orders.length === 0) {
       return res.status(404).json({ message: 'No orders found for this user' });
@@ -106,7 +108,7 @@ const cancelOrder = async (req, res) => {
 // Controller for Admin to view all orders
 const viewAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate('user', 'name email'); 
+    const orders = await Order.find().populate('user', 'name email').populate('items.productId','productName'); 
     res.status(200).json({ orders });
   } catch (error) {
     res.status(500).json({ message: error.message });

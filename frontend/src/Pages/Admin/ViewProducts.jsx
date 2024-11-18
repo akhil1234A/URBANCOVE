@@ -69,7 +69,7 @@ const ViewProducts = () => {
             }`}
             key={item._id}
           >
-            <img className='w-12' src={`http://localhost:3000/${item.images[0]}`} />
+            <img className='w-12' src={item.images[0]} />
             <p>{item.productName}</p>
             <p>{item.category?.category || 'Unknown'}</p>
             <p>${item.price}</p>
