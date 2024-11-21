@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect} from "react";
+import axios from 'axios';
 import Title from "../../components/User/Title";
 import { assets } from "../../assets/assets";
 import { useDispatch, useSelector } from "react-redux";
@@ -107,29 +108,126 @@ const PlaceOrder = () => {
     dispatch(addNewAddress({ token, addressData: newAddress }));
     setShowModal(false);
   };
-  
-  const handlePlaceOrder = async(e) => {
-    e.preventDefault();
 
+  const handleRazorpayOrder = async () => {
+    
     if (!selectedAddress) {
       toast.error("Please select a delivery address.");
       return;
     }
 
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token'); 
+
+    if (!token) {
+      toast.error("User is not authenticated. Please log in.");
+      return;
+    }
+  
+    try {
+      // Step 1: Create Razorpay order from backend
+      const response = await axios.post(
+        'http://localhost:3000/orders/razorpay', 
+        {
+          addressId: selectedAddress,
+          cartItems,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, 
+          },
+        }
+      );
+  
+      const { razorpayOrderId, amount, currency } = response.data;
+      // console.log("Razorpay order data:", response.data); 
+      // console.log(razorpayOrderId,'rx',);
+      // Step 2: Initialize Razorpay options
+      const razorpayOptions = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount,
+        currency,
+        order_id: razorpayOrderId,
+        handler: async (response) => {
+          // console.log("Razorpay response:", response); 
+          const verifyData = {
+            razorpayOrderId,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
+            cartItems: cartItems,
+            addressId: selectedAddress
+          };
+          // console.log("Sending to backend for verification:", verifyData);
+          try {
+            // Step 3: Verify the payment and finalize the order
+            const verifyResponse = await axios.post(
+              'http://localhost:3000/orders/verify', 
+              verifyData, 
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`, 
+                },
+              }
+            );
+  
+            if (verifyResponse.data.success) {
+              toast.success("Payment verified successfully!");
+              navigate('/success');
+            } else {
+              toast.error("Payment verification failed.");
+            }
+          } catch (error) {
+            console.log(error);
+            toast.error("Payment verification failed.");
+          }
+        },
+        theme: { color: "#3399cc" },
+      };
+  
+      // Step 4: Open Razorpay payment portal
+      const razorpay = new window.Razorpay(razorpayOptions);
+      razorpay.open();
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to initialize Razorpay order. Please try again.");
+    }
+  };
+  
+  
+  
+  const handleCODOrder = async () => {
     const orderData = {
       addressId: selectedAddress,
-      paymentMethod: method,
+      paymentMethod: "cod",
       cartItems,
-      total: finalTotal
     };
-
-    console.log("Order Data Sent to API:", orderData);
-
-    await dispatch(placeOrder(orderData)).unwrap();
-    navigate('/success');
-     
+  
+    try {
+      await dispatch(placeOrder(orderData)).unwrap();
+      toast.success("Order placed successfully!");
+      navigate('/success');
+    } catch (error) {
+      console.log(error);
+      toast.error("Order placement failed. Try again.");
+    }
   };
+  
+  
+  const handlePlaceOrder = async (e) => {
+    e.preventDefault();
+  
+    if (!selectedAddress) {
+      toast.error("Please select a delivery address.");
+      return;
+    }
+  
+    if (method === "razorpay") {
+      await handleRazorpayOrder();
+    } else if (method === "cod") {
+      handleCODOrder();
+    }
+  };
+  
+  
 
   if (loading) {
     return <div>Loading...</div>; // Add a loading state while addresses are being fetched

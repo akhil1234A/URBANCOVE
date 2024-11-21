@@ -14,7 +14,8 @@ const orderSchema = new mongoose.Schema({
   totalAmount: { type: Number, required: true },
   status: { type: String, enum: ['Pending', 'Shipped', 'Delivered', 'Cancelled', 'Returned'], default: 'Pending' },
   placedAt: { type: Date, default: Date.now },
-  returnedAt: { type: Date }, // Date when the order is returned
+  returnedAt: { type: Date }, 
+  razorpayOrderId: {type: String}
 });
 
 module.exports = mongoose.model('Order', orderSchema);
