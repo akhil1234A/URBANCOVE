@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAddresses, addNewAddress, updateExistingAddress, deleteUserAddress } from '../../slices/user/addressSlice';
 import { toast, ToastContainer } from 'react-toastify';
@@ -68,19 +68,17 @@ const AddressManagement = () => {
         .unwrap()
         .then(() => {
           toast.success('Address updated successfully!');
+          
         })
-        .catch(() => {
-          toast.error('Failed to update address');
-        });
     } else {
       dispatch(addNewAddress({ token, addressData: currentAddress }))
-        .unwrap()
-        .then(() => {
-          toast.success('Address added successfully!');
-        })
-        .catch(() => {
-          toast.error('Failed to add address');
-        });
+      .unwrap()
+      .then(() => {
+        toast.success('Address added successfully!');
+      })
+      .catch(() => {
+        toast.error('Failed to add address');
+      });
     }
 
     handleModalToggle();

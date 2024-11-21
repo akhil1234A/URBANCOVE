@@ -103,7 +103,7 @@ const addressSlice = createSlice({
         state.error = action.payload || 'Error adding address';
       })
       .addCase(updateExistingAddress.fulfilled, (state, action) => {
-        const updatedAddress = action.payload.address;
+        const updatedAddress = action.payload;
         const index = state.addresses.findIndex((address) => address._id === updatedAddress._id);
         if (index !== -1) {
           state.addresses[index] = updatedAddress;
