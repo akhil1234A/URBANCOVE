@@ -1,6 +1,6 @@
-import React from 'react';
+
 import { Route, Routes } from 'react-router-dom';
-import axios from 'axios';
+
 
 // components
 import Navbar from '../components/Admin/Navbar';
@@ -15,6 +15,9 @@ import AddProduct from '../Pages/Admin/AddProduct';
 import ViewProducts from '../Pages/Admin/ViewProducts';
 import EditProduct from '../Pages/Admin/EditProduct';
 import Orders from '../Pages/Admin/Orders'
+import CouponManagement from '../Pages/Admin/CouponManagement';
+import OfferManagement from '../Pages/Admin/OfferManagement'
+import CreateOfferPage from '../Pages/Admin/CreateOfferPage';
 
 // import Test from './Test';
 // import Product from './Product';
@@ -48,6 +51,9 @@ const AdminRoutes = () => {
             <Route path="products/view" element={<ViewProducts />} />
             <Route path='products/:id/edit' element={<EditProduct />} />
             <Route path='orders' element={<Orders />} />
+            <Route path='coupons' element={<CouponManagement />} />
+            <Route path='offers' element={<OfferManagement />} />
+            <Route path="create-offer" element={<CreateOfferPage />} />
             {/* <Route path='test' element={<Test/>} />
             <Route path='/test/admin/product/:id' element={<Product/>} /> */}
           </Routes>
