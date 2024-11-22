@@ -39,7 +39,7 @@ const PlaceOrder = () => {
     postcode: "",
   });
   
-  const deliveryFee = 10; // This can be dynamic based on your logic
+  const deliveryFee = 40; // This can be dynamic based on your logic
   const finalTotal = total + deliveryFee;
 
   // Fetch addresses on component mount

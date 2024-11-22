@@ -83,7 +83,7 @@ const Cart = () => {
     navigate("/checkout");
   };
 
-  const deliveryFee = 10;
+  const deliveryFee = 40;
   const currency = "₹";
 
   return (

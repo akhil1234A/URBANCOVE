@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const placeOrder = async (req, res) => {
   const { addressId, paymentMethod, cartItems } = req.body;
   const userId = req.user.id;
+  const shippingCharge = 40; 
 
   // console.log("req body", req.body);
 
@@ -46,13 +47,15 @@ const placeOrder = async (req, res) => {
       0
     );
 
+    const totalAmountWithShipping = totalAmount + shippingCharge;
+
     if (paymentMethod == 'cod') {
       const newOrder = await Order.create({
         user: userId,
         items: cartItems,
         paymentMethod,
         deliveryAddress: address,
-        totalAmount,
+        totalAmount: totalAmountWithShipping,
         status: 'Pending',
       });
 
@@ -184,6 +187,7 @@ const updateOrderStatus = async (req, res) => {
 
 const verifyPayment = async (req, res) => {
   const { razorpayOrderId, razorpayPaymentId, razorpaySignature, cartItems, addressId } = req.body;
+  const shippingCharge = 40;
   // console.log(req.body);
   // console.log(razorpayOrderId, razorpayPaymentId, razorpaySignature);
  
@@ -234,13 +238,14 @@ const verifyPayment = async (req, res) => {
         0
       );
   
+      const totalAmountWithShipping = totalAmount + shippingCharge;
       // Create the order
       const newOrder = await Order.create({
         user: req.user.id, 
         items: cartItems,
         paymentMethod: 'razorpay',  
         deliveryAddress: address,
-        totalAmount,
+        totalAmount: totalAmountWithShipping,
         status: 'Pending', 
       });
       const userId = req.user.id;
@@ -256,6 +261,7 @@ const verifyPayment = async (req, res) => {
 // Controller for creating a Razorpay order
 const createRazorpayOrder = async (req, res) => {
   const { addressId, cartItems } = req.body;
+  const shippingCharge = 40; 
 
   try {
     if (!cartItems || cartItems.length === 0) {
@@ -270,10 +276,10 @@ const createRazorpayOrder = async (req, res) => {
 
     // Calculate the total amount
     const totalAmount = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-
+    const totalAmountWithShipping = totalAmount + shippingCharge;
     // Create Razorpay order
     const options = {
-      amount: totalAmount * 100,  // Razorpay expects the amount in paise (1 INR = 100 paise)
+      amount: totalAmountWithShipping * 100,  // Razorpay expects the amount in paise (1 INR = 100 paise)
       currency: "INR",
       receipt: `order_rcptid_${new Date().getTime()}`,
     };
