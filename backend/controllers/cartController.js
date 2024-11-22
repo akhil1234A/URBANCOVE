@@ -33,7 +33,6 @@ exports.addToCart = async (req, res) => {
             userId,
             productId,
             quantity,
-            price: product.price,
         });
         await cartItem.save();
 
@@ -135,7 +134,19 @@ exports.getUserCart = async (req, res) => {
 
     try {
         const cartItems = await Cart.find({ userId }).populate('productId', 'productName price stock images');
-        res.status(200).json({ cartItems });
+
+        const formattedCartItems = cartItems.map(item => ({
+            _id: item._id,
+            productId: item.productId._id,
+            productName: item.productId.productName,
+            images: item.productId.images[0],
+            price: item.productId.price, 
+            stock: item.productId.stock,
+            quantity: item.quantity,
+        }));
+
+       
+        res.status(200).json({ cartItems: formattedCartItems });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

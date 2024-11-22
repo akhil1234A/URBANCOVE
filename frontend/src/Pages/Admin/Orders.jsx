@@ -72,7 +72,7 @@ const Orders = () => {
               <p>Date: {new Date(order.placedAt).toLocaleDateString()}</p>
             </div>
             {/* Total Amount */}
-            <p className="text-sm sm:text-[15px]">${order.totalAmount}</p>
+            <p className="text-sm sm:text-[15px]">₹{order.totalAmount}</p>
             <div className="flex flex-col">
               {/* Status Update Dropdown */}
               <select 

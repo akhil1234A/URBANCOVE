@@ -1,8 +1,8 @@
-import React from 'react';
+
 import Title from './Title';
 
 const CartTotal = ({ subtotal, deliveryFee, total }) => {
-  const currency = "$";
+  const currency = "₹";
 
   return (
     <div className='w-full'>

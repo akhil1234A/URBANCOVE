@@ -3,7 +3,7 @@ import Title from './Title';
 import ProductItem from './ProductItem';
 
 const BestSeller = ({ products }) => {
-  const currency = '$'; // Use your preferred currency symbol here
+  const currency = '₹'; // Use your preferred currency symbol here
 
   return (
     <div className='my-10'>

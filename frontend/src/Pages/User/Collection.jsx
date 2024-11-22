@@ -7,7 +7,7 @@ import ProductItem from '../../components/User/ProductItem';
 
 const Collection = () => {
   const dispatch = useDispatch();
-  const currency = '$';
+  const currency = '₹';
 
   // Retrieve product list and loading status from Redux
   const productList = useSelector(selectProducts);

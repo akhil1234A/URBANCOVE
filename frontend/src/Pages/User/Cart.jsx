@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Title from "../../components/User/Title";
 import CartTotal from "../../components/User/CartTotal";
@@ -8,7 +8,7 @@ import {
   updateCartItemQuantity,
   removeFromCart,
   clearCartError,
-  setCartTotal
+  setCartTotal,
 } from "../../slices/user/cartSlice";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -19,8 +19,9 @@ const Cart = () => {
 
   // Access cart items and error state from Redux store
   const { cartItems, total, error } = useSelector((state) => state.cart);
-  const loading = false
- 
+  const products = useSelector((state) => state.products.items);
+
+  const loading = false;
 
   useEffect(() => {
     dispatch(getUserCart());
@@ -38,24 +39,29 @@ const Cart = () => {
     dispatch(setCartTotal());
   }, [cartItems, dispatch]);
 
+  // Derive invalid items based on stock and activity
+  const invalidItems = cartItems.filter((item) => {
+    const product = products.find((p) => p._id === item.productId);
+    return !product || !product.isActive || product.stock < item.quantity;
+  });
+
   const handleQuantityChange = (productId, newQuantity) => {
     if (newQuantity < 1) {
       toast.error("Quantity must be at least 1");
       return;
     }
 
-    // Find the item to check the stock limit
-    const item = cartItems.find((item) => item._id === productId);
-    if (item) {
+    const product = products.find((item) => item._id === productId);
+
+    if (product) {
       if (newQuantity > 5) {
         toast.error("Maximum quantity per user is 5");
         return;
       }
-      if (newQuantity > item.productId.stock) {
+      if (newQuantity > product.stock) {
         toast.error("Insufficient stock");
         return;
       }
-      
     }
 
     // Dispatch action to update cart item quantity
@@ -63,23 +69,22 @@ const Cart = () => {
   };
 
   const handleRemoveItem = (productId) => {
-    console.log(productId);
-    // Dispatch action to remove item from cart
     dispatch(removeFromCart(productId));
   };
 
-
-
-   // Set delivery fee (you can adjust this as needed)
-   const deliveryFee = 10; // Static delivery fee, can be calculated dynamically
- 
-
-
-  const currency = "$";
-
   const handleCheckout = () => {
+    if (invalidItems.length > 0) {
+      toast.error(
+        "Please remove out-of-stock or inactive items from your cart before proceeding."
+      );
+      return;
+    }
+
     navigate("/checkout");
   };
+
+  const deliveryFee = 10;
+  const currency = "₹";
 
   return (
     <div className="border-t pt-14">
@@ -87,80 +92,101 @@ const Cart = () => {
         <Title text1={"YOUR"} text2={"CART"} />
       </div>
 
-    {cartItems.length === 0 ? (
-       <div className="text-center text-xl font-medium text-gray-600">
-       Your cart is currently empty. Start shopping now!
-     </div>
-    ) : (
-      <>
-        
-      <div>
-        {cartItems.map((item) => (
-          <div
-            key={item._id}
-            className="py-4 border-t border-b text-gray-700 grid grid-cols-[4fr_0.5fr_0.5fr] sm:grid-cols-[4fr_2fr_0.5fr] items-center gap-4"
-          >
-            <div className="flex items-start gap-6">
-              <img
-                className="w-16 sm:w-20"
-                // Access first image from productId.images array, or fallback to placeholder
-                src={
-                  item.productId.images?.length
-                    ? item.productId.images[0]
-                    : "https://via.placeholder.com/80"
-                }
-                alt={item.productId.productName}
-              />
-              <div>
-                <p className="text-xs sm:text-lg font-medium">
-                  {item.productId.productName} {/* Use productId.productName */}
-                </p>
-                <div className="flex items-center gap-5 mt-2">
-                  <p>
-                    {currency}
-                    {item.price.toFixed(2)}
-                  </p>
-                  <p className="px-2 sm:px-3 sm:py-1 border bg-slate-50">
-                    {item.size || "N/A"}
-                  </p>
+      {cartItems.length === 0 ? (
+        <div className="text-center text-xl font-medium text-gray-600">
+          Your cart is currently empty. Start shopping now!
+        </div>
+      ) : (
+        <>
+          <div>
+            {cartItems.map((item) => {
+              const product = products.find((p) => p._id === item.productId);
+              const isInvalid =
+                !product || !product.isActive || product.stock < item.quantity;
+
+              return (
+                <div
+                  key={item._id}
+                  className={`py-4 border-t border-b text-gray-700 grid grid-cols-[4fr_0.5fr_0.5fr] sm:grid-cols-[4fr_2fr_0.5fr] items-center gap-4 ${
+                    isInvalid ? "opacity-50" : ""
+                  }`}
+                >
+                  <div className="flex items-start gap-6">
+                    <img
+                      className="w-16 sm:w-20"
+                      src={
+                        item.images?.length
+                          ? item.images
+                          : "https://via.placeholder.com/80"
+                      }
+                      alt={item.productName}
+                    />
+                    <div>
+                      <p className="text-xs sm:text-lg font-medium">
+                        {item.productName}
+                      </p>
+                      <div className="flex items-center gap-5 mt-2">
+                        <p>
+                          {currency}
+                          {item.price.toFixed(2)}
+                        </p>
+                        <p className="px-2 sm:px-3 sm:py-1 border bg-slate-50">
+                          {item.size || "N/A"}
+                        </p>
+                      </div>
+                      {isInvalid && (
+                        <p className="text-red-500 text-sm">
+                          {product
+                            ? !product.isActive
+                              ? "This product is inactive."
+                              : "Insufficient stock."
+                            : "Product not found."}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <input
+                    className="border max-w-10 sm:max-w-20 px-1 sm:px-2 py-1"
+                    type="number"
+                    min={1}
+                    max={product?.stock || 1}
+                    value={item.quantity}
+                    onChange={(e) =>
+                      handleQuantityChange(item.productId, Number(e.target.value))
+                    }
+                    disabled={isInvalid}
+                  />
+                  <img
+                    className="w-4 mr-4 sm:w-5 cursor-pointer"
+                    src={assets.bin_icon}
+                    alt="Remove"
+                    onClick={() => handleRemoveItem(item.productId)}
+                  />
                 </div>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-end my-20">
+            <div className="w-full sm:w-[450px]">
+              <CartTotal
+                subtotal={total}
+                deliveryFee={deliveryFee}
+                total={total + deliveryFee}
+              />
+              <div className="w-full text-end">
+                <button
+                  onClick={handleCheckout}
+                  className="bg-black text-white text-sm my-8 px-8 py-3"
+                  disabled={loading || invalidItems.length > 0}
+                >
+                  {loading ? "Loading..." : "PROCEED TO CHECKOUT"}
+                </button>
               </div>
             </div>
-            <input
-              className="border max-w-10 sm:max-w-20 px-1 sm:px-2 py-1"
-              type="number"
-              min={1}
-              max={item.productId.stock} // max input limit for stock
-              value={item.quantity}
-              onChange={(e) => handleQuantityChange(item.productId._id, Number(e.target.value))}
-            />
-            <img
-              className="w-4 mr-4 sm:w-5 cursor-pointer"
-              src={assets.bin_icon}
-              alt="Remove"
-              onClick={() => handleRemoveItem(item.productId._id)}
-            />
           </div>
-        ))}
-      </div>
-    
-
-      <div className="flex justify-end my-20">
-        <div className="w-full sm:w-[450px]">
-            <CartTotal subtotal={total} deliveryFee={deliveryFee} total={total+deliveryFee} />
-          <div className="w-full text-end">
-            <button
-              onClick={handleCheckout}
-              className="bg-black text-white text-sm my-8 px-8 py-3"
-              disabled={loading} // Disable button if loading
-            >
-              {loading ? "Loading..." : "PROCEED TO CHECKOUT"}
-            </button>
-          </div>
-        </div>
-      </div>
-      </>
-    )}
+        </>
+      )}
     </div>
   );
 };

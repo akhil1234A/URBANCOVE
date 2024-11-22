@@ -72,7 +72,7 @@ const ViewProducts = () => {
             <img className='w-12' src={item.images[0]} />
             <p>{item.productName}</p>
             <p>{item.category?.category || 'Unknown'}</p>
-            <p>${item.price}</p>
+            <p>₹{item.price}</p>
             <p>{item.isActive ? 'Listed' : 'Unlisted'}</p>
             <div className='flex gap-2 justify-center'>
               <button

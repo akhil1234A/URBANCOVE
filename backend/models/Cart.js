@@ -21,11 +21,6 @@ const cartSchema = new mongoose.Schema(
         message: 'Quantity must be an integer.',
       },
     },
-    price: {
-      type: Number,
-      required: true,
-      min: [0, 'Price must be at least 0.'],
-    },
   },
   {
     timestamps: true,
