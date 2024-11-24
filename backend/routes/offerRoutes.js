@@ -1,0 +1,13 @@
+const express = require('express');
+const router = express.Router();
+const offerController = require('../controllers/OfferController');
+const {adminAuth} = require('../middlewares/authMiddleware');
+
+// Routes for Offer
+router.post('/', adminAuth, offerController.createOffer); 
+router.put('/:offerId', adminAuth, offerController.editOffer); 
+router.patch('/:offerId', adminAuth, offerController.softDeleteOffer); 
+router.get('/:offerId', adminAuth, offerController.getOffer); 
+router.get('/', adminAuth, offerController.listOffers); 
+
+module.exports = router;

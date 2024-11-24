@@ -67,7 +67,7 @@ const CreateOfferPage = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h3 className="text-3xl font-semibold mb-6">{offerId ? 'Edit Offer' : 'Create Offer'}</h3>
+      <h3 className="text-3xl font-bold mb-6 text-gray-700">{offerId ? 'Edit Offer' : 'Create Offer'}</h3>
 
       <div className="space-y-4">
         <input

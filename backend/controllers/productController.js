@@ -1,7 +1,5 @@
 const Product = require('../models/Product');
-const Category = require('../models/Category');
-const sharp = require('sharp');
-const path = require('path');
+const Offer = require('../models/Offer');
 const fs = require('fs');
 const uploadToCloudinary = require('../utils/cloudinaryUploader')
 
@@ -54,9 +52,75 @@ exports.listProducts = async (req, res) => {
   
 
       const totalCount = await Product.countDocuments(query);
+
+      const activeOffers = await Offer.find({
+        isActive:true,
+        startDate: {$lte: new Date()},
+        endDate: {$gte: new Date()},
+      })
+  
+
+
+      const updatedProducts = await Promise.all(
+        products.map(async (product) => {
+          const subCategoryId = product.subCategory?._id || product.subCategory;
       
-      res.json({
-        products,
+          // Check for product-specific offers
+          const productOffer = activeOffers.find(
+            (offer) =>
+              offer.type === 'product' &&
+              offer.products.some((productId) => productId.toString() === product._id.toString())
+          );
+      
+          // Check for category-specific offers
+          const categoryOffer = activeOffers.find(
+            (offer) =>
+              offer.type === 'category' &&
+              offer.categories.some((categoryId) => categoryId.toString() === subCategoryId?.toString())
+          );
+      
+          let discount = 0;
+      
+          // Apply product-level offer
+          if (productOffer) {
+            if (productOffer.discountType === 'percentage') {
+              discount = (product.price * productOffer.discountValue) / 100;
+            } else if (productOffer.discountType === 'flat') {
+              discount = productOffer.discountValue;
+            }
+          }
+      
+          // Apply category-level offer (if no product-specific offer was found)
+          if (!productOffer && categoryOffer) {
+            if (categoryOffer.discountType === 'percentage') {
+              discount = (product.price * categoryOffer.discountValue) / 100;
+            } else if (categoryOffer.discountType === 'flat') {
+              discount = categoryOffer.discountValue;
+            }
+          }
+      
+          const discountedPrice = product.price - discount;
+          const finalDiscountedPrice = discountedPrice < 0 ? 0 : discountedPrice;
+      
+          // Update product in the database
+          try {
+            await Product.updateOne(
+              { _id: product._id },
+              { $set: { discountedPrice: finalDiscountedPrice } }
+            );
+          } catch (error) {
+            console.error(`Failed to update product ID ${product._id}:`, error);
+          }
+      
+          return {
+            ...product.toObject(),
+            discountedPrice: finalDiscountedPrice,
+          };
+        })
+      );  
+      
+res.json({
+        products: updatedProducts,
         currentPage: parseInt(page),
         totalPages: Math.ceil(totalCount / limit),
         totalItems: totalCount

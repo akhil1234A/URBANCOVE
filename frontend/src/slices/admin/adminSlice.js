@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { loginAdmin } from '../../services/admin/authService';
-import { toast } from 'react-toastify';
+
 
 export const adminLogin = createAsyncThunk(
   'admin/login',

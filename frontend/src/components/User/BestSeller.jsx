@@ -1,4 +1,4 @@
-import React from 'react';
+
 import Title from './Title';
 import ProductItem from './ProductItem';
 
@@ -24,6 +24,7 @@ const BestSeller = ({ products }) => {
             name={item.productName}
             price={item.price}
             currency={currency}
+            discountedPrice={item?.discountedPrice || 0}
           />
         ))}
       </div>

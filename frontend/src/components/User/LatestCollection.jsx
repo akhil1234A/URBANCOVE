@@ -1,9 +1,8 @@
-import React from 'react';
 import Title from './Title';
 import ProductItem from './ProductItem';
 
 const LatestCollection = ({ products }) => {
-  const currency = '₹'; // Use your preferred currency symbol here
+  const currency = '₹'; 
 
   return (
     <div className='my-10'>
@@ -24,6 +23,7 @@ const LatestCollection = ({ products }) => {
             name={item.productName}
             price={item.price}
             currency={currency}
+            discountedPrice={item?.discountedPrice || 0}
           />
         ))}
       </div>

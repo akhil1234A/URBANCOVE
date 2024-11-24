@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import  { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchProductsForUser, selectProducts, selectLoading, setCurrentPage} from '../../slices/admin/productSlice';
 import { assets } from '../../assets/assets';
@@ -98,6 +98,7 @@ const Collection = () => {
              price={item.price} 
              image={item.images[0]} 
              currency={currency}
+             discountedPrice={item?.discountedPrice || 0}
            />
           ))}
         </div>

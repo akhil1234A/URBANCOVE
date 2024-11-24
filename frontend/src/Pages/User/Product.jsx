@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProductsForUser, selectProductById, selectProducts, selectLoading } from '../../slices/admin/productSlice';
@@ -62,9 +62,8 @@ const ProductInfo = ({ productData, size, setSize, onAddToCart}) => {
   const isOutOfStock = productData.stock <= 0;
   const isRunningLow = productData.stock > 0 && productData.stock < 5; // You can adjust the threshold
 
-  const hasDiscount = true;
-  const discountPercentage = 40;  
-  const discountPrice = productData.price - (productData.price * (discountPercentage / 100));
+  const hasDiscount = productData.discountedPrice && productData.discountedPrice !== productData.price;
+  
 
   return (
     <div className="flex-1">
@@ -79,7 +78,7 @@ const ProductInfo = ({ productData, size, setSize, onAddToCart}) => {
         {hasDiscount ? (
           <>
             <span className="line-through text-gray-500">${productData.price.toFixed(2)}</span> {/* Original Price */}
-            <span className="text-red-600 ml-2">${discountPrice.toFixed(2)}</span> {/* Discounted Price */}
+            <span className="text-red-600 ml-2">${productData.discountedPrice.toFixed(2)}</span> {/* Discounted Price */}
           </>
         ) : (
           <span>${productData.price.toFixed(2)}</span> // Regular price

@@ -128,8 +128,8 @@ const Cart = () => {
                       <div className="flex items-center gap-5 mt-2">
                         <p>
                           {currency}
-                          {item.price.toFixed(2)}
-                        </p>
+                          {item.price ? item.price.toFixed(2) : "0.00"}
+                          </p>
                         <p className="px-2 sm:px-3 sm:py-1 border bg-slate-50">
                           {item.size || "N/A"}
                         </p>

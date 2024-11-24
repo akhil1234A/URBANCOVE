@@ -33,7 +33,7 @@ const Orders = () => {
 
   return (
     <div>
-      <h3>Order Management</h3>
+      <h1 className='text-2xl font-bold mb-4'>Order Management</h1>
       <div>
         {orders.map((order, index) => (
           <div 
