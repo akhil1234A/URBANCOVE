@@ -15,8 +15,8 @@ const PlaceOrder = () => {
 
   const { addresses, loading, error } = useSelector((state) => state.address);
   const { cartItems, total} = useSelector((state) => state.cart);
- 
-
+  const [discount, setDiscount] = useState(0);
+  const [couponCode, setCouponCode] = useState('');
 
   const [method, setMethod] = useState("cod");
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -41,6 +41,7 @@ const PlaceOrder = () => {
   
   const deliveryFee = 40; // This can be dynamic based on your logic
   const finalTotal = total + deliveryFee;
+  const totalAmount = finalTotal - discount;
 
   // Fetch addresses on component mount
   useEffect(() => {
@@ -130,6 +131,7 @@ const PlaceOrder = () => {
         {
           addressId: selectedAddress,
           cartItems,
+          totalAmount,
         },
         {
           headers: {
@@ -154,7 +156,8 @@ const PlaceOrder = () => {
             razorpayPaymentId: response.razorpay_payment_id,
             razorpaySignature: response.razorpay_signature,
             cartItems: cartItems,
-            addressId: selectedAddress
+            addressId: selectedAddress,
+            totalAmount,
           };
           // console.log("Sending to backend for verification:", verifyData);
           try {
@@ -199,6 +202,7 @@ const PlaceOrder = () => {
       addressId: selectedAddress,
       paymentMethod: "cod",
       cartItems,
+      totalAmount,
     };
   
     try {
@@ -227,6 +231,48 @@ const PlaceOrder = () => {
     }
   };
   
+  const handleApplyCoupon = async () => {
+    if (!couponCode) {
+      toast.error("Please enter a coupon code");
+      return;
+    }
+  
+    if (discount > 0) {
+      toast.error("A coupon is already applied. Remove it before applying a new one.");
+      return;
+    }
+  
+    const token = localStorage.getItem('token');
+    try {
+      const response = await axios.post(
+        'http://localhost:3000/coupons/apply',
+        { couponCode, total },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setDiscount(response.data.discount); // Assuming the API returns the discount amount
+      toast.success("Coupon applied successfully!");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to apply coupon");
+    }
+  };
+  
+
+  // Remove coupon
+  const handleRemoveCoupon = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(
+        'http://localhost:3000/coupons/remove',
+        {couponCode},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setDiscount(0);
+      setCouponCode('');
+      toast.success("Coupon removed successfully!");
+    } catch (error) {
+      toast.error("Failed to remove coupon");
+    }
+  };
   
 
   if (loading) {
@@ -283,8 +329,42 @@ const PlaceOrder = () => {
       {/* Right Side - Payment and Cart Summary */}
       <div className="mt-8">
         <div className="mt-8 min-w-80">
-        <CartTotal subtotal={total} deliveryFee={deliveryFee} total={finalTotal} />
+        <CartTotal subtotal={total} deliveryFee={deliveryFee} total={finalTotal} discount={discount} />
         </div>
+
+          {/* Coupon input and apply/remove buttons */}
+          <div className="flex flex-col gap-3 mt-8">
+            <input
+              type="text"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+              placeholder="Enter Coupon Code"
+              className="border p-2 rounded"
+              disabled={discount > 0} // Disable input if a coupon is already applied
+            />
+            <div className="flex gap-3">
+              {!discount && (
+                <button
+                  type="button"
+                  onClick={handleApplyCoupon}
+                  className="bg-blue-600 text-white px-4 py-2 text-sm"
+                >
+                  Apply Coupon
+                </button>
+              )}
+              {discount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleRemoveCoupon}
+                  className="bg-gray-600 text-white px-4 py-2 text-sm"
+                >
+                  Remove Coupon
+                </button>
+              )}
+            </div>
+</div>
+
+      
 
         <div className="mt-12">
           <Title text1="PAYMENT" text2="METHOD" />

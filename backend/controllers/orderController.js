@@ -7,11 +7,10 @@ const crypto = require('crypto');
 
 // Controller for Users to place an order
 const placeOrder = async (req, res) => {
-  const { addressId, paymentMethod, cartItems } = req.body;
+  const { addressId, paymentMethod, cartItems, totalAmount } = req.body;
   const userId = req.user.id;
-  const shippingCharge = 40; 
-
   // console.log("req body", req.body);
+  const shippingCost = 40;
 
   try {
     if (!cartItems || cartItems.length === 0) {
@@ -33,7 +32,7 @@ const placeOrder = async (req, res) => {
         });
       }
     }
-
+  
     // stock deduction
     for (let item of cartItems) {
       await Product.findByIdAndUpdate(item.productId, {
@@ -42,12 +41,13 @@ const placeOrder = async (req, res) => {
     }
 
     // amount calculation
-    const totalAmount = cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
+    const originalPrice = cartItems.reduce(
+      (total, item) => total + item.originalPrice * item.quantity,
       0
     );
 
-    const totalAmountWithShipping = totalAmount + shippingCharge;
+    const discountAmount = originalPrice - totalAmount + shippingCost;
+
 
     if (paymentMethod == 'cod') {
       const newOrder = await Order.create({
@@ -55,7 +55,8 @@ const placeOrder = async (req, res) => {
         items: cartItems,
         paymentMethod,
         deliveryAddress: address,
-        totalAmount: totalAmountWithShipping,
+        totalAmount,
+        discountAmount,
         status: 'Pending',
       });
 
@@ -186,7 +187,7 @@ const updateOrderStatus = async (req, res) => {
 
 
 const verifyPayment = async (req, res) => {
-  const { razorpayOrderId, razorpayPaymentId, razorpaySignature, cartItems, addressId } = req.body;
+  const { razorpayOrderId, razorpayPaymentId, razorpaySignature, cartItems, addressId, totalAmount } = req.body;
   const shippingCharge = 40;
   // console.log(req.body);
   // console.log(razorpayOrderId, razorpayPaymentId, razorpaySignature);
@@ -233,19 +234,20 @@ const verifyPayment = async (req, res) => {
       }
   
       // Calculate the total amount
-      const totalAmount = cartItems.reduce(
-        (total, item) => total + item.price * item.quantity,
+      const originalPrice = cartItems.reduce(
+        (total, item) => total + item.originalPrice * item.quantity,
         0
       );
   
-      const totalAmountWithShipping = totalAmount + shippingCharge;
+      const discountAmount = originalPrice + shippingCharge - totalAmount;
       // Create the order
       const newOrder = await Order.create({
         user: req.user.id, 
         items: cartItems,
         paymentMethod: 'razorpay',  
         deliveryAddress: address,
-        totalAmount: totalAmountWithShipping,
+        totalAmount,
+        discountAmount,
         status: 'Pending', 
       });
       const userId = req.user.id;
@@ -260,8 +262,7 @@ const verifyPayment = async (req, res) => {
 
 // Controller for creating a Razorpay order
 const createRazorpayOrder = async (req, res) => {
-  const { addressId, cartItems } = req.body;
-  const shippingCharge = 40; 
+  const { addressId, cartItems, totalAmount } = req.body;
 
   try {
     if (!cartItems || cartItems.length === 0) {
@@ -274,12 +275,10 @@ const createRazorpayOrder = async (req, res) => {
       return res.status(400).json({ message: 'Invalid delivery address' });
     }
 
-    // Calculate the total amount
-    const totalAmount = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-    const totalAmountWithShipping = totalAmount + shippingCharge;
+    
     // Create Razorpay order
     const options = {
-      amount: totalAmountWithShipping * 100,  // Razorpay expects the amount in paise (1 INR = 100 paise)
+      amount: totalAmount * 100,  // Razorpay expects the amount in paise (1 INR = 100 paise)
       currency: "INR",
       receipt: `order_rcptid_${new Date().getTime()}`,
     };

@@ -77,7 +77,7 @@ exports.deleteCoupon = async (req, res) => {
 // Admin: Get all coupons
 exports.getAllCoupons = async (req, res) => {
   try {
-    const coupons = await Coupon.find({ isActive: true });
+    const coupons = await Coupon.find();
     return res.status(200).json(coupons);
   } catch (error) {
     console.error(error);
@@ -91,8 +91,10 @@ exports.getAllCoupons = async (req, res) => {
 // User: Apply a coupon to the cart
 exports.applyCoupon = async (req, res) => {
   try {
-    const { couponCode, userId, cartTotal } = req.body;
-
+    const { couponCode, total: cartTotal } = req.body;
+    const userId = req.user.id;
+    
+    
     // Fetch coupon by code
     const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
 
@@ -118,7 +120,7 @@ exports.applyCoupon = async (req, res) => {
 
     // Check if the user has exceeded their usage limit
     const userCoupon = coupon.userUsage.find((usage) => usage.userId.toString() === userId);
-    if (userCoupon && userCoupon.count >= coupon.usageLimit) {
+    if (userCoupon && userCoupon.count >= 1) {
       return res.status(400).json({ message: 'You have already used this coupon the maximum number of times' });
     }
 
@@ -148,11 +150,13 @@ exports.applyCoupon = async (req, res) => {
 // User: Remove a coupon from the cart
 exports.removeCoupon = async (req, res) => {
   try {
-    const { couponCode, userId } = req.body;
+    
+    const { couponCode} = req.body;
+    const userId = req.user.id;
 
     // Fetch coupon by code
     const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
-
+  ;
     if (!coupon) {
       return res.status(400).json({ message: 'Coupon not found or inactive' });
     }
@@ -168,7 +172,7 @@ exports.removeCoupon = async (req, res) => {
       return res.status(400).json({ message: 'You have not applied this coupon' });
     }
   } catch (error) {
-    console.error(error);
+    console.log(error);
     return res.status(500).json({ message: 'Server error' });
   }
 };

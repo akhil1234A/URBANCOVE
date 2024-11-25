@@ -94,7 +94,7 @@ const OrderHistory = () => {
                 <div className="mt-4">
                   <h4 className="text-gray-700 font-medium">Items:</h4>
                   <ul className="list-disc list-inside ml-4 mt-2 text-gray-600">
-                    {order.items.map((item, index) => (
+                    {order.items && order.items.map((item, index) => (
                       <li key={index}>
                         {item.productId.productName} - ${item.price} x {item.quantity}
                       </li>
@@ -105,14 +105,14 @@ const OrderHistory = () => {
                 {/* Delivery Address */}
                 <div className="mt-4">
                   <h4 className="text-gray-700 font-medium">Delivery Address:</h4>
-                  <p className="text-gray-600">{order.deliveryAddress.street}, {order.deliveryAddress.city}, {order.deliveryAddress.state} {order.deliveryAddress.postcode}</p>
-                  <p className="text-gray-600">{order.deliveryAddress.country}</p>
-                  <p className="text-gray-600">Phone: {order.deliveryAddress.phoneNumber}</p>
+                  <p className="text-gray-600">{order.deliveryAddress?.street}, {order.deliveryAddress?.city}, {order.deliveryAddress?.state} {order.deliveryAddress?.postcode}</p>
+                  <p className="text-gray-600">{order.deliveryAddress?.country}</p>
+                  <p className="text-gray-600">Phone: {order.deliveryAddress?.phoneNumber}</p>
                 </div>
 
                 {/* Order Total and Actions */}
                 <div className="mt-4 flex justify-between items-center">
-                  <p className="text-gray-800 font-semibold">Total: ${order.totalAmount}</p>
+                  <p className="text-gray-800 font-semibold">Total: ${order?.totalAmount}</p>
                   <div className="space-x-4">
                     {/* Cancel Order Button */}
                     {order.status === 'Pending' && (

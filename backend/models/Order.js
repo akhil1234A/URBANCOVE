@@ -12,6 +12,7 @@ const orderSchema = new mongoose.Schema({
   paymentMethod: { type: String, enum: ['cod', 'stripe', 'razorpay'], required: true },
   deliveryAddress: { type: Object, required: true },
   totalAmount: { type: Number, required: true },
+  discountAmount: { type: Number, required: true},
   status: { type: String, enum: ['Pending', 'Shipped', 'Delivered', 'Cancelled', 'Returned'], default: 'Pending' },
   placedAt: { type: Date, default: Date.now },
   returnedAt: { type: Date }, 

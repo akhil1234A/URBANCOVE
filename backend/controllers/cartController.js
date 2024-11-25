@@ -141,6 +141,7 @@ exports.getUserCart = async (req, res) => {
             productName: item.productId.productName,
             images: item.productId.images[0],
             price: item.productId.discountedPrice, 
+            originalPrice: item.productId.price,
             stock: item.productId.stock,
             quantity: item.quantity,
         }));
