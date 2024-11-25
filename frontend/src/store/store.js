@@ -10,6 +10,7 @@ import subCategoriesReducer from '../slices/admin/subCategorySlice'
 import addressReducer from '../slices/user/addressSlice'
 import cartReducer from '../slices/user/cartSlice'
 import orderReducer from '../slices/admin/orderSlice'
+import offerReducer from '../slices/admin/offerSlice';
 
 const persistConfig = {
   key: 'root', 
@@ -29,7 +30,8 @@ export const store = configureStore({
     subCategories: subCategoriesReducer,
     address: addressReducer,
     cart: cartReducer,
-    orders: orderReducer
+    orders: orderReducer,
+    offers: offerReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }),

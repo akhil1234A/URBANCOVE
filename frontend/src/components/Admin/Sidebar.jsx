@@ -1,12 +1,11 @@
-import React from 'react';
 import { Layout, Menu } from 'antd';
-import { UserOutlined, AppstoreOutlined, ShoppingOutlined, FileTextOutlined } from '@ant-design/icons';
+import { UserOutlined, AppstoreOutlined, ShoppingOutlined, FileTextOutlined, TagsOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
 const { Sider } = Layout;
 
 const Sidebar = () => {
-  // Define menu items array with nested children
+
   const menuItems = [
     {
       key: 'sub1',
@@ -35,11 +34,20 @@ const Sidebar = () => {
       ],
     },
     {
-      key: 'sub4', // New key for Orders
-      icon: <FileTextOutlined />, // New icon for Orders
+      key: 'sub4', 
+      icon: <FileTextOutlined />, 
       label: 'Orders Management',
       children: [
         { key: '6', label: <Link to="/admin/orders">View Orders</Link> }
+      ],
+    },
+    {
+      key: 'sub5', 
+      icon: <TagsOutlined />, 
+      label: 'Offers Management',
+      children: [
+        { key: '7', label: <Link to="/admin/offers">View Offers</Link> },
+        { key: '8', label: <Link to="/admin/offers/create-offer">Create Offer</Link> },
       ],
     },
   ];
@@ -62,7 +70,7 @@ const Sidebar = () => {
         mode="inline"
         defaultSelectedKeys={['1']}
         style={{ margin: 0, padding: 0 }}
-        items={menuItems} // Pass menu items as items prop
+        items={menuItems} 
       />
     </Sider>
   );

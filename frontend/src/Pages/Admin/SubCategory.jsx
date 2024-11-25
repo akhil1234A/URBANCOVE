@@ -15,6 +15,8 @@ const SubCategory = () => {
   const { list: subCategories, loading, error } = useSelector((state) => state.subCategories);
   const { list: categories = [] } = useSelector((state) => state.categories); // Default to empty array if undefined
 
+  console.log(categories);
+
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentSubCategory, setCurrentSubCategory] = useState({ id: '', subCategory: '', categoryId: '' });
@@ -106,7 +108,7 @@ const SubCategory = () => {
             const category = categories.find((cat) => cat._id === subCategory.category?._id) || { category: 'Unknown' };
             return (
               <li key={subCategory._id} className={`flex justify-between items-center py-2 ${subCategory.isActive ? '' : 'text-gray-400'}`}>
-                <span className="text-lg">{subCategory.subCategory} (Category: {category.category})</span>
+                <span className="text-lg">{subCategory.category.category}'s {subCategory.subCategory} </span>
                 <div>
                   <button className="bg-yellow-500 text-white px-3 py-1 rounded ml-2" onClick={() => handleEditSubCategory(subCategory)}>
                     Edit

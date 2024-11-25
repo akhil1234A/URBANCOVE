@@ -12,9 +12,6 @@ export const fetchProductsForAdmin = createAsyncThunk(
   }
 );
 
-
-
-
 export const updateProductStatus = createAsyncThunk( 'products/updateProductStatus', async ({ productId, isActive, token }) => {
     const updatedProduct = await updateProductStatusService(productId, isActive, token);
     return { productId, isActive: updatedProduct.isActive };

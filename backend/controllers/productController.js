@@ -60,7 +60,6 @@ exports.listProducts = async (req, res) => {
       })
   
 
-
       const updatedProducts = await Promise.all(
         products.map(async (product) => {
           const subCategoryId = product.subCategory?._id || product.subCategory;

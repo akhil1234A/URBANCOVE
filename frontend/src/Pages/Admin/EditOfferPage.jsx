@@ -1,169 +1,261 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import './css/Offer.css';
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import Select from "react-select";
+import axios from "axios";
+import "./css/Offer.css";
+import { fetchSubCategoriesThunk } from "../../slices/admin/subCategorySlice";
+import { getOfferById, updateOffer } from "../../slices/admin/offerSlice";
+import { toast } from "react-toastify";
 
 const EditOfferPage = () => {
   const navigate = useNavigate();
-  const { offerId } = useParams(); // For editing, fetch the offer ID from the URL
-  const [offer, setOffer] = useState({
-    name: '',
-    discount: '',
-    startDate: '',
-    endDate: '',
-    offerType: 'category',
-    selectedItems: [],
-  });
-  const [categories, setCategories] = useState([
-    { _id: '1', name: 'Electronics' },
-    { _id: '2', name: 'Clothing' },
-    { _id: '3', name: 'Home & Kitchen' },
-  ]);
-  const [products, setProducts] = useState([
-    { _id: '1', name: 'Laptop' },
-    { _id: '2', name: 'T-shirt' },
-    { _id: '3', name: 'Blender' },
-  ]);
+  const dispatch = useDispatch();
+  const { id: offerId } = useParams();
 
-  // For editing, load the offer details if offerId is present
+  const [offer, setOffer] = useState({
+    name: "",
+    discountType: "percentage",
+    discountValue: "",
+    startDate: "",
+    endDate: "",
+    type: "category",
+    selectedItems: [],
+    isActive: false,
+  });
+
+  const [products, setProducts] = useState([]);
+  const [formattedCategories, setFormattedCategories] = useState([]);
+
+  const { list: categories, loading: categoriesLoading } = useSelector(
+    (state) => state.subCategories
+  );
+  const { offerDetails, loading: offerLoading } = useSelector(
+    (state) => state.offers
+  );
+
+  console.log(offerDetails);
+
+  const token = useSelector((state) => state.admin.token);
+
+  // Format categories for dropdown
+  useEffect(() => {
+    if (categories.length > 0) {
+      setFormattedCategories(
+        categories.map((cat) => ({
+          value: cat._id,
+          label: `${cat.category.category} - ${cat.subCategory}`,
+        }))
+      );
+    }
+  }, [categories]);
+
+  // Fetch products for dropdown
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/admin/products?limit=100"
+        );
+        setProducts(
+          response.data.products.map((product) => ({
+            value: product._id,
+            label: product.productName,
+          }))
+        );
+      } catch (error) {
+        console.error("Error fetching products:", error.message);
+      }
+    };
+
+    fetchProducts();
+    dispatch(fetchSubCategoriesThunk(token));
+  }, [dispatch, token]);
+
+  // Fetch offer details
   useEffect(() => {
     if (offerId) {
-      const offerToEdit = offers.find((offer) => offer._id === offerId);
-      if (offerToEdit) {
-        setOffer(offerToEdit);
-      }
+      dispatch(getOfferById(offerId));
     }
-  }, [offerId]);
+  }, [dispatch, offerId]);
+
+  // Populate offer data
+  useEffect(() => {
+    if (offerDetails) {
+      setOffer((prev) => ({
+        ...prev,
+        name: offerDetails.name,
+        discountType: offerDetails.discountType,
+        discountValue: offerDetails.discountValue,
+        startDate: new Date(offerDetails.startDate).toISOString().split("T")[0],
+        endDate: new Date(offerDetails.endDate).toISOString().split("T")[0],
+        type: offerDetails.type,
+        selectedItems:
+          offerDetails.products.length == 0
+            ? offerDetails.categories.map((cat) => cat._id)
+            : offerDetails.products.map((prod) => prod._id),
+        isActive: offerDetails.isActive,
+      }));
+    }
+  }, [offerDetails]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setOffer((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleOfferTypeChange = (e) => {
-    setOffer({ ...offer, offerType: e.target.value, selectedItems: [] });
+    setOffer((prev) => ({
+      ...prev,
+      type: e.target.value,
+      selectedItems: [], // Reset selectedItems on type change
+    }));
   };
 
-  const handleItemSelection = (itemId) => {
-    if (offer.selectedItems.includes(itemId)) {
-      setOffer({
-        ...offer,
-        selectedItems: offer.selectedItems.filter((id) => id !== itemId),
-      });
-    } else {
-      setOffer({
-        ...offer,
-        selectedItems: [...offer.selectedItems, itemId],
-      });
+  const handleSelectedItemsChange = (selectedOptions) => {
+    const selectedValues = selectedOptions.map((option) => option.value);
+    setOffer((prev) => ({ ...prev, selectedItems: selectedValues }));
+  };
+
+  const validateOffer = () => {
+    const {
+      name,
+      discountValue,
+      startDate,
+      endDate,
+      selectedItems,
+    } = offer;
+
+    if (!name || !discountValue || !startDate || !endDate) {
+      toast.error("Please fill all required fields.");
+      return false;
+    }
+
+    if (offer.discountType === "flat" && offer.discountValue <= 0) {
+      toast.error("Discount value must be greater than 0 for flat discount.");
+      return false;
+    }
+
+    if (new Date(startDate) >= new Date(endDate)) {
+      toast.error("End date must be later than start date.");
+      return false;
+    }
+
+    if (!selectedItems.length) {
+      toast.error("Please select at least one item.");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateOffer()) return;
+
+    const updatedOffer = {
+      ...offer,
+      categories: offer.type === "category" ? offer.selectedItems : [],
+      products: offer.type === "product" ? offer.selectedItems : [],
+    };
+
+    try {
+      await dispatch(updateOffer({ offerId, offerData: updatedOffer })).unwrap();
+      toast.success("Offer updated successfully!");
+      navigate("/admin/offers");
+    } catch (error) {
+      console.error("Error updating offer:", error);
+      toast.error("Failed to update offer. Please try again.");
     }
   };
 
-  const handleSubmit = () => {
-    // Save the new offer or update the existing one
-    if (offerId) {
-      // Update existing offer logic
-      // (you may need to dispatch an update action if you're using Redux, for example)
-    } else {
-      // Create new offer logic
-    }
-
-    // After saving, navigate back to the offer list
-    navigate('admin/offers');
-  };
+  if (offerLoading) return <div>Loading...</div>;
 
   return (
     <div className="container mx-auto p-6">
-      <h3 className="text-3xl font-bold mb-6 text-gray-700">Edit Offer Page</h3>
+      <h3 className="text-3xl font-bold mb-6 text-gray-700">Edit Offer</h3>
 
       <div className="space-y-4">
         <input
+          id="name"
+          name="name"
           type="text"
           placeholder="Offer Name"
           className="p-3 border border-gray-300 rounded-md w-full"
           value={offer.name}
-          onChange={(e) => setOffer({ ...offer, name: e.target.value })}
+          onChange={handleChange}
         />
+
+        <select
+          name="discountType"
+          value={offer.discountType}
+          onChange={handleChange}
+          className="p-3 border border-gray-300 rounded-md w-full"
+        >
+          <option value="percentage">Percentage</option>
+          <option value="flat">Flat</option>
+        </select>
+
         <input
           type="number"
-          placeholder="Discount (%)"
+          name="discountValue"
+          placeholder="Discount Value"
           className="p-3 border border-gray-300 rounded-md w-full"
-          value={offer.discount}
-          onChange={(e) => setOffer({ ...offer, discount: e.target.value })}
+          value={offer.discountValue}
+          onChange={handleChange}
         />
         <div className="flex gap-4">
           <input
             type="date"
+            name="startDate"
             className="p-3 border border-gray-300 rounded-md w-1/2"
             value={offer.startDate}
-            onChange={(e) => setOffer({ ...offer, startDate: e.target.value })}
+            onChange={handleChange}
           />
           <input
             type="date"
+            name="endDate"
             className="p-3 border border-gray-300 rounded-md w-1/2"
             value={offer.endDate}
-            onChange={(e) => setOffer({ ...offer, endDate: e.target.value })}
+            onChange={handleChange}
           />
         </div>
 
-        {/* Offer Type Dropdown */}
-        <div>
-          <label className="block text-lg font-medium mb-2">Offer Type</label>
-          <select
-            value={offer.offerType}
-            onChange={handleOfferTypeChange}
-            className="p-3 border border-gray-300 rounded-md w-full"
-          >
-            <option value="category">Category</option>
-            <option value="product">Product</option>
-          </select>
-        </div>
-
-        {/* Dynamic Category/Product Selection */}
-        {offer.offerType === 'category' && (
-          <div>
-            <h4 className="text-xl font-semibold mb-2">Select Categories</h4>
-            <div className="space-y-2">
-              {categories.map((category) => (
-                <label key={category._id} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={offer.selectedItems.includes(category._id)}
-                    onChange={() => handleItemSelection(category._id)}
-                    className="mr-2"
-                  />
-                  {category.name}
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {offer.offerType === 'product' && (
-          <div>
-            <h4 className="text-xl font-semibold mb-2">Select Products</h4>
-            <div className="space-y-2">
-              {products.map((product) => (
-                <label key={product._id} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={offer.selectedItems.includes(product._id)}
-                    onChange={() => handleItemSelection(product._id)}
-                    className="mr-2"
-                  />
-                  {product.name}
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="flex gap-4 mt-6">
-        <button
-          onClick={() => navigate('admin/offers')}
-          className="bg-gray-300 text-black py-2 px-4 rounded-md hover:bg-gray-400"
+        <select
+          value={offer.type}
+          onChange={handleOfferTypeChange}
+          className="p-3 border border-gray-300 rounded-md w-full"
         >
-          Cancel
-        </button>
+          <option value="category">Category</option>
+          <option value="product">Product</option>
+        </select>
+
+        {offer.type === "category" && (
+          <Select
+            options={formattedCategories}
+            isMulti
+            value={formattedCategories.filter((cat) =>
+              offer.selectedItems.includes(cat.value)
+            )}
+            onChange={handleSelectedItemsChange}
+          />
+        )}
+
+        {offer.type === "product" && (
+          <Select
+            options={products}
+            isMulti
+            value={products.filter((prod) =>
+              offer.selectedItems.includes(prod.value)
+            )}
+            onChange={handleSelectedItemsChange}
+          />
+        )}
+
         <button
           onClick={handleSubmit}
-          className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+          className="p-3 bg-blue-500 text-white rounded-md"
         >
-          {offerId ? 'Update Offer' : 'Create Offer'}
+          Save Changes
         </button>
       </div>
     </div>

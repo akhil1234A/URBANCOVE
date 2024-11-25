@@ -3,32 +3,27 @@ const Offer = require('../models/Offer');
 // Create a new offer
 exports.createOffer = async (req, res) => {
   try {
-    const { 
+    const {
       name, 
-      type, 
-      categories, 
-      products, 
+      offerType, 
+      selectedItems, 
       discountType, 
       discountValue, 
-      maxDiscountAmount, 
-      minCartValue, 
       startDate, 
-      endDate, 
-      isActive 
+      endDate 
     } = req.body;
+  
 
     const newOffer = new Offer({
       name,
-      type,
-      categories,
-      products,
+      type: offerType,
+      categories: offerType === 'category' ? selectedItems : [],
+      products: offerType === 'product' ? selectedItems : [],
       discountType,
       discountValue,
-      maxDiscountAmount,
-      minCartValue,
       startDate,
       endDate,
-      isActive,
+      isActive: true,
     });
 
     // Save offer to database
@@ -50,8 +45,6 @@ exports.editOffer = async (req, res) => {
       products,
       discountType,
       discountValue,
-      maxDiscountAmount,
-      minCartValue,
       startDate,
       endDate,
       isActive,
@@ -67,8 +60,6 @@ exports.editOffer = async (req, res) => {
         products,
         discountType,
         discountValue,
-        maxDiscountAmount,
-        minCartValue,
         startDate,
         endDate,
         isActive,
@@ -91,19 +82,20 @@ exports.softDeleteOffer = async (req, res) => {
   try {
     const { offerId } = req.params;
 
-    const deletedOffer = await Offer.findByIdAndUpdate(
-      offerId,
-      { isActive: false },
-      { new: true } // Return the updated offer
-    );
 
-    if (!deletedOffer) {
-      return res.status(404).json({ message: 'Offer not found' });
+    const offer = await Offer.findById(offerId);
+    if(!offer){
+      return res.status(404).json({message: 'Offer not found'});
     }
-
-    res.status(200).json({ message: 'Offer deactivated successfully', offer: deletedOffer });
+    offer.isActive = !offer.isActive; 
+    const updatedOffer = await offer.save();
+    res.status(200).json({
+    message: `Offer ${updatedOffer.isActive ? 'activated' : 'deactivated'} successfully`,
+    offer: updatedOffer,
+   })
   } catch (error) {
-    res.status(500).json({ message: 'Error deactivating offer', error });
+    console.log(error)
+    res.status(500).json({ message: 'Error toggling offer status', error });
   }
 };
 
@@ -111,7 +103,6 @@ exports.softDeleteOffer = async (req, res) => {
 exports.getOffer = async (req, res) => {
   try {
     const { offerId } = req.params;
-
     const offer = await Offer.findById(offerId).populate('categories products');
 
     if (!offer) {
@@ -120,6 +111,7 @@ exports.getOffer = async (req, res) => {
 
     res.status(200).json({ offer });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: 'Error fetching offer', error });
   }
 };
@@ -129,7 +121,7 @@ exports.listOffers = async (req, res) => {
   try {
     const { isActive = true } = req.query; // Default to active offers
 
-    const offers = await Offer.find({ isActive })
+    const offers = await Offer.find()
       .populate('categories products')
       .sort({ startDate: -1 }); // Sort by latest start date
 

@@ -1,147 +1,105 @@
 import { useEffect, useState } from 'react';
-import { FaEdit, FaTrash } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
-import './css/Offer.css'
+import { FaEdit, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import './css/Offer.css';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  getOffers,
+  addOffer,
+  updateOffer,
+  deactivateOffer,
+} from '../../slices/admin/offerSlice';
 
 const OfferManagement = () => {
-  // Dummy data for offers
-  const [offers, setOffers] = useState([
-    {
-      _id: '1',
-      name: 'Summer Sale',
-      discount: '25',
-      startDate: '2024-06-01',
-      endDate: '2024-06-30',
-      offerType: 'category', // New field to track the offer type (category/product)
-      selectedItems: ['1', '3'], // Selected categories (dummy category IDs)
-    },
-    {
-      _id: '2',
-      name: 'Black Friday Deal',
-      discount: '40',
-      startDate: '2024-11-24',
-      endDate: '2024-11-26',
-      offerType: 'product', // Offer is for products
-      selectedItems: ['2'], // Selected product IDs (dummy products)
-    },
-  ]);
-
-  const [categories, setCategories] = useState([
-    { _id: '1', name: 'Electronics' },
-    { _id: '2', name: 'Clothing' },
-    { _id: '3', name: 'Home & Kitchen' },
-  ]);
-
-  const [products, setProducts] = useState([
-    { _id: '1', name: 'Laptop' },
-    { _id: '2', name: 'T-shirt' },
-    { _id: '3', name: 'Blender' },
-  ]);
-
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { offers, loading, error } = useSelector((state) => state.offers);
   const [newOffer, setNewOffer] = useState({
     name: '',
     discount: '',
     startDate: '',
     endDate: '',
-    offerType: 'category', // Default type is category
+    offerType: 'category',
     selectedItems: [],
   });
 
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [editMode, setEditMode] = useState(false);
+ 
 
   useEffect(() => {
-    console.log('Fetching offers...');
-  }, []);
+    dispatch(getOffers());
+  }, [dispatch]);
 
-  const handleCreateOffer = () => {
-    const newOfferData = {
-      ...newOffer,
-      _id: (offers.length + 1).toString(), // Generate a new unique ID
-    };
-    setOffers([...offers, newOfferData]);
-    closeModal();
+  
+
+  // Deactivate an offer (either to list or unlist it)
+  const handleDeactivateOffer = async (offerId) => {
+    await dispatch(deactivateOffer(offerId));
   };
 
-  const handleEditOffer = (offerId) => {
-    const offer = offers.find((o) => o._id === offerId);
-    if (offer) {
-      setNewOffer(offer);
-      setEditMode(true);
-      setModalIsOpen(true);
-    }
-  };
+  
+  
 
-  const handleUpdateOffer = () => {
-    setOffers(
-      offers.map((offer) =>
-        offer._id === newOffer._id ? { ...offer, ...newOffer } : offer
-      )
-    );
-    closeModal();
-  };
-
-  const handleDeleteOffer = (offerId) => {
-    setOffers(offers.filter((offer) => offer._id !== offerId));
-  };
-
-  const closeModal = () => {
-    setModalIsOpen(false);
-    setNewOffer({ name: '', discount: '', startDate: '', endDate: '', offerType: 'category', selectedItems: [] });
-    setEditMode(false);
-  };
-
-  const handleOfferTypeChange = (e) => {
-    setNewOffer({ ...newOffer, offerType: e.target.value, selectedItems: [] });
-  };
-
-  const handleItemSelection = (itemId) => {
-    if (newOffer.selectedItems.includes(itemId)) {
-      setNewOffer({
-        ...newOffer,
-        selectedItems: newOffer.selectedItems.filter((id) => id !== itemId),
-      });
-    } else {
-      setNewOffer({
-        ...newOffer,
-        selectedItems: [...newOffer.selectedItems, itemId],
-      });
-    }
+  // Handle edit offer modal
+  const handleEditOffer = (id) => {
+    navigate(`/admin/offers/edit-offer/${id}`)
   };
 
   return (
     <div className="container mx-auto p-6">
       <h3 className="text-3xl font-semibold mb-6">Manage Offers</h3>
 
+      {/* Loading and Error Handling */}
+      {loading && <p>Loading...</p>}
+      {error && <p className="text-red-600">{error}</p>}
+
       {/* Offers List */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {offers.map((offer) => (
           <div
             key={offer._id}
-            className="flex items-center justify-between p-4 bg-white shadow-md rounded-md border"
+            className="flex flex-col md:flex-row items-start justify-between p-6 bg-white shadow-lg rounded-lg border border-gray-200"
           >
-            <div className="flex-1">
-              <p className="font-semibold text-xl">{offer.name}</p>
-              <p>{offer.discount}% off</p>
-              <p>
+            {/* Left Section: Offer Information */}
+            <div className="flex-1 mb-4 md:mb-0">
+              <p className="font-semibold text-2xl text-gray-800 mb-2">{offer.name}</p>
+              <p className="text-lg font-medium text-gray-700 mb-2">
+                {offer.discountType === 'flat' ? `₹${offer.discountValue} off` : `${offer.discountValue}% off`}
+              </p>
+              <p className="text-sm text-gray-500 mb-1">
                 {new Date(offer.startDate).toLocaleDateString()} -{' '}
                 {new Date(offer.endDate).toLocaleDateString()}
               </p>
-              <p>Offer Type: {offer.offerType === 'category' ? 'Category' : 'Product'}</p>
+              <p className="text-sm text-gray-600 mb-2">
+                <span className="font-medium">Offer Type:</span> {offer.type === 'category' ? 'Category' : 'Product'}
+              </p>
             </div>
-            <div className="flex gap-3">
+
+            {/* Right Section: Action Buttons */}
+            <div className="flex gap-4 mt-4 md:mt-0">
+              {/* Edit Offer */}
               <button
                 onClick={() => handleEditOffer(offer._id)}
-                className="text-blue-600 hover:text-blue-800"
+                className="flex items-center justify-center text-blue-600 hover:text-blue-800 transition duration-300"
               >
                 <FaEdit size={20} />
               </button>
-              <button
-                onClick={() => handleDeleteOffer(offer._id)}
-                className="text-red-600 hover:text-red-800"
-              >
-                <FaTrash size={20} />
-              </button>
+
+              {/* List/Unlist Offer */}
+              {offer.isActive ? (
+                <button
+                  onClick={() => handleDeactivateOffer(offer._id, offer.isActive)}
+                  className="flex items-center justify-center text-yellow-600 hover:text-yellow-800 transition duration-300"
+                >
+                  <FaTimesCircle size={20} /> Unlist
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleDeactivateOffer(offer._id, offer.isActive)}
+                  className="flex items-center justify-center text-green-600 hover:text-green-800 transition duration-300"
+                >
+                  <FaCheckCircle size={20} /> List
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -149,16 +107,13 @@ const OfferManagement = () => {
 
       {/* Add New Offer Button */}
       <div className="mt-6">
-        <button
-          as={Link}
-          to="admin/create-offer"
+        <Link
+          to="/admin/offers/create-offer"
           className="bg-green-600 text-white py-2 px-4 rounded-md shadow-md hover:bg-green-700"
         >
           + Create New Offer
-        </button>
+        </Link>
       </div>
-
-     
     </div>
   );
 };
