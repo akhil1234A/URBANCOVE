@@ -17,7 +17,7 @@ const Cart = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Access cart items and error state from Redux store
+
   const { cartItems, total, error } = useSelector((state) => state.cart);
   const products = useSelector((state) => state.products.items);
 
@@ -27,7 +27,7 @@ const Cart = () => {
     dispatch(getUserCart());
   }, [dispatch]);
 
-  // Display error as toast if error exists in the store
+
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -64,7 +64,7 @@ const Cart = () => {
       }
     }
 
-    // Dispatch action to update cart item quantity
+
     dispatch(updateCartItemQuantity({ productId, quantity: newQuantity }));
   };
 

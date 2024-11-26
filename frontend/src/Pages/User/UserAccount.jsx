@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import ProfileDetails from '../../components/User/ProfileDetails';
 import AddressManagement from '../../components/User/AddressManagement';
 import OrderHistory from '../../components/User/OrderHistory';
 import ViewOrder from '../../components/User/ViewOrder';
 
 const UserAccount = () => {
-  const [activeSection, setActiveSection] = useState('profile');  // Track active section
+  const [activeSection, setActiveSection] = useState('profile');  
   const [selectedOrder, setSelectedOrder] = useState(null); 
 
 
   const handleViewOrder = (orderId) => {
-    // Here, you'd normally fetch the order details by ID; we're using a placeholder for now
-    setSelectedOrder({ id: orderId }); // Set dummy order data
+   
+    setSelectedOrder({ id: orderId }); 
     setActiveSection('viewOrder');
   };
 

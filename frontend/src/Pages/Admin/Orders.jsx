@@ -21,7 +21,7 @@ const Orders = () => {
     dispatch(updateOrderStatus({ orderId, status: newStatus }));
   };
 
-  // Display success or error messages
+
   useEffect(() => {
     if (successMessage) {
       message.success(successMessage);
@@ -41,11 +41,11 @@ const Orders = () => {
             key={index}
           >
             <div>
-              {/* Order Image or Icon */}
+             
               <img className="w-12" src={assets.parcel_icon} alt="Parcel Icon" />
             </div>
             <div>
-              {/* Order Items */}
+             
               <div>
                 {order.items.map((item, idx) => {
                   return (

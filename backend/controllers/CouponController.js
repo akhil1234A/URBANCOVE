@@ -99,36 +99,30 @@ exports.applyCoupon = async (req, res) => {
     const userId = req.user.id;
     
     
-    // Fetch coupon by code
     const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
 
     if (!coupon) {
       return res.status(400).json({ message: 'Coupon not found or inactive' });
     }
 
-    // Check if coupon is expired
     const currentDate = new Date();
     if (coupon.validUntil < currentDate) {
       return res.status(400).json({ message: 'Coupon has expired' });
     }
 
-    // Check if the cart meets the minimum purchase requirement
     if (cartTotal < coupon.minPurchase) {
       return res.status(400).json({ message: `Minimum purchase amount is ₹${coupon.minPurchase}` });
     }
 
-    // Check if the coupon usage limit is exceeded
     if (coupon.usageCount >= coupon.usageLimit) {
       return res.status(400).json({ message: 'Coupon usage limit reached' });
     }
 
-    // Check if the user has exceeded their usage limit
     const userCoupon = coupon.userUsage.find((usage) => usage.userId.toString() === userId);
     if (userCoupon && userCoupon.count >= 1) {
       return res.status(400).json({ message: 'You have already used this coupon the maximum number of times' });
     }
 
-    // Calculate the discount
     let discount = coupon.discountValue;
     if (coupon.discountType === 'percentage') {
       discount = Math.min((cartTotal * coupon.discountValue) / 100, coupon.maxDiscount || Infinity);
@@ -158,7 +152,6 @@ exports.removeCoupon = async (req, res) => {
     const { couponCode} = req.body;
     const userId = req.user.id;
 
-    // Fetch coupon by code
     const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
   ;
     if (!coupon) {

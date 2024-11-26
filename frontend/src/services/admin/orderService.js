@@ -3,12 +3,14 @@ import { toast } from 'react-toastify'; // Importing toast
 
 const BASE_URL = 'http://localhost:3000/orders';
 
-// Get tokens from localStorage
+
 const getUserToken = () => localStorage.getItem('token');
 const getAdminToken = () => localStorage.getItem('adminToken');
 
+
+//User: Place an Order
 const orderService = {
-  // Place a new order (User token)
+  
   placeOrder: async (orderData) => {
     try {
       const userToken = getUserToken();
@@ -18,17 +20,16 @@ const orderService = {
         },
       });
 
-      // Show success toast
+      
       toast.success("Order placed successfully!");
       return response.data;
     } catch (error) {
-      // Show error toast
       toast.error("There was an error placing the order. Please try again.");
-      throw error; // Re-throw the error for further handling
+      throw error; 
     }
   },
 
-  // Cancel an order (User token)
+  // User: Cancel an order (User token)
   cancelOrder: async (orderId) => {
     try {
       const userToken = getUserToken();
@@ -38,17 +39,17 @@ const orderService = {
         },
       });
 
-      // Show success toast
+     
       toast.success("Order cancelled successfully!");
       return response.data;
     } catch (error) {
-      // Show error toast
+      
       toast.error("Failed to cancel the order. Please try again.");
-      throw error; // Re-throw the error for further handling
+      throw error; 
     }
   },
 
-  // Fetch all orders (Admin token)
+  // Admin: Fetch all orders (Admin token)
   viewAllOrders: async () => {
     try {
       const adminToken = getAdminToken();
@@ -60,13 +61,12 @@ const orderService = {
 
       return response.data;
     } catch (error) {
-      // Show error toast
       toast.error("Failed to fetch orders. Please try again.");
-      throw error; // Re-throw the error for further handling
+      throw error; 
     }
   },
 
-  // Update order status (Admin token)
+  // Admin: Update order status (Admin token)
   updateOrderStatus: async (orderId, status) => {
     try {
       const adminToken = getAdminToken();
@@ -80,16 +80,16 @@ const orderService = {
         }
       );
 
-      // Show success toast
       toast.success("Order status updated successfully!");
       return response.data;
     } catch (error) {
-      // Show error toast
+      
       toast.error("Failed to update order status. Please try again.");
-      throw error; // Re-throw the error for further handling
+      throw error; 
     }
   },
 
+  //Admin: View User Orders
   viewUserOrders: async () => {
     try {
       const userToken = getUserToken(); 

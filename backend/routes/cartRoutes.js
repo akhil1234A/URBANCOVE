@@ -3,7 +3,7 @@ const router = express.Router();
 const cartController = require('../controllers/cartController');
 const authenticateUser  = require('../middlewares/authenticate')
 
-
+//User: Cart Management Routes
 router.post('/', authenticateUser, cartController.addToCart);
 router.put('/:productId', authenticateUser, cartController.updateCartItemQuantity);
 router.delete('/:productId', authenticateUser, cartController.removeFromCart);

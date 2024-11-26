@@ -2,14 +2,14 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/admin/categories/subcategories';
 
-// Helper function for handling errors consistently
+// Helper for Error Handling
 const handleError = (error) => {
   const errorMessage = error.response?.data?.message || error.message || 'Unknown error occurred';
   console.error('API Error:', errorMessage);
   throw new Error(errorMessage); // Re-throw to allow handling in the calling code
 };
 
-// Fetch all subcategories
+// Admin: Fetch all subcategories
 export const fetchSubCategories = async (token) => {
   try {
     const response = await axios.get(API_URL, {
@@ -21,7 +21,7 @@ export const fetchSubCategories = async (token) => {
   }
 };
 
-// Add a new subcategory
+// Admin: Add a new subcategory
 export const addSubCategory = async (data, token) => {
   try {
     const response = await axios.post(API_URL, data, {
@@ -33,7 +33,7 @@ export const addSubCategory = async (data, token) => {
   }
 };
 
-// Update an existing subcategory
+// Admin: Update an existing subcategory
 export const updateSubCategory = async (id, data, token) => {
   try {
     const response = await axios.put(`${API_URL}/${id}`, data, {
@@ -45,7 +45,7 @@ export const updateSubCategory = async (id, data, token) => {
   }
 };
 
-// Toggle the status of a subcategory
+// Admin: Toggle the status of a subcategory
 export const toggleSubCategoryStatus = async (id, isActive, token) => {
   try {
     const response = await axios.put(`${API_URL}/${id}`, { isActive }, {

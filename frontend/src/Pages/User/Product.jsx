@@ -105,7 +105,7 @@ const ProductInfo = ({ productData, size, setSize, onAddToCart}) => {
               onClick={() => setSize(s)}
               className={`border py-2 px-4 bg-gray-100 ${s === size ? 'border-orange-500' : ''}`}
               key={index}
-              disabled={isOutOfStock} // Disable size selection if out of stock
+              disabled={isOutOfStock} 
             >
               {s}
             </button>

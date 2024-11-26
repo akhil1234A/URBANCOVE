@@ -5,7 +5,7 @@ const Cart = require("../models/Cart");
 const razorpayInstance = require("../utils/Razorpay");
 const crypto = require('crypto');
 
-// Controller for Users to place an order
+// User: Place an Order
 const placeOrder = async (req, res) => {
   const { addressId, paymentMethod, cartItems, totalAmount } = req.body;
   const userId = req.user.id;
@@ -75,12 +75,12 @@ const placeOrder = async (req, res) => {
   }
 };
 
-// Controller for Users to view all their orders
+// User: View All Orders
 const viewUserOrders = async (req, res) => {
   const userId = req.user.id;
   // console.log(userId);
   try {
-    // Find all orders placed by the user
+    
     const orders = await Order.find({ user: userId }).populate(
       "items.productId",
       "productName price"
@@ -96,7 +96,7 @@ const viewUserOrders = async (req, res) => {
   }
 };
 
-// Controller for Users to cancel an order
+// User: Cancel An Order
 const cancelOrder = async (req, res) => {
   const { orderId } = req.params;
   const userId = req.user.id;
@@ -130,7 +130,7 @@ const cancelOrder = async (req, res) => {
   }
 };
 
-// Controller for Admin to view all orders
+// Admin: View All Orders
 const viewAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -142,10 +142,10 @@ const viewAllOrders = async (req, res) => {
   }
 };
 
-// Controller for Admin to update order status (including cancellation)
+// Admin: Update Order Status
 const updateOrderStatus = async (req, res) => {
   const { orderId } = req.params;
-  const { status } = req.body; // New status (e.g., Shipped, Delivered, Cancelled)
+  const { status } = req.body; 
 
   try {
     const order = await Order.findById(orderId);
@@ -163,7 +163,7 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
-    // Update order status
+    
     order.status = status;
 
     // If canceled, restore stock
@@ -185,7 +185,7 @@ const updateOrderStatus = async (req, res) => {
 };
 
 
-
+//User: Razory Pay Verification Step 2 in User Flow Front End 
 const verifyPayment = async (req, res) => {
   const { razorpayOrderId, razorpayPaymentId, razorpaySignature, cartItems, addressId, totalAmount } = req.body;
   const shippingCharge = 40;
@@ -205,12 +205,12 @@ const verifyPayment = async (req, res) => {
     // console.log('Signature verified successfully');
     
     try {
-      // Validate cartItems and addressId
+      
       if (!cartItems || cartItems.length === 0) {
         return res.status(400).json({ message: 'No items in the order' });
       }
   
-      // Fetch the delivery address
+     
       const address = await Address.findById(addressId);
       if (!address) {
         return res.status(400).json({ message: 'Invalid delivery address' });
@@ -240,7 +240,7 @@ const verifyPayment = async (req, res) => {
       );
   
       const discountAmount = originalPrice + shippingCharge - totalAmount;
-      // Create the order
+     
       const newOrder = await Order.create({
         user: req.user.id, 
         items: cartItems,
@@ -260,7 +260,7 @@ const verifyPayment = async (req, res) => {
   
 };
 
-// Controller for creating a Razorpay order
+// User: Create a Razor Pay Order, Step 1 in User Flow 
 const createRazorpayOrder = async (req, res) => {
   const { addressId, cartItems, totalAmount } = req.body;
 
@@ -269,7 +269,6 @@ const createRazorpayOrder = async (req, res) => {
       return res.status(400).json({ message: 'No items in the order' });
     }
 
-    // Fetch the address for delivery
     const address = await Address.findById(addressId);
     if (!address) {
       return res.status(400).json({ message: 'Invalid delivery address' });

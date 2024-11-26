@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import Cropper from 'react-cropper';
 import 'cropperjs/dist/cropper.css';
 
@@ -9,8 +9,8 @@ const ImageCropper = ({ imageURL, setCroppedImage, setCropperOpen, onCropComplet
     if (cropperRef.current) {
       const cropper = cropperRef.current.cropper;
       const croppedImage = cropper.getCroppedCanvas().toDataURL();
-      setCroppedImage(croppedImage); // Set the cropped image
-      onCropComplete(); // Notify the parent to close the cropper
+      setCroppedImage(croppedImage);
+      onCropComplete(); 
     }
   };
 

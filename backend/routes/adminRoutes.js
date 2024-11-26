@@ -3,7 +3,7 @@ const { login, listUsers, blockUser } = require('../controllers/adminController'
 const {adminAuth} = require('../middlewares/authMiddleware')
 const router = express.Router();
 
-
+//Admin: User Management Routes
 //admin auth
 router.post('/login', login);
 

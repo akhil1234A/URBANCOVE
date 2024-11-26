@@ -1,4 +1,4 @@
-import React, { useEffect, useState} from 'react';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { FaEdit } from 'react-icons/fa';
@@ -12,9 +12,9 @@ const ViewProducts = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem('adminToken');
 
-  const currentPage = useSelector((state) => state.products.currentPage); // get currentPage from Redux
-  const totalPages = useSelector((state) => state.products.totalPages); // get totalPages from Redux
-  const itemsPerPage = 10; // Number of items per page
+  const currentPage = useSelector((state) => state.products.currentPage); 
+  const totalPages = useSelector((state) => state.products.totalPages); 
+  const itemsPerPage = 10;
   
   useEffect(() => {
     if (token) {

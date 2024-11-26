@@ -157,7 +157,7 @@ const authSlice = createSlice({
       })
       .addCase(updatePasswordThunk.fulfilled, (state, { payload }) => {
         state.isLoading = false;
-        state.error = null; // Clear any existing errors
+        state.error = null;
       })
       .addCase(updatePasswordThunk.rejected, (state, { payload }) => {
         state.isLoading = false;

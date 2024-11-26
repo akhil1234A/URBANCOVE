@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from 'react';
+import { useState, useEffect} from 'react';
 import {adminLogin} from '../../slices/admin/adminSlice'
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,7 +12,6 @@ const AdminLogin = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Access the login state
   const { isAuthenticated, error, token} = useSelector((state) => state.admin);
 
   useEffect(() => {

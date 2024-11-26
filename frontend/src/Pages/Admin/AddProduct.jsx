@@ -140,7 +140,7 @@ const dataURLToBlob = (dataURL) => {
   };
 
   useEffect(() => {
-    // Fetch categories on component mount
+    
     const token = localStorage.getItem('adminToken');
     dispatch(fetchCategories(token));
   }, [dispatch]);

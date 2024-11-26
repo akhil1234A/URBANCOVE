@@ -5,7 +5,7 @@ const Product = require('../models/Product');
 
 const MAX_QUANTITY_PER_USER = 5; 
 
-// Add to cart
+// User: Add to cart
 exports.addToCart = async (req, res) => {
     const { productId, quantity } = req.body;
     const userId = req.user.id;
@@ -47,7 +47,7 @@ exports.addToCart = async (req, res) => {
 };
 
 
-// Update cart item quantity
+// User: Update cart item quantity
 exports.updateCartItemQuantity = async (req, res) => {
     const { productId } = req.params;
     const { quantity } = req.body;
@@ -83,18 +83,14 @@ exports.updateCartItemQuantity = async (req, res) => {
 
 
 
-// Remove from cart
+// User: Remove from cart
 exports.removeFromCart = async (req, res) => {
     const { productId } = req.params;
     const userId = req.user.id;
 
     // console.log('Product ID:', productId, 'User ID:', userId);
-
-    
- 
-
     try {
-        // Ensure that the cart item actually exists
+        
         const cartItem = await Cart.findOne({ userId, productId });
         if (!cartItem) {
             // console.log('No cart item found for user:', userId, 'and product:', productId);
@@ -103,7 +99,7 @@ exports.removeFromCart = async (req, res) => {
 
         // console.log('Cart item found:', cartItem);
 
-        // Delete the cart item
+      
         await Cart.findOneAndDelete({ userId, productId });
 
         // Re-stock the product
@@ -123,12 +119,7 @@ exports.removeFromCart = async (req, res) => {
     }
 };
 
-
-
-
-
-
-// Get all cart items for a user
+// User: Get all cart items for a user
 exports.getUserCart = async (req, res) => {
     const userId = req.user.id;
 

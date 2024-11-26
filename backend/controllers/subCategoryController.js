@@ -2,6 +2,7 @@ const SubCategory = require('../models/SubCategory');
 const Category = require('../models/Category');
 
 
+//Admin: Add a Sub Category 
 exports.addSubCategory = async (req, res) => {
     const { subCategory, category} = req.body;
     // console.log(req.body)
@@ -23,7 +24,7 @@ exports.addSubCategory = async (req, res) => {
 };
 
 
-
+//Admin: List all Sub Categories 
 exports.listSubCategories = async (req, res) => {
   try {
     const { categoryId } = req.params;
@@ -35,6 +36,8 @@ exports.listSubCategories = async (req, res) => {
   }
 };
 
+
+//Admin: Edit a Sub Category
 exports.editSubCategory = async (req, res) => {
   const { id } = req.params;
   const { subCategory, isActive } = req.body;
@@ -50,7 +53,7 @@ exports.editSubCategory = async (req, res) => {
   }
 };
 
-//soft delete mark active status false
+//Admin: Delete a Sub Category
 exports.deleteSubCategory = async (req, res) => {
   const { id } = req.params;
 

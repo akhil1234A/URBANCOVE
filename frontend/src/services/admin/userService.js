@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-
+//Admin: Get all Users
 export const fetchUsers = async () => {
   const token = localStorage.getItem('adminToken');
   const response = await axios.get('http://localhost:3000/admin/users', {
@@ -11,7 +11,7 @@ export const fetchUsers = async () => {
   return response.data;
 };
 
-
+//Admin: Block an User
 export const toggleBlockUser = async (userId) => {
   const token = localStorage.getItem('adminToken');
   // console.log(token);

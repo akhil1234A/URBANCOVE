@@ -1,6 +1,6 @@
 const Address = require('../models/Address');
 
-// Create a new address
+// User: Create a new address
 const addAddress = async (req, res) => {
   try {
     const { street, city, state, postcode, country, phoneNumber, isDefault } = req.body;
@@ -30,7 +30,7 @@ const addAddress = async (req, res) => {
   }
 };
 
-// Get all addresses for a user
+// User: Get all addresses for a user
 const getUserAddresses = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -45,7 +45,7 @@ const getUserAddresses = async (req, res) => {
   }
 };
 
-// Update an address
+// User: Update an address
 const updateAddress = async (req, res) => {
   try {
     const { addressId } = req.params;
@@ -81,13 +81,13 @@ const updateAddress = async (req, res) => {
   }
 };
 
-//Delete an Address
+//User: Delete an Address
 const deleteAddress = async (req, res) => {
   try {
     const { addressId } = req.params;
     const userId = req.user.id;
    
-    // Directly using findByIdAndDelete
+   
     const address = await Address.findOneAndDelete({ _id: addressId, user: userId });
 
     if (!address) {

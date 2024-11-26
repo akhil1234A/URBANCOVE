@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import * as addressService from '../../services/user/addressService'; // Import the service functions
+import * as addressService from '../../services/user/addressService'; 
 
-// Thunks for async actions
+
 export const fetchAddresses = createAsyncThunk(
   'addresses/fetchAddresses',
   async (token, { rejectWithValue }) => {
@@ -50,7 +50,7 @@ export const deleteUserAddress = createAsyncThunk(
   }
 );
 
-// Slice for address management
+
 const addressSlice = createSlice({
   name: 'address',
   initialState: {

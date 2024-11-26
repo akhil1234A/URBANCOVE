@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import ImageUpload from '../../components/Admin/ImageUpload';
 import ImageCropper from '../../components/Admin/ImageCropper';

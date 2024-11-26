@@ -1,7 +1,7 @@
 import axios from 'axios';
 const API_BASE_URL = 'http://localhost:3000/user/address'; 
 
-// Add a new address
+// User: Add a new address
 export const addAddress = async (token, addressData) => {
   const response = await axios.post(`${API_BASE_URL}/`, addressData, {
     headers: {
@@ -12,7 +12,7 @@ export const addAddress = async (token, addressData) => {
   return response.data.address; 
 };
 
-// Get all addresses for the user
+// User: Get all addresses for the user
 export const getAddresses = async (token) => {
   const response = await axios.get(`${API_BASE_URL}/`, {
     headers: {
@@ -22,7 +22,7 @@ export const getAddresses = async (token) => {
   return response.data.addresses; 
 };
 
-// Update an existing address
+// User: Update an existing address
 export const updateAddress = async (token, addressId, addressData) => {
   const response = await axios.put(`${API_BASE_URL}/${addressId}`, addressData, {
     headers: {
@@ -33,7 +33,7 @@ export const updateAddress = async (token, addressId, addressData) => {
   return response.data.address; 
 };
 
-// Delete an address
+// User: Delete an address
 export const deleteAddress = async (token, addressId) => {
   const response = await axios.delete(`${API_BASE_URL}/${addressId}`, {
     headers: {

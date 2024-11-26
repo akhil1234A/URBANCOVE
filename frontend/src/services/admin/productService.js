@@ -1,6 +1,7 @@
 
 const API_BASE_URL = 'http://localhost:3000'
 
+//Home: Fetch Products
 export const fetchProducts = async (page = 1, limit = 100) => {
   const response = await fetch(`${API_BASE_URL}/admin/products?isActive=true&page=${page}&limit=${limit}&isAdmin=false`);
   if (!response.ok) throw new Error('Failed to fetch products');
@@ -8,6 +9,7 @@ export const fetchProducts = async (page = 1, limit = 100) => {
   return response.json();
 };
 
+//Admin: Fetch Products
 export const fetchAdminProducts = async (token, page = 1, limit = 10) => {
   const response = await fetch(`${API_BASE_URL}/admin/products?page=${page}&limit=${limit}&isAdmin=true`, {
     method: 'GET',
@@ -17,7 +19,7 @@ export const fetchAdminProducts = async (token, page = 1, limit = 10) => {
   return response.json();
 };
 
-
+//Admin: Update a Product
 export const updateProductStatusService = async (productId, isActive, token) => {
   const response = await fetch(`${API_BASE_URL}/admin/products/${productId}/delete`, {
     method: 'PATCH',
@@ -36,7 +38,7 @@ export const updateProductStatusService = async (productId, isActive, token) => 
 };
 
 
-
+//Admin: Add a Product
 export const addProductService = async (productData, token) => {
   const response = await fetch(`${API_BASE_URL}/admin/products`, {
     method: 'POST',
@@ -54,6 +56,8 @@ export const addProductService = async (productData, token) => {
   return response.json();
 };
 
+
+//Admin: Edit a Product
 export const editProductService = async (productId, productData, token) => {
   const response = await fetch(`${API_BASE_URL}/admin/products/${productId}`, {
     method: 'PATCH',

@@ -9,18 +9,18 @@ const Collection = () => {
   const dispatch = useDispatch();
   const currency = '₹';
 
-  // Retrieve product list and loading status from Redux
+
   const productList = useSelector(selectProducts);
   const loading = useSelector(selectLoading);
 
-  const currentPage = useSelector((state) => state.products.currentPage); // get currentPage from Redux
-  const totalPages = useSelector((state) => state.products.totalPages); // get totalPages from Redux
-  const itemsPerPage = 12; // Number of items per page
+  const currentPage = useSelector((state) => state.products.currentPage); 
+  const totalPages = useSelector((state) => state.products.totalPages); 
+  const itemsPerPage = 12; 
 
   
 
   useEffect(() => {
-    // Dispatch an action to fetch products if not already loaded
+    
     dispatch(fetchProductsForUser({page: currentPage, limit: itemsPerPage}));
   }, [dispatch, currentPage]);
 

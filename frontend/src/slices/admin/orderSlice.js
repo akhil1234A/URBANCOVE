@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import orderService from '../../services/admin/orderService';
 
-// Thunks for async actions
+
 export const placeOrder = createAsyncThunk(
   'orders/placeOrder',
   async (orderData, { rejectWithValue }) => {
@@ -58,7 +58,7 @@ export const updateOrderStatus = createAsyncThunk(
   }
 );
 
-// Initial state
+
 const initialState = {
   orders: [],
   order: null,
@@ -67,7 +67,7 @@ const initialState = {
   successMessage: null,
 };
 
-// Order slice
+
 const orderSlice = createSlice({
   name: 'orders',
   initialState,
@@ -81,7 +81,7 @@ const orderSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Place order
+      
       .addCase(placeOrder.pending, (state) => {
         state.loading = true;
       })
@@ -95,7 +95,7 @@ const orderSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Cancel order
+      
       .addCase(cancelOrder.pending, (state) => {
         state.loading = true;
       })
@@ -117,14 +117,14 @@ const orderSlice = createSlice({
       })
       .addCase(viewUserOrders.fulfilled, (state, action) => {
         state.loading = false;
-        state.orders = action.payload.orders; // Store the orders fetched from the service
+        state.orders = action.payload.orders; 
       })
       .addCase(viewUserOrders.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
 
-      // View all orders
+  
       .addCase(viewAllOrders.pending, (state) => {
         state.loading = true;
       })
@@ -137,7 +137,7 @@ const orderSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Update order status
+      
       .addCase(updateOrderStatus.pending, (state) => {
         state.loading = true;
       })

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import cartService from '../../services/user/cartService';
 
-// Async Thunks for Cart Operations
+
 export const addToCart = createAsyncThunk(
   'cart/addToCart',
   async ({ productId, quantity }, { rejectWithValue }) => {
@@ -66,20 +66,20 @@ const cartSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Add to Cart
+      
       .addCase(addToCart.pending, (state) => {
         state.loading = true;
       })
       .addCase(addToCart.fulfilled, (state, action) => {
         state.loading = false;
-        state.cartItems.push(action.payload.cartItem); // Assuming `cartItem` is returned
+        state.cartItems.push(action.payload.cartItem); 
       })
       .addCase(addToCart.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
       
-      // Update Cart Item Quantity
+     
       .addCase(updateCartItemQuantity.pending, (state) => {
         state.loading = true;
       })
@@ -96,7 +96,7 @@ const cartSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Remove from Cart
+    
       .addCase(removeFromCart.pending, (state) => {
         state.loading = true;
       })
@@ -109,13 +109,13 @@ const cartSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Get User Cart
+    
       .addCase(getUserCart.pending, (state) => {
         state.loading = true;
       })
       .addCase(getUserCart.fulfilled, (state, action) => {
         state.loading = false;
-        state.cartItems = action.payload.cartItems; // Assuming `cartItems` is returned
+        state.cartItems = action.payload.cartItems; 
       })
       .addCase(getUserCart.rejected, (state, action) => {
         state.loading = false;

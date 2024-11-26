@@ -8,6 +8,7 @@ const getToken = () => {
 };
 
 const cartService = {
+  //User: Add to cart
   addToCart: async (productId, quantity) => {
     try {
       const response = await axios.post(
@@ -23,6 +24,7 @@ const cartService = {
     }
   },
 
+  //User: Update quantity of Cart Item 
   updateCartItemQuantity: async (productId, quantity) => {
     try {
       const response = await axios.put(
@@ -38,6 +40,7 @@ const cartService = {
     }
   },
 
+  //User: Remove from Cart
   removeFromCart: async (productId) => {
     try {
       const response = await axios.delete(`${BASE_URL}/${productId}`, {
@@ -49,6 +52,7 @@ const cartService = {
     }
   },
 
+  //User: Get All Cart Items
   getUserCart: async () => {
     try {
       const response = await axios.get(BASE_URL, {
@@ -61,6 +65,7 @@ const cartService = {
   },
 };
 
+//Helper Function 
 const handleSimpleError = (error) => {
   if (error.response && error.response.data && error.response.data.message) {
     toast.error(error.response.data.message);

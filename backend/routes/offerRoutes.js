@@ -3,7 +3,7 @@ const router = express.Router();
 const offerController = require('../controllers/OfferController');
 const {adminAuth} = require('../middlewares/authMiddleware');
 
-// Routes for Offer
+// Admin: Offer Management
 router.post('/', adminAuth, offerController.createOffer); 
 router.put('/:offerId', adminAuth, offerController.editOffer); 
 router.patch('/:offerId', adminAuth, offerController.softDeleteOffer); 

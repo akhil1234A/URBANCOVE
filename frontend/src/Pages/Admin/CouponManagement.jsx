@@ -12,27 +12,27 @@ const CouponManagement = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Accessing Redux state
+ 
   const { coupons, isLoading, error } = useSelector((state) => state.coupons);
   console.log(coupons);
-  // Fetch coupons on component mount
+ 
   useEffect(() => {
     dispatch(fetchCoupons());
   }, [dispatch]);
 
-  // Toggle coupon status (Activate/Deactivate)
+  
   const toggleCouponStatus = (coupon) => {
     const couponId = coupon._id;
     console.log(couponId);
     dispatch(deactivateCoupon(couponId));
   };
 
-  // Navigate to the edit coupon page
+ 
   const handleEdit = (couponId) => {
     navigate(`/admin/coupons/edit/${couponId}`);
   };
 
-  // Navigate to the create coupon page
+
   const handleCreate = () => {
     navigate('/admin/coupons/create');
   };

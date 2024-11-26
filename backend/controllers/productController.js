@@ -15,7 +15,7 @@ const processImage = async (filePath) => {
 };
 
 
-// list all products
+// Admin: list all products
 exports.listProducts = async (req, res) => {
     try {
       // console.log(req.query);
@@ -132,7 +132,7 @@ res.json({
 
   
 
-// add a new product
+// Admin: Add a New Product
 exports.addProduct = async (req, res) => {
     const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller } = req.body;
     // console.log(req.body);
@@ -148,7 +148,7 @@ exports.addProduct = async (req, res) => {
             subCategory, 
             price, 
             stock, 
-            size: Array.isArray(size) ? size : [size], //ensure size always an array 
+            size: Array.isArray(size) ? size : [size], 
             images, 
             isBestSeller 
         });
@@ -162,6 +162,7 @@ exports.addProduct = async (req, res) => {
 };
 
 
+//Admin: Edit a Product
 exports.editProduct = async (req, res) => {
   const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller, isActive } = req.body;
   let images;
@@ -190,10 +191,10 @@ exports.editProduct = async (req, res) => {
         ...(subCategory && { subCategory }),
         ...(price && { price }),
         ...(stock && { stock }),
-        ...(size && { size: Array.isArray(size) ? size : [size] }), // Ensures size is always an array
-        ...(images && { images }), // Only update images if they exist
+        ...(size && { size: Array.isArray(size) ? size : [size] }), 
+        ...(images && { images }), 
         isBestSeller,
-        ...(typeof isActive !== 'undefined' && { isActive }) // Update isActive only if provided
+        ...(typeof isActive !== 'undefined' && { isActive }) 
       },
       { new: true }
     );
@@ -213,7 +214,7 @@ exports.editProduct = async (req, res) => {
 
 
 
-// soft delete a product
+// Admin: soft delete a product
 exports.deleteProduct = async (req, res) => {
   try {
     const { isActive } = req.body;
@@ -224,7 +225,7 @@ exports.deleteProduct = async (req, res) => {
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ message: 'Product not found' });
 
-    // Update only isActive status
+    
     product.isActive = isActive;
     await product.save();
 

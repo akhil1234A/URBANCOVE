@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link} from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
@@ -48,7 +48,7 @@ const UserSignup = () => {
     const { name, email, password } = formData;
     let isValid = true;
 
-    // Validate each field and show error if invalid
+    
     ['name', 'email', 'password'].forEach((field) => {
       const error = validateField(field, formData[field]);
       if (error) {
@@ -70,18 +70,14 @@ const UserSignup = () => {
     try {
       const response = await dispatch(signUp(formData)).unwrap();
       
-      // Check if response contains the necessary success flag.
+      
       if (response.success) {
         toast.success('Sign-Up successful! Please verify your email.');
-        
-        // Navigating to OTP verification with email in state
         navigate('/otp-verify', { state: { email: formData.email } });
       } else {
-        // Displaying backend error message if available
         toast.error(response.message || 'Sign-up failed. Please try again.');
       }
     } catch (error) {
-      // Capturing other errors not handled by Redux or backend response
       toast.error(error.message || 'An error occurred during sign-up.');
     }
   };
@@ -152,7 +148,7 @@ const UserSignup = () => {
       </div>
 
       <div className="mt-4">
-        {/* Uncomment when Google Auth is ready */}
+        
         <div className="flex gap-2 items-center justify-center w-fit px-3 h-12 border-2 border-black rounded cursor-pointer" onClick={handleGoogleSignIn}>
               <FaGoogle className="text-black text-xl" />
               Continue With Google

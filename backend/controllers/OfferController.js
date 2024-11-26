@@ -1,6 +1,6 @@
 const Offer = require('../models/Offer'); 
 
-// Create a new offer
+// Admin: Create a new offer
 exports.createOffer = async (req, res) => {
   try {
     const {
@@ -26,7 +26,7 @@ exports.createOffer = async (req, res) => {
       isActive: true,
     });
 
-    // Save offer to database
+    
     await newOffer.save();
     res.status(201).json({ message: 'Offer created successfully', offer: newOffer });
   } catch (error) {
@@ -34,7 +34,7 @@ exports.createOffer = async (req, res) => {
   }
 };
 
-// Edit an existing offer
+// Admin: Edit an existing offer
 exports.editOffer = async (req, res) => {
   try {
     const { offerId } = req.params;
@@ -50,7 +50,6 @@ exports.editOffer = async (req, res) => {
       isActive,
     } = req.body;
 
-    // Find offer by ID and update
     const updatedOffer = await Offer.findByIdAndUpdate(
       offerId,
       {
@@ -64,7 +63,7 @@ exports.editOffer = async (req, res) => {
         endDate,
         isActive,
       },
-      { new: true } // Return the updated offer
+      { new: true } 
     );
 
     if (!updatedOffer) {
@@ -77,7 +76,7 @@ exports.editOffer = async (req, res) => {
   }
 };
 
-// Soft delete an offer (set isActive to false)
+// Admin: Soft delete an offer (set isActive to false)
 exports.softDeleteOffer = async (req, res) => {
   try {
     const { offerId } = req.params;
@@ -99,7 +98,7 @@ exports.softDeleteOffer = async (req, res) => {
   }
 };
 
-// Get offer details
+// Admin: Get offer details
 exports.getOffer = async (req, res) => {
   try {
     const { offerId } = req.params;
@@ -116,14 +115,12 @@ exports.getOffer = async (req, res) => {
   }
 };
 
-// List all offers (active or inactive)
+// Admin: List all offers (active or inactive)
 exports.listOffers = async (req, res) => {
   try {
-    const { isActive = true } = req.query; // Default to active offers
-
     const offers = await Offer.find()
       .populate('categories products')
-      .sort({ startDate: -1 }); // Sort by latest start date
+      .sort({ startDate: -1 }); 
 
     res.status(200).json({ offers });
   } catch (error) {

@@ -1,4 +1,4 @@
-import React, { useState , useEffect} from 'react';
+import { useState , useEffect} from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from '../components/User/Navbar';
 import Footer from '../components/User/Footer';
@@ -9,7 +9,7 @@ import Product from '../Pages/User/Product';
 import UserLogin from '../Pages/User/UserLogin';
 import ForgotPassword from '../Pages/User/ForgotPassword';
 import OtpVerification from '../Pages/User/OtpVerification';
-import UserSignup from '../Pages/User/UserSignUp';
+import UserSignup from '../Pages/User/UserSignup';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProductsForUser, selectProducts } from '../slices/admin/productSlice';
@@ -55,7 +55,7 @@ const UserLayout = () => {
         <Route path="/checkout" element={<UserProtectedRoutes element={<PlaceOrder />} />} />
         <Route path="/success" element={<UserProtectedRoutes element={<OrderSuccess />} />} />
         
-        {/* Wrapping only login and signup in GoogleOAuthProvider */}
+        
         <Route path="/login" element={
           <GoogleOAuthProvider clientId="951211049648-sbiee4qcea4nknn77kaeu33bkcik31vm.apps.googleusercontent.com">
             <UserLogin />

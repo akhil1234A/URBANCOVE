@@ -29,7 +29,7 @@ export const addProduct = createAsyncThunk(
   }
 );
 
-// Edit Product thunk
+
 export const editProduct = createAsyncThunk(
   'products/editProduct',
   async ({ productId, productData, token }, { rejectWithValue }) => {
@@ -114,7 +114,7 @@ const productsSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Edit Product
+    
       .addCase(editProduct.pending, (state) => {
         state.loading = true;
       })

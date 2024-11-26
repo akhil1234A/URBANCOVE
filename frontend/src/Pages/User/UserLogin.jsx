@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaGoogle } from 'react-icons/fa';
 import { toast } from 'react-toastify';
@@ -88,7 +88,7 @@ const UserLogin = () => {
       </div>
 
       <div className="mt-4">
-        {/* Uncomment when Google Auth is ready */}
+        
         <div className="flex gap-2 items-center justify-center w-fit px-3 h-12 border-2 border-black rounded cursor-pointer" onClick={handleGoogleSignIn}>
               <FaGoogle className="text-black text-xl" />
               Continue With Google

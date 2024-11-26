@@ -1,4 +1,3 @@
-import React from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logoutAdmin } from '../../slices/admin/adminSlice';
@@ -10,8 +9,8 @@ const Navbar = () => {
 
   const handleLogout = () => {
     toast.success('Logout Succesful');
-    dispatch(logoutAdmin()); // Dispatch logout action
-    navigate('/admin/login'); // Redirect to login page
+    dispatch(logoutAdmin()); 
+    navigate('/admin/login'); 
   };
 
   return (

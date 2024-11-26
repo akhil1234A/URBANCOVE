@@ -4,7 +4,7 @@ const authenticate = require('../middlewares/authenticate');
 
 const router = express.Router();
 
-
+//User: Authentification
 router.post('/signup', signUp);
 router.post('/verify-otp', verifyOtp);
 router.post('/resend-otp', resendOtp);

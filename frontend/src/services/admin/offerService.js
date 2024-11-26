@@ -3,7 +3,7 @@ import axios from 'axios';
 const BASE_URL = 'http://localhost:3000/admin/offers'; 
 
 
-// Fetch all offers
+// Admin: Fetch all offers
 export const fetchOffers = async (isActive = true) => {
   const token = localStorage.getItem('adminToken');
   const response = await axios.get(BASE_URL, {
@@ -13,7 +13,7 @@ export const fetchOffers = async (isActive = true) => {
   return response.data;
 };
 
-// Fetch single offer details
+// Admin: Fetch single offer details
 export const fetchOfferById = async (offerId) => {
   const token = localStorage.getItem('adminToken');
   const response = await axios.get(`${BASE_URL}/${offerId}`, {
@@ -22,7 +22,7 @@ export const fetchOfferById = async (offerId) => {
   return response.data;
 };
 
-// Create a new offer
+// Admin: Create a new offer
 export const createOffer = async (offerData) => {
   const token = localStorage.getItem('adminToken');
   const response = await axios.post(BASE_URL, offerData, {
@@ -31,7 +31,7 @@ export const createOffer = async (offerData) => {
   return response.data;
 };
 
-// Edit an existing offer
+// Admin: Edit an existing offer
 export const editOffer = async (offerId, offerData) => {
   const token = localStorage.getItem('adminToken');
   const response = await axios.put(`${BASE_URL}/${offerId}`, offerData, {
@@ -40,7 +40,7 @@ export const editOffer = async (offerId, offerData) => {
   return response.data;
 };
 
-// Soft delete an offer
+// Admin: Soft delete an offer
 export const softDeleteOffer = async (offerId) => {
   const token = localStorage.getItem('adminToken');
   const response = await axios.patch(`${BASE_URL}/${offerId}`, null, {

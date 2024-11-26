@@ -65,7 +65,7 @@ const subcategorySlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch
+      
       .addCase(fetchSubCategoriesThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -79,7 +79,7 @@ const subcategorySlice = createSlice({
         state.error = action.payload || 'Failed to fetch subcategories';
       })
       
-      // Add
+     
       .addCase(addSubCategoryThunk.pending, (state) => {
         state.error = null;
       })
@@ -90,7 +90,7 @@ const subcategorySlice = createSlice({
         state.error = action.payload || 'Failed to add subcategory';
       })
       
-      // Update
+      
       .addCase(updateSubCategoryThunk.pending, (state) => {
         state.error = null;
       })
@@ -102,7 +102,7 @@ const subcategorySlice = createSlice({
         state.error = action.payload || 'Failed to update subcategory';
       })
       
-      // Toggle status
+      
       .addCase(toggleSubCategoryStatusThunk.pending, (state) => {
         state.error = null;
       })

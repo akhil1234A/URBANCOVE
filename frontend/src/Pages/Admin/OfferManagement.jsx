@@ -31,7 +31,7 @@ const OfferManagement = () => {
 
   
 
-  // Deactivate an offer (either to list or unlist it)
+  
   const handleDeactivateOffer = async (offerId) => {
     await dispatch(deactivateOffer(offerId));
   };
@@ -39,7 +39,7 @@ const OfferManagement = () => {
   
   
 
-  // Handle edit offer modal
+ 
   const handleEditOffer = (id) => {
     navigate(`/admin/offers/edit-offer/${id}`)
   };
@@ -48,7 +48,7 @@ const OfferManagement = () => {
     <div className="container mx-auto p-6">
       <h3 className="text-3xl font-semibold mb-6">Manage Offers</h3>
 
-      {/* Loading and Error Handling */}
+      
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600">{error}</p>}
 

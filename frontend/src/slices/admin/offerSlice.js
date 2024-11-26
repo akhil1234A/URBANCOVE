@@ -7,7 +7,7 @@ import {
   softDeleteOffer,
 } from '../../services/admin/offerService';
 
-// Async thunks
+
 export const getOffers = createAsyncThunk(
   'offers/getOffers',
   async (isActive = true, { rejectWithValue }) => {
@@ -75,7 +75,7 @@ const offerSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // Get Offers
+      
       .addCase(getOffers.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -89,7 +89,7 @@ const offerSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Get Offer by ID
+      
       .addCase(getOfferById.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -104,7 +104,7 @@ const offerSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Add Offer
+      
       .addCase(addOffer.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -118,7 +118,7 @@ const offerSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Update Offer
+      
       .addCase(updateOffer.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -135,7 +135,7 @@ const offerSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Deactivate Offer
+      
       .addCase(deactivateOffer.pending, (state) => {
         state.loading = true;
         state.error = null;

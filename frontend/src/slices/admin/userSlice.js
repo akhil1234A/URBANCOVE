@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { fetchUsers, toggleBlockUser } from '../../services/admin/userService';
 import { toast } from 'react-toastify';
 
-// Async thunk for fetching users
+
 export const getUsers = createAsyncThunk('users/getUsers', async (_, { rejectWithValue }) => {
   try {
     return await fetchUsers();
@@ -11,7 +11,6 @@ export const getUsers = createAsyncThunk('users/getUsers', async (_, { rejectWit
   }
 });
 
-// Async thunk for toggling user block status
 export const toggleUserBlockStatus = createAsyncThunk(
   'users/toggleBlockStatus',
   async (userId, { rejectWithValue }) => {
@@ -36,7 +35,7 @@ const userSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // Get users
+   
       .addCase(getUsers.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -49,7 +48,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Toggle user block status
+   
       .addCase(toggleUserBlockStatus.fulfilled, (state, action) => {
         const user = state.users.find((u) => u._id === action.payload.userId);
         if (user) user.isActive = action.payload.isActive;

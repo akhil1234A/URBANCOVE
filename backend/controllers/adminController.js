@@ -2,6 +2,8 @@ const Admin = require('../models/Admin');
 const User = require('../models/User');
 const { generateToken } = require('../services/authService');
 
+
+//Admin : Login
 exports.login = async (req, res) => {
     const { email, password } = req.body;
    //  console.log('req body',req.body)
@@ -26,7 +28,7 @@ exports.login = async (req, res) => {
     }
 };
 
-
+//Admin : List All Users
 exports.listUsers = async(req,res)=>{
    try{
       const users = await User.find();
@@ -36,6 +38,7 @@ exports.listUsers = async(req,res)=>{
    }
 };
 
+//Admin: Block a User
 exports.blockUser = async(req,res)=>{
    try{
       // console.log('Headers: ',req.headers);

@@ -18,19 +18,12 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 
-//product management routes
+//Admin: Product Management 
 
 router.get('/', listProducts);
-
-// Route to fetch a specific product by ID
 router.get('/:productId?', listProducts);
-
 router.post('/', adminAuth, upload.array('images', 4), addProduct);
-
-
 router.patch('/:id', adminAuth, upload.array('images', 4), editProduct);
-
-
 router.patch('/:productId/delete', adminAuth, deleteProduct);
 
 module.exports = router;

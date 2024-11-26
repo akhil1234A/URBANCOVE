@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/admin/categories';
 
-// Function to fetch categories
+//Admin: Get Categories
 export const fetchCategories = async (token) => {
   try {
     const response = await axios.get(API_URL, {
@@ -12,12 +12,11 @@ export const fetchCategories = async (token) => {
     });
     return response.data; 
   } catch (error) {
-    // Handle errors properly
     throw new Error(error.response?.data?.message || 'Error fetching categories');
   }
 };
 
-// Function to add a category
+//Admin: Add a Category
 export const addCategory = async (token, category) => {
   try {
     const response = await axios.post(API_URL, category, {
@@ -27,12 +26,11 @@ export const addCategory = async (token, category) => {
     });
     return response.data.newCategory; 
   } catch (error) {
-    // Handle errors properly
     throw new Error(error.response?.data?.message || 'Error adding category');
   }
 };
 
-// Function to update a category
+//Admin: Update a Category
 export const updateCategory = async (token, categoryId, category) => {
   try {
     const response = await axios.put(`${API_URL}/${categoryId}`, category, {
@@ -42,11 +40,12 @@ export const updateCategory = async (token, categoryId, category) => {
     });
     return response.data; 
   } catch (error) {
-    // Handle errors properly
+  
     throw new Error(error.response?.data?.message || 'Error updating category');
   }
 };
 
+//Admin: Get All Sub Categories of a Category
 export const fetchSubCategoriesByCategoryId = async (categoryId, token) => {
   try {
     const response = await axios.get(`${API_URL}/${categoryId}/subcategories`, {

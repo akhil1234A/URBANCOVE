@@ -93,7 +93,6 @@ const CreateCoupon = () => {
   // Disable button while submitting
   setIsSubmitting(true);
 
-  // Dispatch Redux Action
   dispatch(addCoupon(couponData))
     .unwrap()
     .then(() => {

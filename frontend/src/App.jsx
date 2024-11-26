@@ -7,7 +7,6 @@ import { logoutAdmin, adminLogin} from './slices/admin/adminSlice';
 import { fetchProductsForUser, selectProducts} from './slices/admin/productSlice';
 
 
-// Admin
 import AdminLogin from './Pages/Admin/Login';
 import AdminRoutes from './Routes/AdminRoutes';
 import ProtectedRoute from './Routes/ProtectedRoutes';

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -13,7 +13,7 @@ import { fetchCategories } from '../../slices/admin/categorySlice';
 const SubCategory = () => {
   const dispatch = useDispatch();
   const { list: subCategories, loading, error } = useSelector((state) => state.subCategories);
-  const { list: categories = [] } = useSelector((state) => state.categories); // Default to empty array if undefined
+  const { list: categories = [] } = useSelector((state) => state.categories); 
 
   console.log(categories);
 

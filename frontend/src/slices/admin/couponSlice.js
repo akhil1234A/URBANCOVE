@@ -8,7 +8,7 @@ import {
 
 
 
-// Fetch all coupons
+
 export const fetchCoupons = createAsyncThunk('coupons/fetchAll', async (_, { rejectWithValue }) => {
   try {
     const data = await getAllCoupons();
@@ -19,7 +19,7 @@ export const fetchCoupons = createAsyncThunk('coupons/fetchAll', async (_, { rej
   }
 });
 
-// Add a new coupon
+
 export const addCoupon = createAsyncThunk('coupons/add', async (couponData, { rejectWithValue }) => {
   try {
     const data = await createCoupon(couponData);
@@ -29,7 +29,7 @@ export const addCoupon = createAsyncThunk('coupons/add', async (couponData, { re
   }
 });
 
-// Edit an existing coupon
+
 export const updateCoupon = createAsyncThunk(
   'coupons/update',
   async ({ couponId, updatedData }, { rejectWithValue }) => {
@@ -42,7 +42,7 @@ export const updateCoupon = createAsyncThunk(
   }
 );
 
-// Delete (soft delete) a coupon
+
 export const deactivateCoupon = createAsyncThunk(
   'coupons/delete',
   async (couponId, { rejectWithValue }) => {
@@ -55,7 +55,7 @@ export const deactivateCoupon = createAsyncThunk(
   }
 );
 
-// Slice
+
 const couponSlice = createSlice({
   name: 'coupons',
   initialState: {
@@ -75,12 +75,12 @@ const couponSlice = createSlice({
       }
     },
     clearSelectedCoupon: (state) => {
-      state.selectedCoupon = null; // Clear the selected coupon
+      state.selectedCoupon = null; 
     },
   },
   extraReducers: (builder) => {
     builder
-      // Fetch all coupons
+     
       .addCase(fetchCoupons.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -94,7 +94,7 @@ const couponSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Add coupon
+     
       .addCase(addCoupon.pending, (state) => {
         state.isLoading = true;
       })
@@ -107,7 +107,7 @@ const couponSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Update coupon
+      
       .addCase(updateCoupon.pending, (state) => {
         state.isLoading = true;
       })
@@ -123,7 +123,7 @@ const couponSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Delete coupon
+      
       .addCase(deactivateCoupon.pending, (state) => {
         state.isLoading = true;
       })

@@ -78,7 +78,7 @@ const PlaceOrder = () => {
         errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
         isValid = false;
       } else {
-        errors[field] = ""; // Clear error if valid
+        errors[field] = ""; 
       }
     });
   
@@ -249,7 +249,7 @@ const PlaceOrder = () => {
         { couponCode, total },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setDiscount(response.data.discount); // Assuming the API returns the discount amount
+      setDiscount(response.data.discount); 
       toast.success("Coupon applied successfully!");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to apply coupon");
@@ -276,11 +276,11 @@ const PlaceOrder = () => {
   
 
   if (loading) {
-    return <div>Loading...</div>; // Add a loading state while addresses are being fetched
+    return <div>Loading...</div>; 
   }
 
   if (error) {
-    return <div>Error: {error}</div>; // Handle error if there was an issue fetching addresses
+    return <div>Error: {error}</div>; 
   }
 
   return (
