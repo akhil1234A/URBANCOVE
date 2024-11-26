@@ -21,7 +21,7 @@ exports.createCoupon = async (req, res) => {
     await coupon.save();
     return res.status(201).json(coupon);
   } catch (error) {
-    console.error(error);
+    console.log(error);
     return res.status(500).json({ message: 'Server error' });
   }
 };
@@ -31,6 +31,8 @@ exports.editCoupon = async (req, res) => {
   try {
     const { couponId } = req.params;
     const { discountValue, validFrom, validUntil, usageLimit, minPurchase, maxDiscount } = req.body;
+
+    
 
     const coupon = await Coupon.findByIdAndUpdate(
       couponId,
@@ -48,10 +50,10 @@ exports.editCoupon = async (req, res) => {
     if (!coupon) {
       return res.status(404).json({ message: 'Coupon not found' });
     }
-
+   
     return res.status(200).json(coupon);
   } catch (error) {
-    console.error(error);
+    console.log(error);
     return res.status(500).json({ message: 'Server error' });
   }
 };
@@ -60,16 +62,18 @@ exports.editCoupon = async (req, res) => {
 exports.deleteCoupon = async (req, res) => {
   try {
     const { couponId } = req.params;
-
-    const coupon = await Coupon.findByIdAndUpdate(couponId, { isActive: false }, { new: true });
-
+    const coupon = await Coupon.findById(couponId);
+   
     if (!coupon) {
       return res.status(404).json({ message: 'Coupon not found' });
     }
 
+    coupon.isActive = !coupon.isActive;
+    await coupon.save();
+   
     return res.status(200).json({ message: 'Coupon deleted successfully', coupon });
   } catch (error) {
-    console.error(error);
+    console.log(error);
     return res.status(500).json({ message: 'Server error' });
   }
 };
@@ -80,7 +84,7 @@ exports.getAllCoupons = async (req, res) => {
     const coupons = await Coupon.find();
     return res.status(200).json(coupons);
   } catch (error) {
-    console.error(error);
+    console.log(error);
     return res.status(500).json({ message: 'Server error' });
   }
 };

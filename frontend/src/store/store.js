@@ -11,6 +11,7 @@ import addressReducer from '../slices/user/addressSlice'
 import cartReducer from '../slices/user/cartSlice'
 import orderReducer from '../slices/admin/orderSlice'
 import offerReducer from '../slices/admin/offerSlice';
+import couponReducer from '../slices/admin/couponSlice';
 
 const persistConfig = {
   key: 'root', 
@@ -32,6 +33,7 @@ export const store = configureStore({
     cart: cartReducer,
     orders: orderReducer,
     offers: offerReducer,
+    coupons: couponReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }),

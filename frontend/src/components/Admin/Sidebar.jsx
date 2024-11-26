@@ -1,11 +1,17 @@
 import { Layout, Menu } from 'antd';
-import { UserOutlined, AppstoreOutlined, ShoppingOutlined, FileTextOutlined, TagsOutlined } from '@ant-design/icons';
+import { 
+  UserOutlined, 
+  AppstoreOutlined, 
+  ShoppingOutlined, 
+  FileTextOutlined, 
+  TagsOutlined, 
+  PercentageOutlined 
+} from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
 const { Sider } = Layout;
 
 const Sidebar = () => {
-
   const menuItems = [
     {
       key: 'sub1',
@@ -34,20 +40,29 @@ const Sidebar = () => {
       ],
     },
     {
-      key: 'sub4', 
-      icon: <FileTextOutlined />, 
+      key: 'sub4',
+      icon: <FileTextOutlined />,
       label: 'Orders Management',
       children: [
-        { key: '6', label: <Link to="/admin/orders">View Orders</Link> }
+        { key: '6', label: <Link to="/admin/orders">View Orders</Link> },
       ],
     },
     {
-      key: 'sub5', 
-      icon: <TagsOutlined />, 
+      key: 'sub5',
+      icon: <TagsOutlined />,
       label: 'Offers Management',
       children: [
         { key: '7', label: <Link to="/admin/offers">View Offers</Link> },
         { key: '8', label: <Link to="/admin/offers/create-offer">Create Offer</Link> },
+      ],
+    },
+    {
+      key: 'sub6',
+      icon: <PercentageOutlined />,
+      label: 'Coupon Management',
+      children: [
+        { key: '9', label: <Link to="/admin/coupons">View Coupons</Link> },
+        { key: '10', label: <Link to="/admin/coupons/create">Create Coupon</Link> },
       ],
     },
   ];
