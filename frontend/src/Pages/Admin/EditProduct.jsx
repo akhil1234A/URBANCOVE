@@ -95,12 +95,12 @@ const EditProduct = () => {
         return;
       }
       // Check if each image exists and has been cropped if required
-      for (let index = 0; index < images.length; index++) {
-        if (images[index] && !croppedImages[index]) {
-          toast.error(`Please crop the image at index ${index + 1} before submitting.`);
-          return;
-        }
-      }
+      // for (let index = 0; index < images.length; index++) {
+      //   if (images[index] && !croppedImages[index]) {
+      //     toast.error(`Please crop the image at index ${index + 1} before submitting.`);
+      //     return;
+      //   }
+      // }
 
 
 

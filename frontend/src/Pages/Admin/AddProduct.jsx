@@ -10,8 +10,8 @@ const AddProduct = () => {
   const dispatch = useDispatch(); 
   const categories = useSelector((state) => state.categories.categories);
   const [subCategories, setSubCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('671a21b1ed1268c1b442da4b');
-  const [selectedSubCategory, setSelectedSubCategory] = useState('671a2c78a10d924e43a514c2');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [loading, setLoading] = useState(false);
   
   const [images, setImages] = useState([null, null, null, null]);
@@ -156,6 +156,8 @@ const dataURLToBlob = (dataURL) => {
             toast.error('Error fetching subcategories.');
           }
         });
+    } else {
+      setSubCategories([]); // Clear subcategories if no category is selected
     }
   }, [selectedCategory, dispatch]);
 
@@ -211,44 +213,46 @@ const dataURLToBlob = (dataURL) => {
 
       {/* Category, subcategory, price, stock */}
       <div className="flex gap-4">
-        <div className="w-full">
-          <label htmlFor="category" className="block mb-2">Category</label>
-          <select
-            id="category"
-            onChange={(e) => {
-              setSelectedCategory(e.target.value);
-              setSelectedSubCategory(''); 
-              setSubCategories([]); 
-            }}
-            className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            {categories.map((category) => (
-              <option key={category._id} value={category._id}>
-                {category.category}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="w-full">
+        <label htmlFor="category" className="block mb-2">Category</label>
+        <select
+          id="category"
+          value={selectedCategory} 
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            setSelectedSubCategory(''); 
+          }}
+          className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          <option value="" disabled>Select a category</option>
+          {categories.map((category) => (
+            <option key={category._id} value={category._id}>
+              {category.category}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        <div className="w-full">
-          <label htmlFor="subCategory" className="block mb-2">Subcategory</label>
-          <select
-            id="subCategory"
-            value={selectedSubCategory}
-            onChange={(e) => setSelectedSubCategory(e.target.value)}
-            className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            {subCategories.length > 0 ? (
-              subCategories.map((subCategory) => (
-                <option key={subCategory._id} value={subCategory._id}>
-                  {subCategory.subCategory}
-                </option>
-              ))
-            ) : (
-              <option value="" disabled>Select a category first</option>
-            )}
-          </select>
-        </div>
+      <div className="w-full">
+  <label htmlFor="subCategory" className="block mb-2">Subcategory</label>
+  <select
+    id="subCategory"
+    value={selectedSubCategory}
+    onChange={(e) => setSelectedSubCategory(e.target.value)}
+    className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+    disabled={subCategories.length === 0} // Disable if no subcategories are available
+  >
+    <option value="" disabled>
+      {subCategories.length > 0 ? 'Select a subcategory' : 'Select a category first'}
+    </option> {/* Placeholder option */}
+    {subCategories.map((subCategory) => (
+      <option key={subCategory._id} value={subCategory._id}>
+        {subCategory.subCategory}
+      </option>
+    ))}
+  </select>
+</div>
+
 
         <div className="w-full">
           <label className="block mb-2">Product Price</label>
