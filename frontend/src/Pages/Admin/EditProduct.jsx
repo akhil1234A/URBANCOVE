@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import ImageUpload from '../../components/Admin/ImageUpload';
+import ImageUpload from '../../components/Admin/EditImageUpload';
 import ImageCropper from '../../components/Admin/ImageCropper';
 import { toast } from 'react-toastify';
 import { fetchCategories, fetchSubCategoriesByCategory } from '../../slices/admin/categorySlice';
@@ -33,6 +33,8 @@ const EditProduct = () => {
   const [bestseller, setBestseller] = useState(false);
   const [sizes, setSizes] = useState(['L', 'XL']);
   const [stock, setStock] = useState(0);
+ 
+
  
 
   //Helper Functions 
@@ -70,9 +72,6 @@ const EditProduct = () => {
       return null;
     }
   };
-
-
-  
  
   const handleSizeSelection = (size) => {
     setSizes((prevSizes) => {
@@ -161,7 +160,7 @@ const EditProduct = () => {
     }
   };
 
-//reset form
+  //reset form
   const resetForm = () => {
     setName('');
     setDescription('');
@@ -174,7 +173,6 @@ const EditProduct = () => {
     setStock(0);
     setSubCategories([]);
   };
-
 
   useEffect(() => {
     if (productData) {
@@ -194,7 +192,7 @@ const EditProduct = () => {
     }
   }, [productData]);
 
-//useffect for fetching categories 
+  //useffect for fetching categories 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     dispatch(fetchCategories(token));
@@ -219,7 +217,6 @@ const EditProduct = () => {
     }
   }, [selectedCategory, dispatch]);
 
-
   //fetching products
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -227,6 +224,11 @@ const EditProduct = () => {
     if (!productData) {
       dispatch(fetchProductsForAdmin({ token, page: 1, limit: 100}));
     }
+
+    if (productData && productData.images) {
+      setImages(productData.images);
+    }
+
     console.log("Fetching Products for Admin...");
   }, [productId, dispatch, productData,]);
 
@@ -249,8 +251,8 @@ const EditProduct = () => {
         ) : null;
       })}
 
-       {/* Product name */}
-       <div className="w-full">
+ {/* Product name */}
+ <div className="w-full">
         <label className="block mb-2">Product Name</label>
         <input
           onChange={(e) => setName(e.target.value)}
@@ -360,6 +362,7 @@ const EditProduct = () => {
         <input type="checkbox" checked={bestseller} onChange={() => setBestseller(!bestseller)} />
         <label className="ml-2">Best Seller</label>
       </div>
+
 
       <button
         type="submit"
