@@ -33,7 +33,8 @@ export const updateSubCategoryThunk = createAsyncThunk(
   'subCategories/update',
   async ({ id, data, token }, { rejectWithValue }) => {
     try {
-      return await updateSubCategory(id, data, token);
+      const result = await updateSubCategory(id, data, token);
+      return result; 
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }

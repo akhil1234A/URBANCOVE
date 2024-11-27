@@ -13,7 +13,7 @@ import { fetchCategories } from '../../slices/admin/categorySlice';
 const SubCategory = () => {
   const dispatch = useDispatch();
   const { list: subCategories, loading, error } = useSelector((state) => state.subCategories);
-  const { list: categories = [] } = useSelector((state) => state.categories); 
+  const { categories = [] } = useSelector((state) => state.categories); 
 
   console.log(categories);
 
