@@ -6,22 +6,36 @@ import { toast } from 'react-toastify';
 import { fetchCategories, fetchSubCategoriesByCategory } from '../../slices/admin/categorySlice';
 import { editProduct } from '../../slices/admin/productSlice';
 import { useNavigate, useParams } from 'react-router-dom';
+import { selectProductById, fetchProductsForAdmin } from '../../slices/admin/productSlice';
 
 const EditProduct = () => {
   const dispatch = useDispatch();
   const { id: productId } = useParams();
   const navigate = useNavigate();
+  const productData = useSelector((state) => selectProductById(state, productId));
 
+
+  //State Variables 
   const categories = useSelector((state) => state.categories.categories);
   const [subCategories, setSubCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSubCategory, setSelectedSubCategory] = useState('');
+  const [selectedSubCategory, setSelectedSubCategory] = useState([]);
 
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [images, setImages] = useState([null, null, null, null]);
   const [croppedImages, setCroppedImages] = useState([null, null, null, null]);
   const [cropperOpen, setCropperOpen] = useState([false, false, false, false]);
 
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState(0);
+  const [bestseller, setBestseller] = useState(false);
+  const [sizes, setSizes] = useState(['L', 'XL']);
+  const [stock, setStock] = useState(0);
+ 
+
+  //Helper Functions 
   const setCroppedImage = (index, croppedImage) => {
     const newCroppedImages = [...croppedImages];
     newCroppedImages[index] = croppedImage;
@@ -57,47 +71,18 @@ const EditProduct = () => {
     }
   };
 
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState(0);
-  const [bestseller, setBestseller] = useState(false);
-  const [loadingData, setLoadingData] = useState(true);
-  const defaultQuantities = {
-    S: 10,
-    M: 15,
-    L: 20,
-    XL: 25,
-    XXL: 30,
-  };
 
-  const [sizes, setSizes] = useState(['L', 'XL']);
-  const [stock, setStock] = useState(defaultQuantities);
-  const [totalStock, setTotalStock] = useState(0); // Define totalStock as state
-  const [cStock, setCStock] = useState(0)
-  const calculateTotalStock = (selectedSizes, stockData) => {
-    return selectedSizes.reduce((acc, size) => acc + (stockData[size] || 0), 0);
-  };
-
-  useEffect(() => {
-    const total = calculateTotalStock(sizes, stock);
-    setTotalStock(total);
-  }, [sizes, stock]);
   
  
   const handleSizeSelection = (size) => {
     setSizes((prevSizes) => {
-      const newSizes = prevSizes.includes(size)
-        ? prevSizes.filter((s) => s !== size)
-        : [...prevSizes, size];
-        const updatedTotalStock = calculateTotalStock(newSizes, stock);
-        setTotalStock(updatedTotalStock);
-      return newSizes;
+      if (prevSizes.includes(size)) {
+        return prevSizes.filter((s) => s !== size);
+      }
+      return [...prevSizes, size];
     });
   };
 
-const [initialSizes, setInitialSizes] = useState([]);
-const [initialTotalStock, setInitialTotalStock] = useState(0);
-const [initialSubCategory, setInitialSubCategory] = useState('');
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
@@ -118,25 +103,20 @@ const [initialSubCategory, setInitialSubCategory] = useState('');
         }
       }
 
-      const formData = new FormData();
 
+
+      const formData = new FormData();
+      
       formData.append('productName', name);
       formData.append('productDescription', description);
       formData.append('category', selectedCategory);
-      formData.append('subCategory', selectedSubCategory || initialSubCategory);
+      formData.append('subCategory', selectedSubCategory);
       formData.append('price', parseFloat(price));
       formData.append('isBestSeller', bestseller);
+      formData.append('stock', stock); 
+      sizes.forEach((size) => formData.append('size[]', size));
   
-      if (JSON.stringify(sizes) !== JSON.stringify(initialSizes)) {
-        sizes.forEach((size) => {
-          formData.append('size[]', size);
-        });
-      }
-  
-      // Append stock if it has changed
-      if (totalStock !== initialTotalStock) {
-        formData.append('stock', totalStock);
-      }
+      
       // Handle images (ensure they are either original or cropped)
       for (let index = 0; index < images.length; index++) {
         let file;
@@ -159,9 +139,9 @@ const [initialSubCategory, setInitialSubCategory] = useState('');
           formData.append('images', file, `image-${Date.now()}-${index}.png`);
         }
       }
-
-      console.log('images:', images);
-      console.log('croppedImages:', croppedImages);
+    
+      // console.log('images:', images);
+      // console.log('croppedImages:', croppedImages);
 
       // Send the request
       const resultAction = await dispatch(editProduct({ productId, productData: formData, token }));
@@ -181,34 +161,57 @@ const [initialSubCategory, setInitialSubCategory] = useState('');
     }
   };
 
+//reset form
   const resetForm = () => {
     setName('');
     setDescription('');
     setPrice('');
     setImages([null, null, null, null]);
     setCroppedImages([null, null, null, null]);
-    setSizes(['L', 'XL']);  // Or preserve the fetched sizes
+    setSizes(['L', 'XL']);  
     setBestseller(false);
     setCropperOpen([false, false, false, false]);
-    setStock(defaultQuantities);
+    setStock(0);
     setSubCategories([]);
   };
 
+
+  useEffect(() => {
+    if (productData) {
+      setName(productData.productName);
+      setDescription(productData.productDescription);
+      setPrice(productData.price);
+      setStock(productData.stock);
+      setBestseller(productData.isBestSeller);
+      setSizes(productData.size || []);
+      setSelectedCategory(productData.category._id);
+      setSelectedSubCategory(productData.subCategory._id);
+      setLoadingData(false);
+      console.log("Product Data Loaded:", productData);
+    } else {
+      toast.error('Failed to load product data from the store.');
+      setLoadingData(false);
+    }
+  }, [productData]);
+
+//useffect for fetching categories 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     dispatch(fetchCategories(token));
+    console.log("Fetching Categories...");
   }, [dispatch]);
 
+
+//useeffect for populating selected categories 
   useEffect(() => {
     if (selectedCategory) {
+      console.log("Selected Category:", selectedCategory);
       const token = localStorage.getItem('adminToken');
       dispatch(fetchSubCategoriesByCategory({ categoryId: selectedCategory, token }))
         .then((response) => {
           if (fetchSubCategoriesByCategory.fulfilled.match(response)) {
+            console.log("Fetched SubCategories:", response.payload);
             setSubCategories(response.payload);
-            if (selectedSubCategory) {
-              setSelectedSubCategory(selectedSubCategory._id);
-            }
           } else {
             toast.error('Error fetching subcategories.');
           }
@@ -216,49 +219,17 @@ const [initialSubCategory, setInitialSubCategory] = useState('');
     }
   }, [selectedCategory, dispatch]);
 
+
+  //fetching products
   useEffect(() => {
-    const fetchProduct = async () => {
-      const token = localStorage.getItem('adminToken');
-      try {
-        const response = await fetch(`http://localhost:3000/admin/products?productId=${productId}&isAdmin=true`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const productX = await response.json();
-        const productData = productX.products;
-        console.log(productData);
-        if (response.ok && productData) {
-          setName(productData[0].productName);
-          setDescription(productData[0].productDescription);
-          setPrice(productData[0].price);
-          setStock((prev) => ({
-              ...prev,
-              ...productData[0].stockQuantities,  // Ensure stockQuantities aligns with your data structure
-          }));
-          setCStock(productData[0].stock);
-          setBestseller(productData[0].isBestSeller);
-          setSizes(productData[0].sizes || []);  // Populate sizes from fetched data
-          setSelectedCategory(productData[0].category._id);
-          setSelectedSubCategory(productData[0].subCategory._id);
-          setInitialSizes(productData[0].sizes || []);
-          setInitialTotalStock(totalStock);
-          setInitialSubCategory(productData[0].subCategory._id);
-          setLoadingData(false);
-      } else {
-          toast.error(productData.message || 'Failed to load product');
-      }
+    const token = localStorage.getItem('adminToken');
 
+    if (!productData) {
+      dispatch(fetchProductsForAdmin({ token, page: 1, limit: 100}));
+    }
+    console.log("Fetching Products for Admin...");
+  }, [productId, dispatch, productData,]);
 
-      } catch (error) {
-        toast.error('An error occurred while fetching the product');
-        console.error(error);
-        setLoadingData(false);
-      }
-    };
-
-    fetchProduct();
-  }, [productId]);
 
   return (
     <form onSubmit={onSubmitHandler} className="flex flex-col w-full items-start gap-4 p-5 bg-white rounded shadow-md">
@@ -332,21 +303,16 @@ const [initialSubCategory, setInitialSubCategory] = useState('');
           </label>
           <select
             id="subCategory"
-            value={selectedSubCategory || ''}
+            value={selectedSubCategory}
             onChange={(e) => setSelectedSubCategory(e.target.value)}
             className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
-            {subCategories.length > 0 ? (
-              subCategories.map((subCategory) => (
-                <option key={subCategory._id} value={subCategory._id}>
-                  {subCategory.subCategory}
-                </option>
-              ))
-            ) : (
-              <option value="" disabled>
-                Select a category first
-              </option>
-            )}
+          <option value="">Select a subcategory</option>
+          {subCategories.map((subCategory) => (
+            <option key={subCategory._id} value={subCategory._id}>
+              {subCategory.subCategory}
+            </option>
+          ))}
           </select>
         </div>
 
@@ -363,21 +329,14 @@ const [initialSubCategory, setInitialSubCategory] = useState('');
         </div>
 
         <div className="w-full">
-          <label className="block mb-2">Fetched Stock</label>
+          <label className="block mb-2">Stock</label>
           <input
-            value={cStock || 0}
-            className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none bg-gray-100 cursor-not-allowed"
-            readOnly
+            type="number"
+            value={stock}
+            onChange={(e) => setStock(Math.max(0, parseInt(e.target.value, 10) || 0))}
+            className="w-full px-3 py-2 border rounded"
           />
-        </div>
 
-        <div className="w-full">
-          <label className="block mb-2">Overall Stock</label>
-          <input
-            value={totalStock || ''}
-            className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none bg-gray-100 cursor-not-allowed"
-            readOnly
-          />
         </div>
       </div>
 
@@ -385,14 +344,14 @@ const [initialSubCategory, setInitialSubCategory] = useState('');
       <div className="w-full">
         <p className="mb-2">Product Sizes</p>
         <div className="flex gap-3">
-          {Object.keys(defaultQuantities).map((size) => (
-            <div key={size} className="flex items-center">
+        {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
+            <div key={size} className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={sizes.includes(size)}
                 onChange={() => handleSizeSelection(size)}
               />
-              <label className="ml-2">{size}</label>
+              <label>{size}</label>
             </div>
           ))}
         </div>

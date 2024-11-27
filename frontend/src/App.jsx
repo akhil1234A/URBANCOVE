@@ -1,10 +1,10 @@
-import React, {useEffect} from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import {useEffect} from 'react';
+import { useDispatch } from 'react-redux';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { logoutAdmin, adminLogin} from './slices/admin/adminSlice';
-import { fetchProductsForUser, selectProducts} from './slices/admin/productSlice';
+import { logoutAdmin } from './slices/admin/adminSlice';
+import { fetchProductsForUser } from './slices/admin/productSlice';
 
 
 import AdminLogin from './Pages/Admin/Login';
