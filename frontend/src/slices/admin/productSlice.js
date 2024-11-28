@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import {fetchProducts, fetchAdminProducts, updateProductStatusService, addProductService, editProductService }from '../../services/admin/productService'
 
 export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async ({page = 1, limit = 100, search}) => {
@@ -50,6 +50,13 @@ const productsSlice = createSlice({
     totalPages: 1,
     totalItems: 0,
     search: '',
+    sort: '',
+    filters: {
+      categories: [],
+      subCategories: [],
+      priceRange: { min: 0, max: Infinity },
+      inStock: true
+    },
     loading: false,
     error: null,
   },
@@ -59,6 +66,12 @@ const productsSlice = createSlice({
   },
    setSearch: (state, action) => {
     state.search = action.payload;
+  },
+  setSort: (state, action) => {
+    state.sort = action.payload;
+  },
+  setFilters: (state, action) => {
+    state.filters = { ...state.filters, ...action.payload };
   },
 },
   extraReducers: (builder) => {
@@ -136,7 +149,62 @@ const productsSlice = createSlice({
   },
 });
 
-export const selectProducts = (state) => state.products.items;
+const selectProductItems = state => state.products.items;
+const selectProductFilters = state => state.products.filters;
+const selectProductSort = state => state.products.sort;
+
+export const selectProducts = createSelector(
+  [selectProductItems, selectProductFilters, selectProductSort],
+  (items, filters, sort) => {
+    let filteredProducts = items;
+
+    // Apply category filter
+    if (filters.categories.length > 0) {
+      filteredProducts = filteredProducts.filter(product => 
+        filters.categories.includes(product.category.category)
+      );
+    }
+
+    // Apply subcategory filter
+    if (filters.subCategories.length > 0) {
+      filteredProducts = filteredProducts.filter(product => 
+        filters.subCategories.includes(product.subCategory.subCategory)
+      );
+    }
+
+    // Apply price range filter
+    filteredProducts = filteredProducts.filter(product => 
+      product.price >= filters.priceRange.min && 
+      product.price <= filters.priceRange.max
+    );
+
+    // Apply in stock filter
+    if (filters.inStock) {
+      filteredProducts = filteredProducts.filter(product => product.stock > 0);
+    }
+
+    // Apply sorting
+    if (sort) {
+      filteredProducts.sort((a, b) => {
+        switch (sort) {
+          case 'price-low-high':
+            return a.price - b.price;
+          case 'price-high-low':
+            return b.price - a.price;
+          case 'name-a-z':
+            return a.productName.localeCompare(b.productName);
+          case 'name-z-a':
+            return b.productName.localeCompare(a.productName);
+          default:
+            return 0;
+        }
+      });
+    }
+
+    return filteredProducts;
+  }
+);
+
 export const selectLoading = (state) => state.products.loading;
 
 
@@ -144,5 +212,5 @@ export const selectProductById = (state, productID) =>
   state.products.items.find((product) => product._id === productID);
 
 
-export const {setCurrentPage, setSearch} = productsSlice.actions;
+export const {setCurrentPage, setSearch, setSort, setFilters} = productsSlice.actions;
 export default productsSlice.reducer;

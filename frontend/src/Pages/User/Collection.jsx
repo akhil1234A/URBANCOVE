@@ -1,6 +1,6 @@
-import  { useEffect } from 'react';
+import  { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchProductsForUser, selectProducts, selectLoading, setCurrentPage} from '../../slices/admin/productSlice';
+import { fetchProductsForUser, selectProducts, selectLoading, setCurrentPage, setSort, setFilters, setSearch } from '../../slices/admin/productSlice';
 import { assets } from '../../assets/assets';
 import Title from '../../components/User/Title';
 import ProductItem from '../../components/User/ProductItem';
@@ -17,8 +17,11 @@ const Collection = () => {
   const totalPages = useSelector((state) => state.products.totalPages); 
   const itemsPerPage = 12; 
   const search = useSelector((state) => state.products.search);
-
+  const sort = useSelector((state) => state.products.sort);
+  const filters = useSelector((state) => state.products.filters);
   
+
+  const [localFilters, setLocalFilters] = useState(filters);
 
   useEffect(() => {
     dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search }));
@@ -30,6 +33,50 @@ const Collection = () => {
     }
   };
 
+  const handleSortChange = (e) => {
+    dispatch(setSort(e.target.value));
+  };
+
+  const handleCategoryFilterChange = (category) => {
+    const updatedCategories = localFilters.categories.includes(category)
+      ? localFilters.categories.filter(c => c !== category)
+      : [...localFilters.categories, category];
+    
+    setLocalFilters(prev => ({
+      ...prev,
+      categories: updatedCategories
+    }));
+  };
+
+  const handleSubCategoryFilterChange = (subCategory) => {
+    const updatedSubCategories = localFilters.subCategories.includes(subCategory)
+      ? localFilters.subCategories.filter(sc => sc !== subCategory)
+      : [...localFilters.subCategories, subCategory];
+    
+    setLocalFilters(prev => ({
+      ...prev,
+      subCategories: updatedSubCategories
+    }));
+  };
+
+  const handleInStockChange = () => {
+    setLocalFilters(prev => ({
+      ...prev,
+      inStock: !prev.inStock
+    }));
+  };
+
+  const handlePriceRangeChange = (min, max) => {
+    setLocalFilters(prev => ({
+      ...prev,
+      priceRange: { min, max }
+    }));
+  };
+
+  const applyFilters = () => {
+    dispatch(setFilters(localFilters));
+  };
+
   if (loading) {
     return <div>Loading products...</div>;
   }
@@ -37,46 +84,88 @@ const Collection = () => {
   return (
     <div className='flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t'>
        
-      {/* Filter options */}
-      <div className='min-w-60'>
+        {/* Filter options */}
+        <div className='min-w-60'>
         <p className='my-2 text-xl flex items-center cursor-pointer gap-2'>FILTERS
           <img className={`h-3 sm:hidden`} src={assets.dropdown_icon} alt="" />
         </p>
 
+        
         {/* Category filter */}
         <div className={`border border-gray-300 pl-5 py-3 mt-6 sm:block`}>
           <p className='mb-3 text-sm font-medium'>CATEGORIES</p>
           <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
-            <p className='flex gap-2'>
-              <input className='w-3' type="checkbox" value={'Men'} /> Men
-            </p>
-            <p className='flex gap-2'>
-              <input className='w-3' type="checkbox" value={'Women'} /> Women
-            </p>
-            <p className='flex gap-2'>
-              <input className='w-3' type="checkbox" value={'Kids'} /> Kids
-            </p>
-            <p className='flex gap-2'>
-              <input className='w-3' type="checkbox" value={'OutOfStock'} /> Out of Stock
-            </p>
+            {['Men', 'Women', 'Kids'].map(category => (
+              <p key={category} className='flex gap-2'>
+                <input
+                  className='w-3'
+                  type="checkbox"
+                  value={category}
+                  checked={localFilters.categories.includes(category)}
+                  onChange={() => handleCategoryFilterChange(category)}
+                /> {category}
+              </p>
+            ))}
           </div>
         </div>
 
         {/* Subcategory filter */}
-        {/* <div className={`border border-gray-300 pl-5 py-3 my-5 sm:block`}>
+        <div className={`border border-gray-300 pl-5 py-3 my-5 sm:block`}>
           <p className='mb-3 text-sm font-medium'>TYPE</p>
           <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
-            <p className='flex gap-2'>
-              <input className='w-3' type="checkbox" value={'Topwear'} /> Topwear
-            </p>
-            <p className='flex gap-2'>
-              <input className='w-3' type="checkbox" value={'Bottomwear'} /> Bottomwear
-            </p>
-            <p className='flex gap-2'>
-              <input className='w-3' type="checkbox" value={'Winterwear'} /> Winterwear
-            </p>
+            {['Topwear', 'Bottomwear', 'Winterwear'].map(subCategory => (
+              <p key={subCategory} className='flex gap-2'>
+                <input
+                  className='w-3'
+                  type="checkbox"
+                  value={subCategory}
+                  checked={localFilters.subCategories.includes(subCategory)}
+                  onChange={() => handleSubCategoryFilterChange(subCategory)}
+                /> {subCategory}
+              </p>
+            ))}
           </div>
-        </div> */}
+        </div>
+
+        {/* Price range filter */}
+        <div className={`border border-gray-300 pl-5 py-3 my-5 sm:block`}>
+          <p className='mb-3 text-sm font-medium'>PRICE RANGE</p>
+          <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
+            <input
+              type="number"
+              placeholder="Min Price"
+              value={localFilters.priceRange.min}
+              onChange={(e) => handlePriceRangeChange(Number(e.target.value), localFilters.priceRange.max)}
+              className="border rounded px-2 py-1"
+            />
+            <input
+              type="number"
+              placeholder="Max Price"
+              value={localFilters.priceRange.max === Infinity ? '' : localFilters.priceRange.max}
+              onChange={(e) => handlePriceRangeChange(localFilters.priceRange.min, Number(e.target.value) || Infinity)}
+              className="border rounded px-2 py-1"
+            />
+          </div>
+        </div>
+
+        {/* In Stock filter */}
+        <div className={`border border-gray-300 pl-5 py-3 my-5 sm:block`}>
+          <p className='flex gap-2'>
+            <input
+              className='w-3'
+              type="checkbox"
+              checked={localFilters.inStock}
+              onChange={handleInStockChange}
+            /> In Stock Only
+          </p>
+        </div>
+
+        <button
+          onClick={applyFilters}
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+        >
+          Apply Filters
+        </button>
       </div>
      
       {/* Right side */}
@@ -84,10 +173,16 @@ const Collection = () => {
         <div className='flex justify-between text-base sm:text-2xl mb-4'>
           <Title text1={'ALL'} text2={'COLLECTIONS'} />
           {/* Product sort */}
-          <select className='border-2 border-gray-300 text-sm px-2'>
-            {/* <option value="relavent">Sort by : Relevant</option> */}
-            <option value="low-high">Sort by : Low to High</option>
-            <option value="high-low">Sort by : High to Low</option>
+          <select
+            className='border-2 border-gray-300 text-sm px-2'
+            value={sort}
+            onChange={handleSortChange}
+          >
+            <option value="">Sort by</option>
+            <option value="price-low-high">Price: Low to High</option>
+            <option value="price-high-low">Price: High to Low</option>
+            <option value="name-a-z">Name: A to Z</option>
+            <option value="name-z-a">Name: Z to A</option>
           </select>
         </div>
 
