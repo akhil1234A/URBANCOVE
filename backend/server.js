@@ -25,6 +25,8 @@ const cartRoutes = require('./routes/cartRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const offerRoutes = require('./routes/offerRoutes');
 const couponRoutes = require('./routes/couponRoutes');
+const wishlistRoutes = require('./routes/wishlistRoutes')
+const walletRoutes = require('./routes/walletRoutes')
 
 app.use('/admin', adminRoutes);
 app.use('/admin/categories',categoryRoutes);
@@ -34,8 +36,11 @@ app.use('/admin/offers', offerRoutes);
 app.use('/user',userRoutes);
 app.use('/user/address',addressRoutes);
 app.use('/user/cart', cartRoutes)
+app.use('/user/wishlist',wishlistRoutes);
+app.use('/user/wallet',walletRoutes);
 app.use('/orders', orderRoutes);
-app.use('/coupons',couponRoutes)
+app.use('/coupons',couponRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

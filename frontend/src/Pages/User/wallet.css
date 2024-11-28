@@ -1,0 +1,49 @@
+/* wallet styles */
+.wallet-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.balance-text {
+  font-size: 36px;
+  font-weight: 700;
+  color: #4caf50; /* Green for positive balance */
+  margin-top: 20px;
+}
+
+.error-text {
+  color: #e74c3c;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.no-transaction-text {
+  color: #7f8c8d;
+  font-size: 18px;
+}
+
+.spinner {
+  margin-top: 20px;
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+  border-width: 0.3em;
+  border-top-color: #007bff; /* Blue spinner */
+}
+
+.spinner-border span {
+  visibility: hidden; /* Hide the default text */
+}

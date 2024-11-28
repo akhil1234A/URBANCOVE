@@ -12,6 +12,7 @@ import cartReducer from '../slices/user/cartSlice'
 import orderReducer from '../slices/admin/orderSlice'
 import offerReducer from '../slices/admin/offerSlice';
 import couponReducer from '../slices/admin/couponSlice';
+import wishlistReducer from '../slices/user/wishlistSlice'
 
 const persistConfig = {
   key: 'root', 
@@ -34,6 +35,7 @@ export const store = configureStore({
     orders: orderReducer,
     offers: offerReducer,
     coupons: couponReducer,
+    wishlist: wishlistReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }),

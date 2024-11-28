@@ -1,13 +1,32 @@
 import { Link } from 'react-router-dom';
-import { FaHeart } from 'react-icons/fa'; // Wishlist heart icon
-import { FaTag } from 'react-icons/fa';  // Offer tag icon
+import { FaHeart } from 'react-icons/fa'; 
+import { FaTag } from 'react-icons/fa';  
+import { addToWishlist } from '../../slices/user/wishlistSlice';
+import { useDispatch } from 'react-redux';
+
+
 
 const ProductItem = ({ id, image, name, price, currency, discountedPrice }) => {
+  const dispatch = useDispatch();
+
   // Calculate discount percentage
   const hasDiscount = discountedPrice && discountedPrice < price;
   const discountPercentage = hasDiscount
     ? Math.round(((price - discountedPrice) / price) * 100)
     : 0;
+
+  // Handle adding to wishlist
+  const handleAddToWishlist = (e) => {
+    e.preventDefault(); // Prevent navigation when clicking the icon
+    dispatch(addToWishlist(id))
+      .unwrap()
+      .then(() => {
+        toast.success('Item added to your wishlist!');
+      })
+      .catch((error) => {
+        toast.error(error || 'Failed to add item to wishlist.');
+      });
+  };
 
   return (
     <Link className="text-gray-700 cursor-pointer relative" to={`/product/${id}`}>
@@ -53,11 +72,16 @@ const ProductItem = ({ id, image, name, price, currency, discountedPrice }) => {
       </p>
 
       {/* Wishlist Icon */}
-      <div className="absolute top-1 right-5 text-xl text-gray-700 opacity-75 hover:opacity-100 z-20">
+      <div
+        className="absolute top-1 right-5 text-xl text-gray-700 opacity-75 hover:opacity-100 z-20"
+        onClick={handleAddToWishlist}
+      >
         <FaHeart className="cursor-pointer hover:text-red-500" />
       </div>
     </Link>
   );
 };
+
+
 
 export default ProductItem;

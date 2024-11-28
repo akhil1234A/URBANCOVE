@@ -83,6 +83,12 @@ const Navbar = () => {
                   <NavLink to='/account' className='cursor-pointer hover:text-black'>
                     My Profile
                   </NavLink>
+                  <NavLink to='/wishlist' className='cursor-pointer hover:text-black'>
+                    My Wishlist
+                  </NavLink>
+                  <NavLink to='/wallet' className='cursor-pointer hover:text-black'>
+                    My Wallet
+                  </NavLink>
               {/* Conditional rendering for Logout/Login */}
               {user ? (
                 <p onClick={handleLogout} className='cursor-pointer hover:text-black'>Logout</p>

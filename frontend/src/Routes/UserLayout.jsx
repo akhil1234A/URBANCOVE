@@ -19,6 +19,8 @@ import UserAccount from '../Pages/User/UserAccount';
 import Cart from '../Pages/User/Cart';
 import OrderSuccess from '../Pages/User/OrderSuccess';
 import UserProtectedRoutes from './UserProtectedRoutes';
+import Wishlist from '../Pages/User/Wishlist';
+import Wallet from '../Pages/User/Wallet';
 
 const UserLayout = () => {
 
@@ -54,7 +56,8 @@ const UserLayout = () => {
         <Route path="/cart" element={<UserProtectedRoutes element={<Cart />} />} />
         <Route path="/checkout" element={<UserProtectedRoutes element={<PlaceOrder />} />} />
         <Route path="/success" element={<UserProtectedRoutes element={<OrderSuccess />} />} />
-        
+        <Route path="/wishlist" element={<UserProtectedRoutes element={<Wishlist/>} />} /> 
+        <Route path="/wallet" element={<UserProtectedRoutes element={<Wallet/>} />} /> 
         
         <Route path="/login" element={
           <GoogleOAuthProvider clientId="951211049648-sbiee4qcea4nknn77kaeu33bkcik31vm.apps.googleusercontent.com">

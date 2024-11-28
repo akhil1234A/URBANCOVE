@@ -2,6 +2,7 @@ const Order = require("../models/Order");
 const Product = require("../models/Product");
 const Address = require("../models/Address");
 const Cart = require("../models/Cart");
+const Transaction = require('../models/Transaction')
 const razorpayInstance = require("../utils/Razorpay");
 const crypto = require('crypto');
 
@@ -115,7 +116,10 @@ const cancelOrder = async (req, res) => {
     }
 
     order.status = "Cancelled";
+    const refund = order.totalAmount;
     await order.save();
+
+   
 
     // Restore stock for canceled items
     for (let item of order.items) {
@@ -123,6 +127,15 @@ const cancelOrder = async (req, res) => {
         $inc: { stock: item.quantity },
       });
     }
+
+    await Transaction.create({
+      userId,
+      type: "credit",
+      amount: refund,
+      description: `Refund for canceled order ${orderId}`,
+      date: new Date(),
+    });
+
 
     res.status(200).json({ message: "Order canceled successfully", order });
   } catch (error) {
