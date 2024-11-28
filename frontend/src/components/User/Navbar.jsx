@@ -2,14 +2,24 @@ import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux'; // Import necessary hooks
 import { logout } from '../../slices/user/authSlice'; // Import the logout action
-import { assets } from '../../assets/assets';
+import { assets } from '../../assets/assets'; 
+import { setSearch, fetchProductsForUser} from '../../slices/admin/productSlice'
+import { Search } from 'lucide-react'
 
-const Navbar = ({toggleSearchBar}) => {
+const Navbar = () => {
+  const [searchQuery, setSearchQuery] = useState('');
   const [visible, setVisible] = useState(false);
   const dispatch = useDispatch(); 
   const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   
+  const handleSearch = (e) => {
+    e.preventDefault();
+    dispatch(setSearch(searchQuery)); 
+    dispatch(fetchProductsForUser({ page: 1, limit: 12, search: searchQuery })); 
+    navigate('/collection');
+  };
+
   const handleLogout = () => {
     dispatch(logout()); 
     navigate('/login');
@@ -44,12 +54,22 @@ const Navbar = ({toggleSearchBar}) => {
       </ul>
 
       <div className='flex items-center gap-6'>
-        <img 
-          onClick={toggleSearchBar}
-          src={assets.search_icon} 
-          className='w-5 cursor-pointer' 
-          alt="Search" 
-        />
+      <form onSubmit={handleSearch} className='hidden sm:flex items-center relative'>
+          <input
+            type='text'
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder='Search products...'
+            className='border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition duration-300 ease-in-out'
+          />
+          <button 
+            type='submit' 
+            className='absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition duration-300 ease-in-out'
+            aria-label="Search"
+          >
+            <Search size={20} />
+          </button>
+        </form>
 
         <div className='relative group'>
           <img 
@@ -76,7 +96,7 @@ const Navbar = ({toggleSearchBar}) => {
         <Link to='/cart' className='relative'>
           <img src={assets.cart_icon} className='w-5 min-w-5' alt="Cart" />
           <p className='absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]'>
-            0 {/* Placeholder for cart count */}
+            0 
           </p>
         </Link>
 

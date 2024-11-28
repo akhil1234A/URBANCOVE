@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import {fetchProducts, fetchAdminProducts, updateProductStatusService, addProductService, editProductService }from '../../services/admin/productService'
 
-export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async ({page = 1, limit = 100}) => {
-  return await fetchProducts(page,limit);
+export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async ({page = 1, limit = 100, search}) => {
+  return await fetchProducts(page,limit,search);
 });
 
 export const fetchProductsForAdmin = createAsyncThunk(
@@ -49,13 +49,18 @@ const productsSlice = createSlice({
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
+    search: '',
     loading: false,
-    error: null
+    error: null,
   },
   reducers: { 
     setCurrentPage: (state, action) => {
     state.currentPage = action.payload;
-  },},
+  },
+   setSearch: (state, action) => {
+    state.search = action.payload;
+  },
+},
   extraReducers: (builder) => {
     builder
       .addCase(fetchProductsForUser.pending, (state) => {
@@ -139,5 +144,5 @@ export const selectProductById = (state, productID) =>
   state.products.items.find((product) => product._id === productID);
 
 
-export const {setCurrentPage} = productsSlice.actions;
+export const {setCurrentPage, setSearch} = productsSlice.actions;
 export default productsSlice.reducer;

@@ -20,9 +20,9 @@ exports.listProducts = async (req, res) => {
     try {
       // console.log(req.query);
       const { type } = req.params;
-      const { page = 1, limit = 10, isAdmin = false, productId} = req.query;      
+      const { page = 1, limit = 10, isAdmin = false, productId, search} = req.query;      
 
-    
+      
 
       let query = isAdmin === 'true' ? {} : { isActive: true };
 
@@ -37,6 +37,9 @@ exports.listProducts = async (req, res) => {
         }
       }
      
+      if (search) {
+        query.productName = { $regex: search, $options: 'i' }; // Case-insensitive search
+      }
 
       const options = {
         limit: parseInt(limit),

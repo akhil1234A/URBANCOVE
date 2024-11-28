@@ -8,7 +8,6 @@ import Newsletter from '../../components/User/Newsletter'
 
 const Home = ({products}) => {
 
-console.log(products)
 
 
 const latestCollection = Array.isArray(products)

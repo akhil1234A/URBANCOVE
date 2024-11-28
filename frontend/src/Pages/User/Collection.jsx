@@ -16,14 +16,14 @@ const Collection = () => {
   const currentPage = useSelector((state) => state.products.currentPage); 
   const totalPages = useSelector((state) => state.products.totalPages); 
   const itemsPerPage = 12; 
+  const search = useSelector((state) => state.products.search);
 
   
 
   useEffect(() => {
-    
-    dispatch(fetchProductsForUser({page: currentPage, limit: itemsPerPage}));
-  }, [dispatch, currentPage]);
-
+    dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search }));
+  }, [dispatch, currentPage, search]);
+  
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) {
       dispatch(setCurrentPage(page));  
@@ -56,11 +56,14 @@ const Collection = () => {
             <p className='flex gap-2'>
               <input className='w-3' type="checkbox" value={'Kids'} /> Kids
             </p>
+            <p className='flex gap-2'>
+              <input className='w-3' type="checkbox" value={'OutOfStock'} /> Out of Stock
+            </p>
           </div>
         </div>
 
         {/* Subcategory filter */}
-        <div className={`border border-gray-300 pl-5 py-3 my-5 sm:block`}>
+        {/* <div className={`border border-gray-300 pl-5 py-3 my-5 sm:block`}>
           <p className='mb-3 text-sm font-medium'>TYPE</p>
           <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
             <p className='flex gap-2'>
@@ -73,7 +76,7 @@ const Collection = () => {
               <input className='w-3' type="checkbox" value={'Winterwear'} /> Winterwear
             </p>
           </div>
-        </div>
+        </div> */}
       </div>
      
       {/* Right side */}
@@ -82,11 +85,15 @@ const Collection = () => {
           <Title text1={'ALL'} text2={'COLLECTIONS'} />
           {/* Product sort */}
           <select className='border-2 border-gray-300 text-sm px-2'>
-            <option value="relavent">Sort by : Relevant</option>
+            {/* <option value="relavent">Sort by : Relevant</option> */}
             <option value="low-high">Sort by : Low to High</option>
             <option value="high-low">Sort by : High to Low</option>
           </select>
         </div>
+
+        {productList.length === 0 && (
+          <p className="text-center text-gray-500">No products found for "{search}"</p>
+        )}
 
         {/* Map products */}
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6'>

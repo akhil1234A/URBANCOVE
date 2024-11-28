@@ -28,13 +28,13 @@ const UserLayout = () => {
 
   const products = useSelector(selectProducts);
 
-  
+  const search = useSelector((state) => state.products.search);
 
   useEffect(() => {
     dispatch(fetchProductsForUser(
-      {page:1, limit:100}
+      {page:1, limit:100, search}
     ));
-  }, [dispatch]);
+  }, [dispatch,search]);
 
 
   const toggleSearchBar = () => {
