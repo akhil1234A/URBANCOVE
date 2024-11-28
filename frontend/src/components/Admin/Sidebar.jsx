@@ -5,7 +5,9 @@ import {
   ShoppingOutlined, 
   FileTextOutlined, 
   TagsOutlined, 
-  PercentageOutlined 
+  PercentageOutlined,
+  DashboardOutlined,
+  BarChartOutlined 
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
@@ -15,54 +17,70 @@ const Sidebar = () => {
   const menuItems = [
     {
       key: 'sub1',
-      icon: <UserOutlined />,
-      label: 'User Management',
+      icon: <DashboardOutlined />,
+      label: 'Dashboard',
       children: [
-        { key: '1', label: <Link to="/admin/users">View Users</Link> },
+        { key: '1', label: <Link to="/admin">Dashboard Overview</Link> }, // Link to Dashboard
       ],
     },
     {
       key: 'sub2',
-      icon: <AppstoreOutlined />,
-      label: 'Category Management',
+      icon: <UserOutlined />,
+      label: 'User Management',
       children: [
-        { key: '2', label: <Link to="/admin/categories">View Categories</Link> },
-        { key: '3', label: <Link to="/admin/subcategories">View Sub Categories</Link> },
+        { key: '2', label: <Link to="/admin/users">View Users</Link> },
       ],
     },
     {
       key: 'sub3',
-      icon: <ShoppingOutlined />,
-      label: 'Product Management',
+      icon: <AppstoreOutlined />,
+      label: 'Category Management',
       children: [
-        { key: '4', label: <Link to="/admin/products/add">Add Product</Link> },
-        { key: '5', label: <Link to="/admin/products/view">View Products</Link> },
+        { key: '3', label: <Link to="/admin/categories">View Categories</Link> },
+        { key: '4', label: <Link to="/admin/subcategories">View Sub Categories</Link> },
       ],
     },
     {
       key: 'sub4',
-      icon: <FileTextOutlined />,
-      label: 'Orders Management',
+      icon: <ShoppingOutlined />,
+      label: 'Product Management',
       children: [
-        { key: '6', label: <Link to="/admin/orders">View Orders</Link> },
+        { key: '5', label: <Link to="/admin/products/add">Add Product</Link> },
+        { key: '6', label: <Link to="/admin/products/view">View Products</Link> },
       ],
     },
     {
       key: 'sub5',
-      icon: <TagsOutlined />,
-      label: 'Offers Management',
+      icon: <FileTextOutlined />,
+      label: 'Orders Management',
       children: [
-        { key: '7', label: <Link to="/admin/offers">View Offers</Link> },
-        { key: '8', label: <Link to="/admin/offers/create-offer">Create Offer</Link> },
+        { key: '7', label: <Link to="/admin/orders">View Orders</Link> },
       ],
     },
     {
       key: 'sub6',
+      icon: <TagsOutlined />,
+      label: 'Offers Management',
+      children: [
+        { key: '8', label: <Link to="/admin/offers">View Offers</Link> },
+        { key: '9', label: <Link to="/admin/offers/create-offer">Create Offer</Link> },
+      ],
+    },
+    {
+      key: 'sub7',
       icon: <PercentageOutlined />,
       label: 'Coupon Management',
       children: [
-        { key: '9', label: <Link to="/admin/coupons">View Coupons</Link> },
-        { key: '10', label: <Link to="/admin/coupons/create">Create Coupon</Link> },
+        { key: '10', label: <Link to="/admin/coupons">View Coupons</Link> },
+        { key: '11', label: <Link to="/admin/coupons/create">Create Coupon</Link> },
+      ],
+    },
+    {
+      key: 'sub8',
+      icon: <BarChartOutlined />,
+      label: 'Sales Report',
+      children: [
+        { key: '12', label: <Link to="/admin/sales-report">View Sales Report</Link> }, // Link to Sales Report
       ],
     },
   ];

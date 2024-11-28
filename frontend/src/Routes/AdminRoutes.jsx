@@ -21,6 +21,7 @@ import CreateOfferPage from '../Pages/Admin/CreateOfferPage';
 import EditOfferPage from '../Pages/Admin/EditOfferPage';
 import CreateCoupon from '../Pages/Admin/CreateCoupon';
 import EditCoupon from '../Pages/Admin/EditCoupon';
+import SalesReport from '../Pages/Admin/SalesReport'
 
 // import Test from './Test';
 // import Product from './Product';
@@ -60,9 +61,8 @@ const AdminRoutes = () => {
             <Route path='coupons' element={<CouponManagement />} />
             <Route path='coupons/create' element={<CreateCoupon/>} />
             <Route path='coupons/edit/:id' element={<EditCoupon/>} />
-
-            {/* <Route path='test' element={<Test/>} />
-            <Route path='/test/admin/product/:id' element={<Product/>} /> */}
+            <Route path='sales-report' element={<SalesReport/>} />
+            {/* <Route path='test' element={<Test/>} />            <Route path='/test/admin/product/:id' element={<Product/>} /> */}
           </Routes>
         </div>
       </div>

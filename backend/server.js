@@ -27,12 +27,14 @@ const offerRoutes = require('./routes/offerRoutes');
 const couponRoutes = require('./routes/couponRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes')
 const walletRoutes = require('./routes/walletRoutes')
+const salesRoutes = require('./routes/salesRoute');
 
 app.use('/admin', adminRoutes);
 app.use('/admin/categories',categoryRoutes);
 app.use('/admin/categories/subcategories',subCategoryRoutes);
 app.use('/admin/products',productRoutes);
 app.use('/admin/offers', offerRoutes);
+app.use('/admin/sales-report',salesRoutes);
 app.use('/user',userRoutes);
 app.use('/user/address',addressRoutes);
 app.use('/user/cart', cartRoutes)
