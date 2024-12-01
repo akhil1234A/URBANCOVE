@@ -68,7 +68,7 @@ const Orders = () => {
               {/* Order Details */}
               <p className="text-sm sm:text-[15px]">Items: {order.items.length}</p>
               <p className="mt-3">Method: {order.paymentMethod}</p>
-              <p>Payment: {order.paymentStatus ? 'Done' : 'Pending'}</p>
+              <p>Payment: {order.paymentStatus}</p>
               <p>Date: {new Date(order.placedAt).toLocaleDateString()}</p>
             </div>
             {/* Total Amount */}

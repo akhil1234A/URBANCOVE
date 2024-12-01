@@ -12,21 +12,16 @@ const getAdminToken = () => localStorage.getItem('adminToken');
 const orderService = {
   
   placeOrder: async (orderData) => {
-    try {
+   
       const userToken = getUserToken();
       const response = await axios.post(BASE_URL, orderData, {
         headers: {
           Authorization: `Bearer ${userToken}`,
         },
       });
-
-      
-      toast.success("Order placed successfully!");
+      // toast success("Order placed successfully!");
       return response.data;
-    } catch (error) {
-      toast.error("There was an error placing the order. Please try again.");
-      throw error; 
-    }
+    
   },
 
   // User: Cancel an order (User token)

@@ -182,6 +182,29 @@ const PlaceOrder = () => {
             console.log(error);
             toast.error("Payment verification failed.");
           }
+        }, modal: {
+          escape: true,
+          ondismiss: async () => {
+            try {
+              await axios.post(
+                'http://localhost:3000/orders/create-failed',
+                {
+                  razorpayOrderId,
+                  cartItems,
+                  addressId: selectedAddress,
+                  totalAmount,
+                },
+                {
+                  headers: { Authorization: `Bearer ${token}` },
+                }
+              );
+              toast.error("Payment canceled. Order created with status: Failed.");
+              navigate('/success');
+            } catch (error) {
+              console.error("Failed to handle payment cancellation:", error);
+              toast.error("Failed to handle payment cancellation.");
+            }
+          },
         },
         theme: { color: "#3399cc" },
       };
@@ -207,11 +230,10 @@ const PlaceOrder = () => {
   
     try {
       await dispatch(placeOrder(orderData)).unwrap();
-      toast.success("Order placed successfully!");
       navigate('/success');
     } catch (error) {
       console.log(error);
-      toast.error("Order placement failed. Try again.");
+      toast.error(error.message || "Order placement failed. Try again.");
     }
   };
   
