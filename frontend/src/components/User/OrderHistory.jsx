@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { cancelOrder, viewUserOrders} from '../../slices/admin/orderSlice';
 import { AiOutlineShoppingCart, AiOutlineClockCircle } from 'react-icons/ai'; 
 import { toast } from 'react-toastify'; 
+import { generateInvoice } from "../../utils/invoiceUtils";
 
 const OrderHistory = () => {
   const dispatch = useDispatch();
@@ -135,6 +136,19 @@ const OrderHistory = () => {
     }
   };
 
+  const handleDownload = async (order) => {
+    try {
+      const doc = await generateInvoice(order);
+      const fileName = `invoice-${order._id}.pdf`;
+      doc.save(fileName);
+      toast.success("Invoice downloaded successfully!");
+    } catch (error) {
+      toast.error("Failed to download invoice. Please try again.");
+      console.error("Download error:", error);
+    }
+  };
+   
+
   return (
     <div className="p-6 max-w-4xl mx-auto bg-gray-50 rounded-lg shadow-md">
     <h2 className="text-3xl font-bold mb-6 text-gray-800 border-b pb-3">Order History</h2>
@@ -224,6 +238,14 @@ const OrderHistory = () => {
                     className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md transition hover:bg-blue-500"
                   >
                     Return
+                  </button>
+                )}
+                {order.status !== 'Cancelled' && (
+                  <button
+                    onClick={() => handleDownload(order)}
+                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md transition hover:bg-green-500"
+                  >
+                    Download Invoice
                   </button>
                 )}
               </div>
