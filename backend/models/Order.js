@@ -20,27 +20,32 @@ const orderSchema = new mongoose.Schema({
   razorpayOrderId: {type: String}
 });
 
-orderSchema.pre('save', function (next) { 
-  if (this.paymentMethod === 'cod') { 
-    if (this.status === 'Cancelled') { 
-      this.paymentStatus = 'Cancelled'; 
-    } 
-    else if (this.status === 'Returned') 
-    { this.paymentStatus = 'Refunded'; 
+orderSchema.pre('save', function (next) {
+  console.log(`Processing order update: Order ID: ${this._id}, Status: ${this.status}, Payment Method: ${this.paymentMethod}`);
 
-    } 
-    else if (this.status === 'Delivered'){
+  if (this.paymentMethod === 'cod') {
+    if (this.status === 'Cancelled') {
+      this.paymentStatus = 'Cancelled';
+    } else if (this.status === 'Returned') {
+      this.paymentStatus = 'Refunded';
+    } else if (this.status === 'Delivered') {
       this.paymentStatus = 'Paid';
     }
-  } 
-
-  if(this.paymentMethod === 'razorpay'){
-    if(this.status === 'Cancelled' || this.status === 'Returned'){
-      this.paymentStatus = 'Refunded';
-    }
+    console.log(`COD payment status updated to: ${this.paymentStatus}`);
   }
-  next(); 
+
+  if (this.paymentMethod === 'razorpay' && this.paymentStatus !== 'Failed') {
+    if (this.status === 'Cancelled' || this.status === 'Returned') {
+      this.paymentStatus = 'Refunded';
+    } else if (this.status === 'Delivered') {
+      this.paymentStatus = 'Paid';
+    }
+    console.log(`Razorpay payment status updated to: ${this.paymentStatus}`);
+  }
+
+  next();
 });
+
 
 module.exports = mongoose.model('Order', orderSchema);
 

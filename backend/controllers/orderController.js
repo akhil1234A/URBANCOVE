@@ -6,6 +6,7 @@ const Transaction = require('../models/Transaction')
 const razorpayInstance = require("../utils/Razorpay");
 const crypto = require('crypto');
 
+
 // User: Place an Order
 const placeOrder = async (req, res) => {
   const { addressId, paymentMethod, cartItems, totalAmount } = req.body;
@@ -91,12 +92,11 @@ const viewUserOrders = async (req, res) => {
     const orders = await Order.find({ user: userId }).populate(
       "items.productId",
       "productName price"
-    ).sort({placedAt: -1});
+    ).populate("user","name email").sort({placedAt: -1});
 
     if (orders.length === 0) {
       return res.status(404).json({ message: "No orders found for this user" });
     }
-
     res.status(200).json({ orders });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -134,7 +134,7 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    if(order.paymentMethod != 'cod'){
+    if(order.paymentMethod != 'cod' && order.paymentStatus !='Failed'){
       await Transaction.create({
         userId,
         type: "credit",
@@ -180,7 +180,7 @@ const returnOrder = async (req, res) => {
     }
 
     // Process refund if payment method is not COD
-    if (order.paymentMethod !== "cod") {
+    if (order.paymentMethod !== "cod" && order.paymentStatus !=='Failed') {
       await Transaction.create({
         userId,
         type: "credit",
@@ -327,7 +327,7 @@ const verifyPayment = async (req, res) => {
 const createFailedOrder = async (req, res) => {
   const { razorpayOrderId, cartItems, addressId, totalAmount } = req.body;
   const userId = req.user.id;
-  console.log(userId);
+  const shippingCharge = 40; 
 
   try {
     const address = await Address.findById(addressId);
@@ -426,6 +426,19 @@ const updateOrderStatus = async (req, res) => {
         });
       }
     }
+
+    if (["Cancelled", "Returned"].includes(status)) {
+      if (order.paymentMethod !== "cod" && order.paymentStatus !=='Failed') {
+        await Transaction.create({
+          userId: order.user,
+          type: "credit",
+          amount: order.totalAmount,
+          description: `Refund for returned order ${orderId}`,
+          date: new Date(),
+        });
+      }      
+    }
+
 
     await order.save();
     res

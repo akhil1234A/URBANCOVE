@@ -14,10 +14,38 @@ const Orders = () => {
     dispatch(viewAllOrders()); 
   }, [dispatch]);
 
-
+  const getAllowedStatuses = (currentStatus) => {
+    const allowedTransitions = {
+      Pending: ["Pending", "Cancelled", "Shipped"],
+      Shipped: ["Shipped", "Delivered"],
+      Delivered: ["Delivered"],
+      Cancelled: ["Cancelled"],
+      Returned: ["Returned"], 
+    };
+    return allowedTransitions[currentStatus] || [];
+  };
 
   const handleStatusChange = (event, orderId) => {
     const newStatus = event.target.value;
+
+    // Find the current order
+    const currentOrder = orders.find((order) => order._id === orderId);
+    if (!currentOrder) {
+      message.error("Order not found.");
+      return;
+    }
+
+    const currentStatus = currentOrder.status;
+    const allowedStatuses = getAllowedStatuses(currentStatus);
+
+    if (!allowedStatuses.includes(newStatus)) {
+      message.error(
+        `Invalid status change from "${currentStatus}" to "${newStatus}".`
+      );
+      return;
+    }
+
+    // Dispatch the action if the transition is valid
     dispatch(updateOrderStatus({ orderId, status: newStatus }));
   };
 
@@ -75,16 +103,16 @@ const Orders = () => {
             <p className="text-sm sm:text-[15px]">₹{order.totalAmount}</p>
             <div className="flex flex-col">
               {/* Status Update Dropdown */}
-              <select 
-                value={order.status} 
-                onChange={(event) => handleStatusChange(event, order._id)} 
+              <select
+                value={order.status}
+                onChange={(event) => handleStatusChange(event, order._id)}
                 className="p-2 font-semibold"
               >
-                <option value="Pending">Pending</option>
-                <option value="Shipped">Shipped</option>
-                <option value="Delivered">Delivered</option>
-                <option value="Cancelled">Cancelled</option>
-                <option value="Returned">Returned</option>
+                {getAllowedStatuses(order.status).map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
              
             </div>
