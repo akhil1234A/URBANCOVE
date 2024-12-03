@@ -1,68 +1,69 @@
-import { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { viewAllOrders } from '../../slices/admin/orderSlice';
-
+import React, { useState } from 'react';
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable'
+import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { ChartBarIcon, DocumentDownloadIcon, ExclamationCircleIcon } from '@heroicons/react/outline';
+import { formatDate } from '../../utils/dateFormatter';
+import { toast } from 'react-toastify';
 
 const SalesReport = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [period, setPeriod] = useState('daily');
-  const [reportData, setReportData] = useState([]);
   const [summary, setSummary] = useState({
-    totalOrders: 0, 
+    totalOrders: 0,
     totalProductsSold: 0,
     totalAmount: 0,
     totalDiscount: 0,
   });
-  const { orders, successMessage, errorMessage } = useSelector((state) => state.orders);
-  const dispatch = useDispatch();
-
+  const [allOrders, setAllOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
-  useEffect(() => {
-    dispatch(viewAllOrders()); 
-  }, [dispatch]);
-
-  useEffect(() => {
-    fetchSalesReport();
-  }, [startDate, endDate, period]);
-
-  
-  const filteredOrders = orders.filter((order) => order.status === 'Delivered');
+  const [dataFetched, setDataFetched] = useState(false);
 
   const fetchSalesReport = async () => {
     setLoading(true);
     setError(null);
 
+    if (period === 'custom' && (!startDate || !endDate)) {
+      setLoading(false);
+      toast.error('Please select both start and end dates for the custom period.');
+      return;
+    }
+  
+    if (period === 'custom' && startDate > endDate) {
+      setLoading(false);
+      toast.error('Start date cannot be later than the end date.');
+      return;
+    }
     try {
+      const payload = {
+        startDate: startDate ? new Date(startDate).toISOString() : null,
+        endDate: endDate ? new Date(endDate).toISOString() : null,
+        period,
+      };
       const response = await axios.post(
         'http://localhost:3000/admin/sales-report/generate-sales-report',
-        { startDate, endDate, period },
+        payload,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
           },
         }
       );
-  
-      const { salesReport, totalProductsSold, totalAmount, totalDiscount } = response.data;
+      const { salesSummary, allOrders } = response.data;
 
-      
-
-      setReportData(salesReport);
       setSummary({
-        totalOrders: filteredOrders.length, // Set the total number of orders
-        totalProductsSold,
-        totalAmount: parseFloat(totalAmount).toFixed(2),
-        totalDiscount: parseFloat(totalDiscount).toFixed(2),
+        totalOrders: allOrders.length,
+        totalProductsSold: salesSummary.totalProductsSold,
+        totalAmount: parseFloat(salesSummary.totalAmount).toFixed(2),
+        totalDiscount: parseFloat(salesSummary.totalDiscount).toFixed(2),
       });
+      setAllOrders(allOrders);
+      setDataFetched(true);
     } catch (error) {
       setError('Failed to fetch report data');
     } finally {
@@ -71,7 +72,6 @@ const SalesReport = () => {
   };
 
   const handleDownloadExcel = () => {
-    // Include the summary data as the first row in Excel
     const summaryData = [
       {
         OrderID: 'Total Orders',
@@ -90,125 +90,146 @@ const SalesReport = () => {
         Date: '',
       },
     ];
-  
-    // Combine the summary data and filteredOrders into the final data
-    const dataForExcel = [...summaryData, ...filteredOrders.map((order) => ({
-      OrderID: order._id,
-      Product: order.items.map((item) => item.productId.productName).join(', '),
-      Quantity: order.items.reduce((acc, item) => acc + item.quantity, 0),
-      Amount: `₹${order.totalAmount}`,
-      Discount: `₹${order.discountAmount}`,
-      Date: order.placedAt ? new Date(order.placedAt[0]).toLocaleString() : 'N/A',
-    }))];
-  
+
+    const dataForExcel = [
+      ...summaryData,
+      ...allOrders.map((order) => ({
+        OrderID: order._id,
+        Product: order.items.map((item) => item.productId.productName).join(', '),
+        Quantity: order.items.reduce((acc, item) => acc + item.quantity, 0),
+        Amount: `₹${order.totalAmount}`,
+        Discount: `₹${order.discountAmount}`,
+        Date: formatDate(order.placedAt),
+      })),
+    ];
+
     const ws = XLSX.utils.json_to_sheet(dataForExcel);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
     XLSX.writeFile(wb, 'sales_report.xlsx');
   };
-  
+
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
-    doc.setFont('Arial', 'normal');
-    doc.text('Sales Report', 14, 10);
-  
-    // Create summary content
+    doc.setFont('helvetica', 'normal');
+    doc.text('Sales Report', 14, 15);
+
     const summaryContent = [
       ['Total Orders', summary.totalOrders],
       ['Total Products Sold', summary.totalProductsSold],
-      ['Total Revenue', `₹${summary.totalAmount}`],
-      ['Total Discounts', `₹${summary.totalDiscount}`],
+      ['Total Revenue', `Rs.${summary.totalAmount}`],
+      ['Total Discounts', `Rs.${summary.totalDiscount}`],
     ];
-  
-    // Add summary content to PDF
+
     doc.autoTable({
       head: [['Description', 'Value']],
       body: summaryContent,
-      startY: 20,
+      startY: 25,
+      styles: { fontSize: 10, cellPadding: 5 },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
     });
-  
-    // Report data for the table (filtered orders)
-    const reportContent = filteredOrders.map((order) => [
+
+    const reportContent = allOrders.map((order) => [
       order._id,
       order.items.map((item) => item.productId.productName).join(', '),
       order.items.reduce((acc, item) => acc + item.quantity, 0),
-      `₹${order.totalAmount}`,
-      `₹${order.discountAmount}`,
-      order.placedAt ? new Date(order.placedAt[0]).toLocaleString() : 'N/A',
+      `Rs.${order.totalAmount}`,
+      `Rs.${order.discountAmount}`,
+      formatDate(order.placedAt),
     ]);
-  
-    // Add the report data to PDF
+
     doc.autoTable({
       head: [['Order ID', 'Product', 'Quantity', 'Amount', 'Discount', 'Date']],
       body: reportContent,
-      startY: doc.lastAutoTable.finalY + 10, // Ensure the report starts after the summary table
+      startY: doc.lastAutoTable.finalY + 10,
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
     });
-  
+
     doc.save('sales_report.pdf');
   };
-  
 
   const renderSummary = () => (
-    <div className="grid grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div className="bg-blue-100 p-4 rounded-lg shadow-md">
-        <h4 className="text-blue-600 font-bold text-lg">Total Orders</h4>
+        <h4 className="text-blue-600 font-bold text-lg mb-2">Total Orders</h4>
         <p className="text-2xl font-semibold">{summary.totalOrders}</p>
       </div>
-      <div className="bg-blue-100 p-4 rounded-lg shadow-md">
-        <h4 className="text-blue-600 font-bold text-lg">Total Products Sold</h4>
+      <div className="bg-green-100 p-4 rounded-lg shadow-md">
+        <h4 className="text-green-600 font-bold text-lg mb-2">Total Products Sold</h4>
         <p className="text-2xl font-semibold">{summary.totalProductsSold}</p>
       </div>
-      <div className="bg-green-100 p-4 rounded-lg shadow-md">
-        <h4 className="text-green-600 font-bold text-lg">Total Revenue</h4>
+      <div className="bg-yellow-100 p-4 rounded-lg shadow-md">
+        <h4 className="text-yellow-600 font-bold text-lg mb-2">Total Revenue</h4>
         <p className="text-2xl font-semibold">₹{summary.totalAmount}</p>
       </div>
       <div className="bg-red-100 p-4 rounded-lg shadow-md">
-        <h4 className="text-red-600 font-bold text-lg">Total Discounts</h4>
+        <h4 className="text-red-600 font-bold text-lg mb-2">Total Discounts</h4>
         <p className="text-2xl font-semibold">₹{summary.totalDiscount}</p>
       </div>
     </div>
   );
 
   const renderReportTable = () => {
-    if (!filteredOrders.length) {
+    if (!dataFetched) {
       return (
-        <div className="text-center text-gray-500 py-4">
-          <p>No sales data is available for the selected period.</p>
+        <div className="text-center py-12">
+          <ExclamationCircleIcon className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No data available</h3>
+          <p className="mt-1 text-sm text-gray-500">Get started by generating a report.</p>
+          <div className="mt-6">
+            <button
+              type="button"
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              onClick={fetchSalesReport}
+            >
+              <ChartBarIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+              Generate Report
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (allOrders.length === 0) {
+      return (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <ExclamationCircleIcon className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No orders found</h3>
+          <p className="mt-1 text-sm text-gray-500">There are no orders for the selected period.</p>
         </div>
       );
     }
 
     return (
       <div className="overflow-x-auto shadow-md rounded-lg mt-6">
-        <table className="min-w-full bg-white table-auto">
-          <thead>
-            <tr className="bg-gray-100 text-left">
-              <th className="py-3 px-4">Order ID</th>
-              <th className="py-3 px-4">Product</th>
-              <th className="py-3 px-4">Quantity</th>
-              <th className="py-3 px-4">Amount</th>
-              <th className="py-3 px-4">Discount</th>
-              <th className="py-3 px-4">Date</th>
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
             </tr>
           </thead>
-          <tbody>
-            {filteredOrders.map((order, index) => (
-              <tr key={index} className="border-t">
-                <td className="py-2 px-4">{order._id}</td>
-                <td className="py-2 px-4">
+          <tbody className="bg-white divide-y divide-gray-200">
+            {allOrders.map((order, index) => (
+              <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order._id}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {order.items.map((item, idx) => (
                     <p key={idx}>{item.productId.productName}</p>
                   ))}
                 </td>
-                <td className="py-2 px-4">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {order.items.reduce((acc, item) => acc + item.quantity, 0)}
                 </td>
-                <td className="py-2 px-4">₹{order.totalAmount}</td>
-                <td className="py-2 px-4">₹{order.discountAmount}</td>
-                <td className="py-2 px-4">
-                  {order.placedAt && order.placedAt.length > 0
-                    ? new Date(order.placedAt[0]).toLocaleString()
-                    : 'N/A'}
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹{order.totalAmount}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹{order.discountAmount}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {formatDate(order.placedAt)}
                 </td>
               </tr>
             ))}
@@ -222,62 +243,104 @@ const SalesReport = () => {
     <div className="max-w-7xl mx-auto p-6">
       <h2 className="text-3xl font-bold text-gray-800 mb-6">Sales Report Dashboard</h2>
 
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex space-x-4">
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            className="p-2 border rounded"
-          >
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="custom">Custom Date Range</option>
-          </select>
+      <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <div className="flex flex-wrap items-end gap-4 mb-4">
+          <div>
+            <label htmlFor="period" className="block text-sm font-medium text-gray-700 mb-1">Report Period</label>
+            <select
+              id="period"
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+            >
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="custom">Custom Date Range</option>
+            </select>
+          </div>
 
           {period === 'custom' && (
-            <div className="flex space-x-4">
-              <DatePicker
-                selected={startDate}
-                onChange={(date) => setStartDate(date)}
-                className="p-2 border rounded"
-                placeholderText="Start Date"
-                dateFormat="yyyy/MM/dd"
-              />
-              <DatePicker
-                selected={endDate}
-                onChange={(date) => setEndDate(date)}
-                className="p-2 border rounded"
-                placeholderText="End Date"
-                dateFormat="yyyy/MM/dd"
-              />
-            </div>
+            <>
+              <div>
+                <label htmlFor="start-date" className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <DatePicker
+                  id="start-date"
+                  selected={startDate}
+                  onChange={(date) => setStartDate(date)}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                  placeholderText="Select start date"
+                  dateFormat="yyyy/MM/dd"
+                />
+              </div>
+              <div>
+                <label htmlFor="end-date" className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <DatePicker
+                  id="end-date"
+                  selected={endDate}
+                  onChange={(date) => setEndDate(date)}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                  placeholderText="Select end date"
+                  dateFormat="yyyy/MM/dd"
+                />
+              </div>
+            </>
           )}
+
+          <button
+            onClick={fetchSalesReport}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Generate Report
+          </button>
         </div>
 
-        <div className="flex space-x-4">
-          <button
-            onClick={handleDownloadExcel}
-            className="bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
-          >
-            Download Excel
-          </button>
-          <button
-            onClick={handleDownloadPDF}
-            className="bg-red-600 text-white p-2 rounded hover:bg-red-700"
-          >
-            Download PDF
-          </button>
-        </div>
+        {dataFetched && (
+          <div className="flex flex-wrap gap-4 mt-4">
+            <button
+              onClick={handleDownloadExcel}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <DocumentDownloadIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+              Download Excel
+            </button>
+            <button
+              onClick={handleDownloadPDF}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              <DocumentDownloadIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+              Download PDF
+            </button>
+          </div>
+        )}
       </div>
 
-      {loading && <div>Loading...</div>}
-      {error && <div className="text-red-600">{error}</div>}
+      {loading && (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+        </div>
+      )}
+      
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <ExclamationCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">
+                {error}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {renderSummary()}
+      {dataFetched && renderSummary()}
       {renderReportTable()}
     </div>
   );
 };
 
 export default SalesReport;
+

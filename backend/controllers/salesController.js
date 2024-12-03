@@ -2,13 +2,13 @@ const Order = require('../models/Order');
 const moment = require('moment');
 const { jsPDF } = require('jspdf');
 require('jspdf-autotable');
-const XLSX = require('xlsx'); // For Excel generation
+const XLSX = require('xlsx'); 
 
 // Middleware to validate input
 const validateInput = (req, res, next) => {
   const { startDate, endDate, period } = req.body;
 
-  if (period && !['daily', 'weekly', 'monthly'].includes(period)) {
+  if (period && !['daily', 'weekly', 'monthly','custom'].includes(period)) {
     return res.status(400).json({ message: 'Invalid period specified. Choose from daily, weekly, or monthly.' });
   }
 
@@ -21,9 +21,20 @@ const validateInput = (req, res, next) => {
 
 // Helper function to build match criteria
 const buildMatchCriteria = (startDate, endDate, period) => {
-  const matchCriteria = { status: 'Delivered' };
+  const matchCriteria = { status: { $nin: ['Returned', 'Cancelled'] } };
 
-  if (period) {
+  // Handle custom date range first
+  if (period === 'custom' && startDate && endDate) {
+    const start = moment.utc(startDate).startOf('day'); // Start of custom day
+    const end = moment.utc(endDate).endOf('day'); // End of custom day
+
+    matchCriteria.placedAt = {
+      $gte: start.toDate(),
+      $lt: end.toDate(),
+    };
+  }
+  // Handle predefined periods
+  else if (period) {
     const periods = {
       daily: { start: moment().startOf('day'), end: moment().endOf('day') },
       weekly: { start: moment().startOf('week'), end: moment().endOf('week') },
@@ -36,15 +47,13 @@ const buildMatchCriteria = (startDate, endDate, period) => {
         $lt: periods[period].end.toDate(),
       };
     }
-  } else if (startDate && endDate) {
-    matchCriteria.placedAt = {
-      $gte: moment(startDate).startOf('day').toDate(),
-      $lt: moment(endDate).endOf('day').toDate(),
-    };
   }
 
+  // Return criteria
   return matchCriteria;
 };
+
+
 
 // Helper function to get aggregated sales data
 const getSalesData = async (matchCriteria) => {
@@ -61,24 +70,20 @@ const getSalesData = async (matchCriteria) => {
     },
     { $unwind: '$productDetails' },
     {
-      $project: {
-        orderId: '$_id', // Include the order _id
-        product: '$productDetails.productName',
-        quantity: '$items.quantity',
-        totalAmount: '$totalAmount',
-        discountAmount: '$discountAmount',
-        placedAt: '$placedAt', // Include placedAt field
+      $group: {
+        _id: '$items.productId',
+        product: { $first: '$productDetails.productName' },
+        quantity: { $sum: '$items.quantity' },
+        totalAmount: { $sum: '$totalAmount' },
+        discountAmount: { $sum: '$discountAmount' },
       },
     },
     {
-      $group: {
-        _id: '$items.productId',
-        product: { $first: '$product' },
-        quantity: { $sum: '$quantity' },
-        totalAmount: { $sum: '$totalAmount' },
-        discountAmount: { $sum: '$discountAmount' },
-        placedAt: { $push: '$placedAt' },
-        orders: { $push: '$orderId' }, // Collect all order _id for each product
+      $project: {
+        product: 1,
+        quantity: 1,
+        totalAmount: { $round: ['$totalAmount', 2] },
+        discountAmount: { $round: ['$discountAmount', 2] },
       },
     },
   ]);
@@ -86,28 +91,43 @@ const getSalesData = async (matchCriteria) => {
 
 
 
-// Controller to generate the sales report
+
+// Admin: Sales Report 
 const generateSalesReport = async (req, res) => {
   const { startDate, endDate, period } = req.body;
 
-  try {
-    const matchCriteria = buildMatchCriteria(startDate, endDate, period);
-    const salesReport = await getSalesData(matchCriteria);
 
-    if (!salesReport.length) {
+  try {
+    // Get the match criteria
+    const matchCriteria = buildMatchCriteria(startDate, endDate, period);
+   
+    // Fetch aggregated sales data
+    const salesReport = await getSalesData(matchCriteria);
+   
+   
+    // Fetch all orders within the specified period
+    const allOrders = await Order.find(matchCriteria)
+      .populate('items.productId', 'productName') 
+      .lean(); 
+   
+    if (!salesReport.length && !allOrders.length) {
       return res.status(200).json({ message: 'No sales data found for this period.' });
     }
 
-    // Calculate totals
+    // Calculate totals for delivered orders
     const totalProductsSold = salesReport.reduce((sum, item) => sum + item.quantity, 0);
     const totalAmount = salesReport.reduce((sum, item) => sum + item.totalAmount, 0);
     const totalDiscount = salesReport.reduce((sum, item) => sum + item.discountAmount, 0);
 
+    
+
     res.status(200).json({
-      totalProductsSold,
-      totalAmount: totalAmount.toFixed(2),
-      totalDiscount: totalDiscount.toFixed(2),
-      salesReport,
+      salesSummary: {
+        totalProductsSold,
+        totalAmount: totalAmount.toFixed(2),
+        totalDiscount: totalDiscount.toFixed(2),
+      },
+      allOrders, 
     });
   } catch (error) {
     console.error('Error generating sales report:', error);
@@ -115,84 +135,9 @@ const generateSalesReport = async (req, res) => {
   }
 };
 
-// Controller to generate and download sales report as PDF
-const generatePDF = async (req, res) => {
-  const { startDate, endDate, period } = req.body;
 
-  try {
-    const matchCriteria = buildMatchCriteria(startDate, endDate, period);
-    const salesData = await getSalesData(matchCriteria);
-
-    if (!salesData.length) {
-      return res.status(200).json({ message: 'No sales data found for this period.' });
-    }
-
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text('Sales Report', 14, 20);
-
-    const tableColumns = ['Product Name', 'Quantity', 'Amount', 'Discount'];
-    const tableRows = salesData.map((data) => [
-      data.product,
-      data.quantity,
-      data.totalAmount.toFixed(2),
-      data.discountAmount.toFixed(2),
-    ]);
-
-    doc.autoTable(tableColumns, tableRows, { startY: 30 });
-    res.header('Content-Type', 'application/pdf');
-    res.attachment('sales_report.pdf');
-    res.send(doc.output('arraybuffer'));
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
-// Controller to generate and download sales report as Excel
-const generateExcel = async (req, res) => {
-  const { startDate, endDate, period } = req.body;
-
-  try {
-    const matchCriteria = buildMatchCriteria(startDate, endDate, period);
-    const salesData = await getSalesData(matchCriteria);
-
-    if (!salesData.length) {
-      return res.status(200).json({ message: 'No sales data found for this period.' });
-    }
-
-    const excelData = salesData.map((data) => ({
-      'Product Name': data.product,
-      Quantity: data.quantity,
-      Amount: data.totalAmount.toFixed(2),
-      Discount: data.discountAmount.toFixed(2),
-    }));
-
-    // Add summary row
-    excelData.push({
-      'Product Name': 'Total',
-      Quantity: salesData.reduce((sum, item) => sum + item.quantity, 0),
-      Amount: salesData.reduce((sum, item) => sum + item.totalAmount, 0).toFixed(2),
-      Discount: salesData.reduce((sum, item) => sum + item.discountAmount, 0).toFixed(2),
-    });
-
-    const ws = XLSX.utils.json_to_sheet(excelData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
-
-    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=sales_report.xlsx');
-    res.send(excelBuffer);
-  } catch (error) {
-    console.error('Error generating Excel:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
 
 module.exports = {
   validateInput,
-  generateSalesReport,
-  generatePDF,
-  generateExcel,
+  generateSalesReport
 };
