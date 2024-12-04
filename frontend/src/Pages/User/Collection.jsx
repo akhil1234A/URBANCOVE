@@ -201,6 +201,7 @@ const Collection = () => {
              image={item.images[0]} 
              currency={currency}
              discountedPrice={item?.discountedPrice || 0}
+             wishlist={item?.isWishListed}
            />
           ))}
         </div>

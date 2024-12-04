@@ -60,7 +60,7 @@ const ViewOrder = () => {
           </div>
           <div className="mt-2 flex justify-between text-gray-800">
             <span>Shipping:</span>
-            <span>$5.00</span>
+            <span>₹40.00</span>
           </div>
           <div className="mt-2 flex justify-between text-gray-800 font-semibold">
             <span>Total:</span>

@@ -77,11 +77,11 @@ const ProductInfo = ({ productData, size, setSize, onAddToCart}) => {
        <p className="mt-5 text-3xl font-medium">
         {hasDiscount ? (
           <>
-            <span className="line-through text-gray-500">${productData.price.toFixed(2)}</span> {/* Original Price */}
-            <span className="text-red-600 ml-2">${productData.discountedPrice.toFixed(2)}</span> {/* Discounted Price */}
+            <span className="line-through text-gray-500">₹{productData.price.toFixed(2)}</span> {/* Original Price */}
+            <span className="text-red-600 ml-2">₹{productData.discountedPrice.toFixed(2)}</span> {/* Discounted Price */}
           </>
         ) : (
-          <span>${productData.price.toFixed(2)}</span> // Regular price
+          <span>₹{productData.price.toFixed(2)}</span> // Regular price
         )}
       </p>
 
@@ -143,7 +143,7 @@ const Product = () => {
 
   const [currentImage, setCurrentImage] = useState('');
   const [activeSection, setActiveSection] = useState('description');
-  const [size, setSize] = useState('');
+  const [size, setSize] = useState(productData?.size[0] || '');
   const [isZoomed, setIsZoomed] = useState(false);
 
   // Dummy reviews array

@@ -19,6 +19,9 @@ const CreateCoupon = () => {
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector((state) => state.coupons);
 
+  const today = new Date(); 
+  today.setHours(0, 0, 0, 0);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
@@ -73,7 +76,7 @@ const CreateCoupon = () => {
     toast.error('Valid From date must be earlier than Valid Until date');
     return;
   }
-  if (new Date(couponData.validFrom) < new Date()) {
+  if (new Date(couponData.validFrom) < today) {
     toast.error('Valid From date cannot be in the past');
     return;
   }

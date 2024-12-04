@@ -7,6 +7,9 @@ exports.createCoupon = async (req, res) => {
    
     const { code, discountType, discountValue, validFrom, validUntil, usageLimit, minPurchase, maxDiscount } = req.body;
 
+    const couponExist = await Coupon.find({code});
+    if(couponExist) return res.status(400).json({message: 'Coupon Already Exist'})
+
     const coupon = new Coupon({
       code,
       discountType,
@@ -32,7 +35,7 @@ exports.editCoupon = async (req, res) => {
     const { couponId } = req.params;
     const { discountValue, validFrom, validUntil, usageLimit, minPurchase, maxDiscount } = req.body;
 
-    
+
 
     const coupon = await Coupon.findByIdAndUpdate(
       couponId,

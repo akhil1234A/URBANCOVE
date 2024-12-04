@@ -118,36 +118,59 @@ const EditOfferPage = () => {
   };
 
   const validateOffer = () => {
-    const {
-      name,
-      discountValue,
-      startDate,
-      endDate,
-      selectedItems,
-    } = offer;
-
+    const { name, discountValue, startDate, endDate, offerType, discountType, selectedItems } = offer;
+  
+    // Ensure required fields are filled
     if (!name || !discountValue || !startDate || !endDate) {
-      toast.error("Please fill all required fields.");
+      toast.error('Please fill all required fields.');
       return false;
     }
-
-    if (offer.discountType === "flat" && offer.discountValue <= 0) {
-      toast.error("Discount value must be greater than 0 for flat discount.");
+  
+    // Validate discount value
+    if (discountType === 'percentage' && (discountValue <= 0 || discountValue > 100)) {
+      toast.error('Percentage discount value must be between 1 and 100.');
       return false;
     }
-
-    if (new Date(startDate) >= new Date(endDate)) {
-      toast.error("End date must be later than start date.");
+    if (discountType === 'flat' && discountValue <= 0) {
+      toast.error('Flat discount value must be greater than 0.');
       return false;
     }
-
-    if (!selectedItems.length) {
-      toast.error("Please select at least one item.");
+  
+    // Validate date format and logic
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to midnight
+  
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      toast.error('Invalid date format.');
       return false;
     }
-
+  
+    if (start < today) {
+      toast.error('Valid From date cannot be in the past.');
+      return false;
+    }
+  
+    if (end < today) {
+      toast.error('Valid Until date cannot be in the past.');
+      return false;
+    }
+  
+    if (start >= end) {
+      toast.error('Valid Until date must be later than Valid From date.');
+      return false;
+    }
+  
+    // Validate selection
+    if ((offerType === 'category' || offerType === 'product') && selectedItems.length === 0) {
+      toast.error(`Please select at least one ${offerType}.`);
+      return false;
+    }
+  
     return true;
   };
+  
 
   const handleSubmit = async () => {
     if (!validateOffer()) return;

@@ -6,7 +6,7 @@ import { useDispatch } from 'react-redux';
 
 
 
-const ProductItem = ({ id, image, name, price, currency, discountedPrice }) => {
+const ProductItem = ({ id, image, name, price, currency='₹', discountedPrice, wishlist}) => {
   const dispatch = useDispatch();
 
   // Calculate discount percentage
@@ -76,7 +76,9 @@ const ProductItem = ({ id, image, name, price, currency, discountedPrice }) => {
         className="absolute top-1 right-5 text-xl text-gray-700 opacity-75 hover:opacity-100 z-20"
         onClick={handleAddToWishlist}
       >
-        <FaHeart className="cursor-pointer hover:text-red-500" />
+         <FaHeart
+          className={`cursor-pointer ${wishlist ? 'text-red-500' : 'text-gray-500'} hover:text-red-500`}
+        />
       </div>
     </Link>
   );

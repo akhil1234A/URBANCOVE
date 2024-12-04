@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux'; // Import necessary hooks
-import { logout } from '../../slices/user/authSlice'; // Import the logout action
+import { useDispatch, useSelector } from 'react-redux'; 
+import { logout } from '../../slices/user/authSlice'; 
 import { assets } from '../../assets/assets'; 
 import { setSearch, fetchProductsForUser} from '../../slices/admin/productSlice'
 import { Search } from 'lucide-react'
@@ -11,6 +11,7 @@ const Navbar = () => {
   const [visible, setVisible] = useState(false);
   const dispatch = useDispatch(); 
   const { user } = useSelector((state) => state.auth);
+  const { cartItems } = useSelector((state) => state.cart);
   const navigate = useNavigate();
   
   const handleSearch = (e) => {
@@ -99,11 +100,13 @@ const Navbar = () => {
           </div>
         </div>
 
-        <Link to='/cart' className='relative'>
-          <img src={assets.cart_icon} className='w-5 min-w-5' alt="Cart" />
-          <p className='absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]'>
-            0 
-          </p>
+        <Link to="/cart" className="relative">
+          <img src={assets.cart_icon} className="w-5 min-w-5" alt="Cart" />
+          {cartItems.length > 0 && (
+            <p className="absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]">
+              {cartItems.reduce((acc, item) => acc + item.quantity, 0)}
+            </p>
+          )}
         </Link>
 
         <img 
