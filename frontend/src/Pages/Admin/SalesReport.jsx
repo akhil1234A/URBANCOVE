@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx'; 
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ChartBarIcon, DocumentDownloadIcon, ExclamationCircleIcon } from '@heroicons/react/outline';
@@ -268,6 +268,7 @@ const SalesReport = () => {
                   id="start-date"
                   selected={startDate}
                   onChange={(date) => setStartDate(date)}
+                  maxDate={new Date()}
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                   placeholderText="Select start date"
                   dateFormat="yyyy/MM/dd"
@@ -279,6 +280,7 @@ const SalesReport = () => {
                   id="end-date"
                   selected={endDate}
                   onChange={(date) => setEndDate(date)}
+                  maxDate={new Date()}
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                   placeholderText="Select end date"
                   dateFormat="yyyy/MM/dd"

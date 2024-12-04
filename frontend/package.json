@@ -38,6 +38,7 @@
     "react-to-pdf": "^1.0.1",
     "react-to-print": "^3.0.2",
     "react-toastify": "^10.0.5",
+    "recharts": "^2.14.1",
     "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "svg2pdf.js": "^2.2.4",
