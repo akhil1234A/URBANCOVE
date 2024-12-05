@@ -6,7 +6,7 @@ import { getUsers, toggleUserBlockStatus } from '../../slices/admin/userSlice';
 
 const Users = () => {
   const dispatch = useDispatch();
-  const { users, loading, error } = useSelector((state) => state.users);
+  const { users, loading, error, currentPage, totalPages } = useSelector((state) => state.users);
 
   // useEffect(() => {
   //   console.log('Users state:', users); 
@@ -14,8 +14,16 @@ const Users = () => {
   
 
   useEffect(() => {
-    dispatch(getUsers());
-  }, [dispatch]);
+    dispatch(getUsers({ page: currentPage }));
+  }, [dispatch, currentPage]);
+
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      dispatch(getUsers({ page }));
+    }
+  };
+
 
   const handleToggleBlockStatus = (userId) => {
     dispatch(toggleUserBlockStatus(userId));
@@ -57,6 +65,39 @@ const Users = () => {
         ))}
       </tbody>
     </table>
+    <div className="pagination flex justify-center items-center mt-4 space-x-2">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className={`py-2 px-4 bg-gray-200 rounded-lg ${
+            currentPage === 1 ? 'cursor-not-allowed text-gray-400' : 'hover:bg-gray-300'
+          } transition duration-300`}
+        >
+          Previous
+        </button>
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index + 1}
+            onClick={() => handlePageChange(index + 1)}
+            className={`py-2 px-4 rounded-lg ${
+              currentPage === index + 1
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            } transition duration-300`}
+          >
+            {index + 1}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className={`py-2 px-4 bg-gray-200 rounded-lg ${
+            currentPage === totalPages ? 'cursor-not-allowed text-gray-400' : 'hover:bg-gray-300'
+          } transition duration-300`}
+        >
+          Next
+        </button>
+      </div>
   </div>
 );
 };

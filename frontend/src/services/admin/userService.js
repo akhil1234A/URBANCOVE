@@ -1,13 +1,16 @@
 import axios from 'axios';
 
 //Admin: Get all Users
-export const fetchUsers = async () => {
+export const fetchUsers = async (page, limit) => {
   const token = localStorage.getItem('adminToken');
-  const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/users`, {
-    headers: {
-      Authorization: `Bearer ${token}`, 
-    },
-  });
+  const response = await axios.get(
+    `${import.meta.env.VITE_API_BASE_URL}/admin/users?page=${page}&limit=${limit}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
   return response.data;
 };
 

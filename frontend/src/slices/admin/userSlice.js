@@ -3,13 +3,17 @@ import { fetchUsers, toggleBlockUser } from '../../services/admin/userService';
 import { toast } from 'react-toastify';
 
 
-export const getUsers = createAsyncThunk('users/getUsers', async (_, { rejectWithValue }) => {
-  try {
-    return await fetchUsers();
-  } catch (error) {
-    return rejectWithValue(error.response?.data?.message || 'Failed to fetch users');
+export const getUsers = createAsyncThunk(
+  'users/getUsers',
+  async ({ page = 1, limit = 5 }, { rejectWithValue }) => {
+    try {
+      const response = await fetchUsers(page, limit);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch users');
+    }
   }
-});
+);
 
 export const toggleUserBlockStatus = createAsyncThunk(
   'users/toggleBlockStatus',
@@ -31,6 +35,8 @@ const userSlice = createSlice({
     users: [],
     loading: false,
     error: null,
+    currentPage: 1,
+    totalPages: 1,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -42,7 +48,9 @@ const userSlice = createSlice({
       })
       .addCase(getUsers.fulfilled, (state, action) => {
         state.loading = false;
-        state.users = action.payload;
+        state.users = action.payload.users;
+        state.currentPage = action.payload.currentPage;
+        state.totalPages = action.payload.totalPages;
       })
       .addCase(getUsers.rejected, (state, action) => {
         state.loading = false;

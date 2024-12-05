@@ -29,14 +29,26 @@ exports.login = async (req, res) => {
 };
 
 //Admin : List All Users
-exports.listUsers = async(req,res)=>{
-   try{
-      const users = await User.find();
-      res.json(users);
-   } catch(error){
-      res.status(500).json({message: 'Server error'});
+exports.listUsers = async (req, res) => {
+   try {
+     const page = parseInt(req.query.page) || 1; 
+     const limit = parseInt(req.query.limit) || 5; 
+     const skip = (page - 1) * limit;
+ 
+     const totalUsers = await User.countDocuments();
+     const users = await User.find().skip(skip).limit(limit);
+ 
+     res.json({
+       users,
+       currentPage: page,
+       totalPages: Math.ceil(totalUsers / limit),
+       totalUsers,
+     });
+   } catch (error) {
+     res.status(500).json({ message: 'Server error' });
    }
-};
+ };
+ 
 
 //Admin: Block a User
 exports.blockUser = async(req,res)=>{
