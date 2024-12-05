@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/coupons'; 
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/coupons`; 
 
 
 const axiosInstance = axios.create({

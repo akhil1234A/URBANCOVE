@@ -55,7 +55,7 @@ const EditOfferPage = () => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/admin/products?limit=100"
+          `${import.meta.env.VITE_API_BASE_URL}/admin/products?limit=100`
         );
         setProducts(
           response.data.products.map((product) => ({

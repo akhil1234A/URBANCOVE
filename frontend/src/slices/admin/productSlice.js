@@ -18,7 +18,7 @@ export const updateProductStatus = createAsyncThunk( 'products/updateProductStat
   }
 );
 
-export const addProduct = createAsyncThunk(
+export const addProduct = createAsyncThunk( 
   'products/addProduct',
   async ({ productData, token }, { rejectWithValue }) => {
     try {

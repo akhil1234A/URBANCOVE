@@ -15,7 +15,7 @@ const Wallet = () => {
 
       try {
         // Fetch balance and transactions from the same API endpoint
-        const response = await axios.get('http://localhost:3000/user/wallet/balance', {
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/user/wallet/balance`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },

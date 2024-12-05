@@ -3,7 +3,7 @@ import axios from 'axios';
 import {auth, googleProvider} from '../../firebase/firebase';
 import {signInWithPopup} from 'firebase/auth'
 
-const API_BASE_URL = 'http://localhost:3000/user';
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/user`;
 
 //User: Sign Up 
 export const signUpUser = (userData) => {

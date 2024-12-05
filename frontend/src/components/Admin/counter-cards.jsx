@@ -11,7 +11,7 @@ function CounterCards() {
     async function fetchCounters() {
       try {
         const token = getAdminToken();
-        const res = await fetch('http://localhost:3000/admin/sales-report/counters', {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/sales-report/counters`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

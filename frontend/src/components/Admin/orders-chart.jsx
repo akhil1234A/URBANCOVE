@@ -17,7 +17,7 @@ import { ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
 async function getOrdersData(period) {
   const token = getAdminToken();
   const res = await fetch(
-    `http://localhost:3000/admin/sales-report/orders-chart?period=${period}`,
+    `${import.meta.env.VITE_API_BASE_URL}/admin/sales-report/orders-chart?period=${period}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

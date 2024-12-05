@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { toast } from 'react-toastify'; // Importing toast
 
-const BASE_URL = 'http://localhost:3000/orders';
+const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/orders`;
 
 
 const getUserToken = () => localStorage.getItem('token');

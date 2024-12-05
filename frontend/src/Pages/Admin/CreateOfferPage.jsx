@@ -43,7 +43,7 @@ const CreateOfferPage = () => {
 
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/admin/products?limit=100');
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/products?limit=100`);
         const formattedProducts = response.data.products.map((product) => ({
           value: product._id,
           label: product.productName,

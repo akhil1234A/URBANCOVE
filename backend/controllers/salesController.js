@@ -26,8 +26,8 @@ const buildMatchCriteria = (startDate, endDate, period) => {
 
   // Handle custom date range first
   if (period === 'custom' && startDate && endDate) {
-    const start = moment.utc(startDate).startOf('day'); // Start of custom day
-    const end = moment.utc(endDate).endOf('day'); // End of custom day
+    const start = moment.utc(startDate).startOf('day'); 
+    const end = moment.utc(endDate).endOf('day'); 
 
     matchCriteria.placedAt = {
       $gte: start.toDate(),
@@ -50,44 +50,7 @@ const buildMatchCriteria = (startDate, endDate, period) => {
     }
   }
 
-  // Return criteria
   return matchCriteria;
-};
-
-
-
-// Helper function to get aggregated sales data
-const getSalesData = async (matchCriteria) => {
-  return Order.aggregate([
-    { $match: matchCriteria },
-    { $unwind: '$items' },
-    {
-      $lookup: {
-        from: 'products',
-        localField: 'items.productId',
-        foreignField: '_id',
-        as: 'productDetails',
-      },
-    },
-    { $unwind: '$productDetails' },
-    {
-      $group: {
-        _id: '$items.productId',
-        product: { $first: '$productDetails.productName' },
-        quantity: { $sum: '$items.quantity' },
-        totalAmount: { $sum: '$totalAmount' },
-        discountAmount: { $sum: '$discountAmount' },
-      },
-    },
-    {
-      $project: {
-        product: 1,
-        quantity: 1,
-        totalAmount: { $round: ['$totalAmount', 2] },
-        discountAmount: { $round: ['$discountAmount', 2] },
-      },
-    },
-  ]);
 };
 
 
@@ -97,44 +60,53 @@ const getSalesData = async (matchCriteria) => {
 const generateSalesReport = async (req, res) => {
   const { startDate, endDate, period } = req.body;
 
-
   try {
-    // Get the match criteria
     const matchCriteria = buildMatchCriteria(startDate, endDate, period);
    
-    // Fetch aggregated sales data
-    const salesReport = await getSalesData(matchCriteria);
-   
+
    
     // Fetch all orders within the specified period
     const allOrders = await Order.find(matchCriteria)
       .populate('items.productId', 'productName') 
       .lean(); 
    
-    if (!salesReport.length && !allOrders.length) {
+    if (!allOrders.length) {
       return res.status(200).json({ message: 'No sales data found for this period.' });
     }
 
-    // Calculate totals for delivered orders
-    const totalProductsSold = salesReport.reduce((sum, item) => sum + item.quantity, 0);
-    const totalAmount = salesReport.reduce((sum, item) => sum + item.totalAmount, 0);
-    const totalDiscount = salesReport.reduce((sum, item) => sum + item.discountAmount, 0);
+    // Initialize variables to calculate totals
+    let totalAmount = 0;
+    let totalDiscount = 0;
+    let totalQuantities = 0;
+    let totalOrders = allOrders.length;  
 
-    
+    // Loop through each order to calculate the totals
+    allOrders.forEach(order => {
+      totalAmount += order.totalAmount; 
+      totalDiscount += order.discountAmount;  
+
+      // Sum quantities for each item in the order
+      order.items.forEach(item => {
+        totalQuantities += item.quantity;  
+      });
+    });
 
     res.status(200).json({
       salesSummary: {
-        totalProductsSold,
-        totalAmount: totalAmount.toFixed(2),
-        totalDiscount: totalDiscount.toFixed(2),
+        totalProductsSold: totalQuantities,
+        totalAmount: totalAmount.toFixed(2),  
+        totalDiscount: totalDiscount.toFixed(2),  
+        totalOrders,
       },
-      allOrders, 
+      allOrders,
     });
   } catch (error) {
     console.error('Error generating sales report:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+
 
 
 //Admin: Dashboard Counters
@@ -156,7 +128,7 @@ const counters = async (req,res)=>{
 //Admin: Dashboard Chart
 const getOrdersChart = async (req, res) => {
   try {
-    const { period } = req.query; // Extract 'period' from query parameters
+    const { period } = req.query;
 
     const matchCriteria = {
       status: { $nin: ['Returned', 'Cancelled'] },
@@ -198,7 +170,7 @@ const getOrdersChart = async (req, res) => {
           totalOrders: { $sum: 1 },
         },
       },
-      { $sort: { '_id.year': 1, '_id.isoWeek': 1 } }, // Ensure proper sorting for weekly data
+      { $sort: { '_id.year': 1, '_id.isoWeek': 1 } },
     ]);
 
     // Transform weekly data for consistency
@@ -291,7 +263,7 @@ const getTopSellingCategories = async (req, res) => {
       {
         $lookup: {
           from: 'subcategories',
-          localField: 'productDetails.subCategory', // Link product's subCategory field
+          localField: 'productDetails.subCategory', 
           foreignField: '_id',
           as: 'subCategoryDetails',
         },
@@ -300,7 +272,7 @@ const getTopSellingCategories = async (req, res) => {
       {
         $lookup: {
           from: 'categories',
-          localField: 'subCategoryDetails.category', // Link subcategory's category field
+          localField: 'subCategoryDetails.category',
           foreignField: '_id',
           as: 'categoryDetails',
         },
@@ -315,8 +287,8 @@ const getTopSellingCategories = async (req, res) => {
           totalSales: { $sum: { $multiply: ['$items.quantity', '$items.price'] } },
         },
       },
-      { $sort: { totalQuantity: -1 } }, // Sort by total quantity sold
-      { $limit: 10 }, // Limit to top 10 categories
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 10 },
       {
         $project: {
           combinedName: {

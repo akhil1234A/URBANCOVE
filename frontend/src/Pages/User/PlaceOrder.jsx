@@ -128,7 +128,7 @@ const PlaceOrder = () => {
     try {
       // Step 1: Create Razorpay order from backend
       const response = await axios.post(
-        'http://localhost:3000/orders/razorpay', 
+        `${import.meta.env.VITE_API_BASE_URL}/orders/razorpay`, 
         {
           addressId: selectedAddress,
           cartItems,
@@ -164,7 +164,7 @@ const PlaceOrder = () => {
           try {
             // Step 3: Verify the payment and finalize the order
             const verifyResponse = await axios.post(
-              'http://localhost:3000/orders/verify', 
+              `${import.meta.env.VITE_API_BASE_URL}/orders/verify`, 
               verifyData, 
               {
                 headers: {
@@ -188,7 +188,7 @@ const PlaceOrder = () => {
           ondismiss: async () => {
             try {
               await axios.post(
-                'http://localhost:3000/orders/create-failed',
+                `${import.meta.env.VITE_API_BASE_URL}/orders/create-failed`,
                 {
                   razorpayOrderId,
                   cartItems,
@@ -268,7 +268,7 @@ const PlaceOrder = () => {
     const token = localStorage.getItem('token');
     try {
       const response = await axios.post(
-        'http://localhost:3000/coupons/apply',
+        `${import.meta.env.VITE_API_BASE_URL}/coupons/apply`,
         { couponCode, total },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -285,7 +285,7 @@ const PlaceOrder = () => {
     const token = localStorage.getItem('token');
     try {
       await axios.post(
-        'http://localhost:3000/coupons/remove',
+        `${import.meta.env.VITE_API_BASE_URL}/coupons/remove`,
         {couponCode},
         { headers: { Authorization: `Bearer ${token}` } }
       );

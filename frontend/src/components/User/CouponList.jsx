@@ -12,7 +12,7 @@ const CouponList = () => {
     const fetchCoupons = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3000/coupons/list', {
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/coupons/list`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setCoupons(response.data.coupons);

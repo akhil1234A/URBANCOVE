@@ -6,7 +6,7 @@ import { ArrowUp, ArrowDown, Loader2 } from 'lucide-react'
 
 async function fetchTopSellingProducts() {
   const token = getAdminToken()
-  const res = await fetch('http://localhost:3000/admin/sales-report/top-selling-product', {
+  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/sales-report/top-selling-product`, {
     headers: {
       'Authorization': `Bearer ${token}`
     }

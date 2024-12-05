@@ -47,7 +47,7 @@ const OrderHistory = () => {
         }
 
         const response = await axios.post(
-          `http://localhost:3000/orders/${selectedOrderId}/return`,
+          `${import.meta.env.VITE_API_BASE_URL}/orders/${selectedOrderId}/return`,
           {},
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -76,7 +76,7 @@ const OrderHistory = () => {
       }
   
       const response = await axios.post(
-        'http://localhost:3000/orders/razorpay',
+        `${import.meta.env.VITE_API_BASE_URL}/orders/razorpay`,
         {
           orderId: order._id, 
           addressId: order.deliveryAddress._id,
@@ -104,7 +104,7 @@ const OrderHistory = () => {
             };
   
             const verifyResponse = await axios.post(
-              'http://localhost:3000/orders/verify',
+              `${import.meta.env.VITE_API_BASE_URL}/orders/verify`,
               verifyData,
               { headers: { Authorization: `Bearer ${token}` } }
             );

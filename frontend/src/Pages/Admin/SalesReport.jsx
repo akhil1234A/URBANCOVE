@@ -46,7 +46,7 @@ const SalesReport = () => {
         period,
       };
       const response = await axios.post(
-        'http://localhost:3000/admin/sales-report/generate-sales-report',
+        `${import.meta.env.VITE_API_BASE_URL}/admin/sales-report/generate-sales-report`,
         payload,
         {
           headers: {

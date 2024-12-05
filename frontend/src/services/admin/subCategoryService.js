@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/admin/categories/subcategories';
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/admin/categories/subcategories`;
 
 // Helper for Error Handling
 const handleError = (error) => {

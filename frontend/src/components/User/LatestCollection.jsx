@@ -24,6 +24,7 @@ const LatestCollection = ({ products }) => {
             price={item.price}
             currency={currency}
             discountedPrice={item?.discountedPrice || 0}
+            wishlist={item?.isWishListed}
           />
         ))}
       </div>
