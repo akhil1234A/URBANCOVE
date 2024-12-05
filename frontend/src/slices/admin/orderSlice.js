@@ -39,15 +39,16 @@ export const viewUserOrders = createAsyncThunk(
 
 
 export const viewAllOrders = createAsyncThunk(
-  'orders/viewAllOrders',
-  async (_, { rejectWithValue }) => {
+  "orders/viewAllOrders",
+  async ({ page = 1, limit = 10 }, { rejectWithValue }) => {
     try {
-      return await orderService.viewAllOrders();
+      return await orderService.viewAllOrders(page, limit);
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
+
 
 export const updateOrderStatus = createAsyncThunk(
   'orders/updateOrderStatus',
@@ -67,7 +68,11 @@ const initialState = {
   loading: false,
   error: null,
   successMessage: null,
-  pagination: null,
+  pagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalOrders: 0,
+  },
 };
 
 
@@ -139,7 +144,11 @@ const orderSlice = createSlice({
       .addCase(viewAllOrders.fulfilled, (state, action) => {
         state.loading = false;
         state.orders = action.payload.orders;
-      })
+        state.pagination = { 
+          currentPage: action.payload.currentPage,
+          totalPages: action.payload.totalPages,
+          totalOrders: action.payload.totalOrders,
+        };      })
       .addCase(viewAllOrders.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { viewAllOrders, cancelOrder, updateOrderStatus } from '../../slices/admin/orderSlice';
 import { message } from 'antd';
@@ -6,13 +6,19 @@ import {assets} from '../../assets/admin'
 
 const Orders = () => {
   const dispatch = useDispatch();
-  const { orders, loading, error, successMessage } = useSelector((state) => state.orders);
+  const { orders, loading, error, pagination } = useSelector((state) => state.orders);
 
-  console.log(orders);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    dispatch(viewAllOrders()); 
-  }, [dispatch]);
+    dispatch(viewAllOrders({ page: currentPage, limit: 10 }));
+  }, [dispatch, currentPage]);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= pagination.totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   const getAllowedStatuses = (currentStatus) => {
     const allowedTransitions = {
@@ -50,14 +56,7 @@ const Orders = () => {
   };
 
 
-  useEffect(() => {
-    if (successMessage) {
-      message.success(successMessage);
-    }
-    if (error) {
-      message.error(error);
-    }
-  }, [successMessage, error]);
+ 
 
   return (
     <div>
@@ -118,6 +117,42 @@ const Orders = () => {
             </div>
           </div>
         ))}
+      </div>
+      {/* Pagination */}
+      <div className="pagination flex justify-center mt-4 space-x-2">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className={`py-2 px-4 bg-gray-200 rounded-lg ${
+            currentPage === 1 ? "cursor-not-allowed text-gray-400" : "hover:bg-gray-300"
+          }`}
+        >
+          Previous
+        </button>
+        {Array.from({ length: pagination.totalPages }, (_, index) => (
+          <button
+            key={index + 1}
+            onClick={() => handlePageChange(index + 1)}
+            className={`py-2 px-4 rounded-lg ${
+              currentPage === index + 1
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 hover:bg-gray-300"
+            }`}
+          >
+            {index + 1}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === pagination.totalPages}
+          className={`py-2 px-4 bg-gray-200 rounded-lg ${
+            currentPage === pagination.totalPages
+              ? "cursor-not-allowed text-gray-400"
+              : "hover:bg-gray-300"
+          }`}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

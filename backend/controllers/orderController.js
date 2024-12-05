@@ -401,14 +401,29 @@ const createFailedOrder = async (req, res) => {
 // Admin: View All Orders
 const viewAllOrders = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1; 
+    const limit = parseInt(req.query.limit) || 10; 
+    const skip = (page - 1) * limit;
+
+    const totalOrders = await Order.countDocuments();
     const orders = await Order.find()
+      .skip(skip)
+      .limit(limit)
       .populate("user", "name email")
-      .populate("items.productId", "productName").sort({placedAt: -1});
-    res.status(200).json({ orders });
+      .populate("items.productId", "productName")
+      .sort({ placedAt: -1 });
+
+    res.status(200).json({
+      orders,
+      currentPage: page,
+      totalPages: Math.ceil(totalOrders / limit),
+      totalOrders,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Admin: Update Order Status
 const updateOrderStatus = async (req, res) => {

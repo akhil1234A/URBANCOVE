@@ -45,21 +45,23 @@ const orderService = {
   },
 
   // Admin: Fetch all orders (Admin token)
-  viewAllOrders: async () => {
+  viewAllOrders: async (page = 1, limit = 10) => {
     try {
       const adminToken = getAdminToken();
       const response = await axios.get(`${BASE_URL}/admin/orders`, {
         headers: {
           Authorization: `Bearer ${adminToken}`,
         },
+        params: { page, limit }, 
       });
-
+  
       return response.data;
     } catch (error) {
       toast.error("Failed to fetch orders. Please try again.");
-      throw error; 
+      throw error;
     }
   },
+  
 
   // Admin: Update order status (Admin token)
   updateOrderStatus: async (orderId, status) => {
