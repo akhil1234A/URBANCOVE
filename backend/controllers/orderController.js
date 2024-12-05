@@ -86,22 +86,38 @@ const placeOrder = async (req, res) => {
 // User: View All Orders
 const viewUserOrders = async (req, res) => {
   const userId = req.user.id;
-  // console.log(userId);
-  try {
-    
-    const orders = await Order.find({ user: userId }).populate(
-      "items.productId",
-      "productName price"
-    ).populate("user","name email").sort({placedAt: -1});
+  const { page = 1, limit = 10 } = req.query; 
 
-    if (orders.length === 0) {
+  try {
+    const skip = (page - 1) * limit;
+
+    const [orders, totalOrders] = await Promise.all([
+      Order.find({ user: userId })
+        .populate("items.productId", "productName price")
+        .populate("user", "name email")
+        .sort({ placedAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments({ user: userId }),
+    ]);
+
+    if (!orders.length) {
       return res.status(404).json({ message: "No orders found for this user" });
     }
-    res.status(200).json({ orders });
+
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    res.status(200).json({
+      orders,
+      currentPage: Number(page),
+      totalPages,
+      totalOrders,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // User: Cancel An Order
 const cancelOrder = async (req, res) => {

@@ -81,17 +81,15 @@ export const generateInvoice = async (order) => {
     doc.line(20, yPos, pageWidth - 20, yPos);
     yPos += 10;
     doc.setTextColor(0);
-    doc.text("Subtotal:", 140, yPos);
+    doc.text("Shipping Charge:", 140, yPos);
     doc.setFontSize(10); 
-    doc.text(order.totalAmount.toFixed(2), 180, yPos, { align: "right" });
+    const shippingCharge = 40; 
+    doc.text(shippingCharge.toFixed(2), 180, yPos, { align: "right" });
     yPos += 10;
-    doc.text("Discount:", 140, yPos);
-    doc.setFontSize(10); 
-    doc.text(order.discountAmount.toFixed(2), 180, yPos, { align: "right" });
     yPos += 10;
     doc.setFontSize(12);
     doc.text("Total:", 140, yPos);
-    doc.text(`Rs. ${(order.totalAmount - order.discountAmount).toFixed(2)}`, 180, yPos, { align: "right" });
+    doc.text(`Rs. ${(order.totalAmount).toFixed(2)}`, 180, yPos, { align: "right" });
 
     // Payment details
     yPos += 20;

@@ -10,14 +10,19 @@ import ReturnOrderModal from './ReturnOrderModal';
 
 const OrderHistory = () => {
   const dispatch = useDispatch();
-  const { orders, loading } = useSelector((state) => state.orders);
+  const { orders, loading, pagination  } = useSelector((state) => state.orders);
+  const [currentPage, setCurrentPage] = useState(1);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [returnModalOpen, setReturnModalOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
 
   useEffect(() => {
-    dispatch(viewUserOrders());
-  }, [dispatch]);
+    dispatch(viewUserOrders({ page: currentPage, limit: 5 }));
+  }, [currentPage, dispatch]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   const handleCancelOrder = (orderId) => {
     setSelectedOrderId(orderId);
@@ -255,6 +260,38 @@ const OrderHistory = () => {
             </div>
           ))
         )}
+        {/* Pagination Controls */}
+{pagination && (
+  <div className="flex justify-center items-center mt-6">
+    <button
+      onClick={() => handlePageChange(currentPage - 1)}
+      disabled={currentPage === 1}
+      className={`px-4 py-2 mr-2 border rounded-md text-sm font-medium ${
+        currentPage === 1
+          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          : 'bg-blue-600 text-white hover:bg-blue-500 transition'
+      }`}
+    >
+      Previous
+    </button>
+    <span className="px-4 py-2 text-sm font-medium text-gray-700">
+      Page <strong>{pagination.currentPage}</strong> of <strong>{pagination.totalPages}</strong>
+    </span>
+    <button
+      onClick={() => handlePageChange(currentPage + 1)}
+      disabled={currentPage === pagination.totalPages}
+      className={`px-4 py-2 ml-2 border rounded-md text-sm font-medium ${
+        currentPage === pagination.totalPages
+          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          : 'bg-blue-600 text-white hover:bg-blue-500 transition'
+      }`}
+    >
+      Next
+    </button>
+  </div>
+)}
+
+
       </div>
       <CancelOrderModal
         isOpen={cancelModalOpen}

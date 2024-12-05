@@ -5,36 +5,63 @@ import './wallet.css';
 const Wallet = () => {
   const [balance, setBalance] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1); 
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const fetchWalletDetails = async (page = 1) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/user/wallet/balance?page=${page}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      const { balance, transactions, currentPage, totalPages } = response.data;
+      setBalance(balance);
+      setTransactions(transactions || []);
+      setCurrentPage(currentPage);
+      setTotalPages(totalPages);
+    } catch (error) {
+      setError('Failed to fetch wallet details. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchWalletDetails = async () => {
-      setLoading(true);
-      setError(null);
+    fetchWalletDetails(currentPage);
+  }, [currentPage]);
 
-      try {
-        // Fetch balance and transactions from the same API endpoint
-        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/user/wallet/balance`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
-        // Destructure balance and transactions from the response
-        const { balance, transactions } = response.data;
-        
-        setBalance(balance);
-        setTransactions(transactions || []);
-      } catch (error) {
-        setError('Failed to fetch wallet details. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWalletDetails();
-  }, []);
+  const renderPagination = () => (
+    <div className="flex justify-center space-x-4 mt-6">
+      <button
+        disabled={currentPage === 1}
+        onClick={() => handlePageChange(currentPage - 1)}
+        className="px-4 py-2 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
+      >
+        Previous
+      </button>
+      <span className="px-4 py-2 text-gray-700">{`Page ${currentPage} of ${totalPages}`}</span>
+      <button
+        disabled={currentPage === totalPages}
+        onClick={() => handlePageChange(currentPage + 1)}
+        className="px-4 py-2 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
+  );
 
   const renderBalance = () => {
     if (loading) {
@@ -81,6 +108,7 @@ const Wallet = () => {
             <p className="text-xs text-gray-400">{new Date(transaction.date).toLocaleString()}</p>
           </div>
         ))}
+      {renderPagination()}
       </div>
     );
   };

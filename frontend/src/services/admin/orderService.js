@@ -84,22 +84,18 @@ const orderService = {
     }
   },
 
-  //Admin: View User Orders
-  viewUserOrders: async () => {
-    try {
-      const userToken = getUserToken(); 
-      const response = await axios.get(`${BASE_URL}/user`, {
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
-
-      return response.data; 
-    } catch (error) {
-      toast.error("Failed to fetch your orders. Please try again.");
-      throw error; 
-    }
+  //User: View User Orders
+  viewUserOrders: async (page, limit) => {
+    const userToken = getUserToken();
+    const response = await axios.get(`${BASE_URL}/user`, {
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+      },
+      params: { page, limit },
+    });
+    return response.data;
   },
+  
 
 };
 
