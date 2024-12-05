@@ -15,6 +15,7 @@ router.get('/',adminAuth,couponController.getAllCoupons);
 //User: Coupon Apply and Remove
 router.post('/apply',userAuth, couponController.applyCoupon);
 router.post('/remove',userAuth, couponController.removeCoupon);
+router.get('/list',couponController.listApplicableCoupons);
 
 
 module.exports = router;

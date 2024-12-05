@@ -176,3 +176,30 @@ exports.removeCoupon = async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 };
+
+//User: List Applicable Coupons
+exports.listApplicableCoupons = async (req, res) => {
+  try {
+    const currentDate = new Date();
+
+    const applicableCoupons = await Coupon.find({
+      isActive: true,
+      validFrom: { $lte: currentDate },
+      validUntil: { $gte: currentDate },
+      $expr: { $lt: ["$usageCount", "$usageLimit"] }, 
+    }).select('-userUsage -usageCount -usageLimit');
+
+    if (applicableCoupons.length === 0) {
+      return res.status(404).json({ message: 'No applicable coupons found.' });
+    }
+
+   
+    res.status(200).json({
+      message: 'Applicable coupons retrieved successfully.',
+      coupons: applicableCoupons,
+    });
+  } catch (error) {
+    console.error('Error fetching applicable coupons:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};

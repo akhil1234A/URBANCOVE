@@ -17,120 +17,114 @@ const processImage = async (filePath) => {
 
 // Admin: list all products
 exports.listProducts = async (req, res) => {
-    try {
-      // console.log(req.query);
-      const { type } = req.params;
-      const { page = 1, limit = 10, isAdmin = false, productId, search} = req.query;      
+  try {
+    const { type } = req.params;
+    const { page = 1, limit = 10, isAdmin = false, productId, search } = req.query;
 
-      
+    let query = isAdmin === 'true' ? {} : { isActive: true };
 
-      let query = isAdmin === 'true' ? {} : { isActive: true };
-
-
-      if (productId) {
-        query._id = productId;
-      } else {
-        if (type === 'latest') {
-          query = { ...query }; 
-        } else if (type === 'bestSeller') {
-          query = { ...query, isBestSeller: true };
-        }
+    if (productId) {
+      query._id = productId;
+    } else {
+      if (type === 'latest') {
+        query = { ...query };
+      } else if (type === 'bestSeller') {
+        query = { ...query, isBestSeller: true };
       }
-     
-      if (search) {
-        query.productName = { $regex: search, $options: 'i' }; // Case-insensitive search
-      }
-
-      const options = {
-        limit: parseInt(limit),
-        skip: (parseInt(page) - 1) * parseInt(limit),
-        sort: type === 'latest' ? { createdAt: -1 } : {}
-    };
-  
-      const products = await Product.find(query)
-        .populate('category subCategory')
-        .limit(options.limit)
-        .skip(options.skip)
-        .sort(options.sort); 
-  
-
-      const totalCount = await Product.countDocuments(query);
-
-      const activeOffers = await Offer.find({
-        isActive:true,
-        startDate: {$lte: new Date()},
-        endDate: {$gte: new Date()},
-      })
-  
-
-      const updatedProducts = await Promise.all(
-        products.map(async (product) => {
-          const subCategoryId = product.subCategory?._id || product.subCategory;
-      
-          // Check for product-specific offers
-          const productOffer = activeOffers.find(
-            (offer) =>
-              offer.type === 'product' &&
-              offer.products.some((productId) => productId.toString() === product._id.toString())
-          );
-      
-          // Check for category-specific offers
-          const categoryOffer = activeOffers.find(
-            (offer) =>
-              offer.type === 'category' &&
-              offer.categories.some((categoryId) => categoryId.toString() === subCategoryId?.toString())
-          );
-      
-          let discount = 0;
-      
-          // Apply product-level offer
-          if (productOffer) {
-            if (productOffer.discountType === 'percentage') {
-              discount = (product.price * productOffer.discountValue) / 100;
-            } else if (productOffer.discountType === 'flat') {
-              discount = productOffer.discountValue;
-            }
-          }
-      
-          // Apply category-level offer (if no product-specific offer was found)
-          if (!productOffer && categoryOffer) {
-            if (categoryOffer.discountType === 'percentage') {
-              discount = (product.price * categoryOffer.discountValue) / 100;
-            } else if (categoryOffer.discountType === 'flat') {
-              discount = categoryOffer.discountValue;
-            }
-          }
-      
-          const discountedPrice = product.price - discount;
-          const finalDiscountedPrice = discountedPrice < 0 ? 0 : discountedPrice;
-      
-          // Update product in the database
-          try {
-            await Product.updateOne(
-              { _id: product._id },
-              { $set: { discountedPrice: finalDiscountedPrice } }
-            );
-          } catch (error) {
-            console.error(`Failed to update product ID ${product._id}:`, error);
-          }
-      
-          return {
-            ...product.toObject(),
-            discountedPrice: finalDiscountedPrice,
-          };
-        })
-      );  
-      
-res.json({
-        products: updatedProducts,
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(totalCount / limit),
-        totalItems: totalCount
-    });
-    } catch (error) {
-      res.status(500).json({ message: 'Server error', error });
     }
-  };
+
+    if (search) {
+      query.productName = { $regex: search, $options: 'i' }; // Case-insensitive search
+    }
+
+    const options = {
+      limit: parseInt(limit),
+      skip: (parseInt(page) - 1) * parseInt(limit),
+      sort: type === 'latest' ? { createdAt: -1 } : {}
+    };
+
+    const products = await Product.find(query)
+      .populate('category subCategory')
+      .limit(options.limit)
+      .skip(options.skip)
+      .sort(options.sort);
+
+    const totalCount = await Product.countDocuments(query);
+
+    const activeOffers = await Offer.find({
+      isActive: true,
+      startDate: { $lte: new Date() },
+      endDate: { $gte: new Date() },
+    });
+
+    const updatedProducts = await Promise.all(
+      products.map(async (product) => {
+        const subCategoryId = product.subCategory?._id || product.subCategory;
+
+        // Identify offers applicable to the product
+        const productOffer = activeOffers.find(
+          (offer) =>
+            offer.type === 'product' &&
+            offer.products.some((productId) => productId.toString() === product._id.toString())
+        );
+
+        const categoryOffer = activeOffers.find(
+          (offer) =>
+            offer.type === 'category' &&
+            offer.categories.some((categoryId) => categoryId.toString() === subCategoryId?.toString())
+        );
+
+        // Calculate discounts
+        let productDiscount = 0;
+        let categoryDiscount = 0;
+
+        if (productOffer) {
+          productDiscount =
+            productOffer.discountType === 'percentage'
+              ? (product.price * productOffer.discountValue) / 100
+              : productOffer.discountValue;
+        }
+
+        if (categoryOffer) {
+          categoryDiscount =
+            categoryOffer.discountType === 'percentage'
+              ? (product.price * categoryOffer.discountValue) / 100
+              : categoryOffer.discountValue;
+        }
+
+        // Apply the highest discount
+        const discount = Math.max(productDiscount, categoryDiscount);
+        const discountedPrice = product.price - discount;
+        const finalDiscountedPrice = discountedPrice < 0 ? 0 : discountedPrice;
+
+        // Optionally update product's discounted price in the database
+        try {
+          await Product.updateOne(
+            { _id: product._id },
+            { $set: { discountedPrice: finalDiscountedPrice } }
+          );
+        } catch (error) {
+          console.error(`Failed to update product ID ${product._id}:`, error);
+        }
+
+        return {
+          ...product.toObject(),
+          discountedPrice: finalDiscountedPrice,
+        };
+      })
+    );
+
+    res.json({
+      products: updatedProducts,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalCount / limit),
+      totalItems: totalCount
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
 
 
   

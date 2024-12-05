@@ -8,6 +8,7 @@ import { placeOrder } from '../../slices/admin/orderSlice';
 import CartTotal from "../../components/User/CartTotal";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import CouponList from "../../components/User/CouponList";
 
 const PlaceOrder = () => {
   const dispatch = useDispatch();
@@ -346,6 +347,8 @@ const PlaceOrder = () => {
         >
           + Add New Address
         </button>
+
+        <CouponList/>
       </div>
 
       {/* Right Side - Payment and Cart Summary */}

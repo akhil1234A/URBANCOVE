@@ -4,7 +4,7 @@ const Transaction = require('../models/Transaction')
 // User: Get wallet balance
 const getWalletBalance = async (req, res) => {
   try {
-    const transactions = await Transaction.find({ userId: req.user.id });
+    const transactions = await Transaction.find({ userId: req.user.id }).sort({date: -1});
 
     // Calculate balance
     let balance = 0;
