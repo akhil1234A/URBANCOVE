@@ -147,10 +147,10 @@ const EditOfferPage = () => {
       return false;
     }
   
-    if (start < today) {
-      toast.error('Valid From date cannot be in the past.');
-      return false;
-    }
+    // if (start < today) {
+    //   toast.error('Valid From date cannot be in the past.');
+    //   return false;
+    // }
   
     if (end < today) {
       toast.error('Valid Until date cannot be in the past.');

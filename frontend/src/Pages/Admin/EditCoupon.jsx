@@ -116,10 +116,7 @@ const EditCoupon = () => {
       return;
     }
 
-    if (new Date(couponData.validFrom) < today) {
-      toast.error('Valid From date cannot be in the past');
-      return;
-    }
+   
     if (new Date(couponData.validUntil) < new Date()) {
       toast.error('Valid Until date cannot be in the past');
       return;
