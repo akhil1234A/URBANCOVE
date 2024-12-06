@@ -5,6 +5,7 @@ import ImageCropper from '../../components/Admin/ImageCropper';
 import { toast } from 'react-toastify'; 
 import { fetchCategories, fetchSubCategoriesByCategory } from '../../slices/admin/categorySlice';
 import { addProduct } from '../../slices/admin/productSlice';
+import { useNavigate } from 'react-router-dom';
 
 const AddProduct = () => {
   const dispatch = useDispatch(); 
@@ -22,6 +23,8 @@ const AddProduct = () => {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [bestseller, setBestseller] = useState(false);
+
+  const navigate = useNavigate();
   
   const defaultQuantities = {
     S: 10,
@@ -114,6 +117,7 @@ const dataURLToBlob = (dataURL) => {
 
       if (addProduct.fulfilled.match(resultAction)) {
         toast.success('Product added successfully!');
+        navigate('/admin/products/view');
         resetForm();
       } else {
         toast.error(resultAction.payload || 'Error adding product. Please try again.');

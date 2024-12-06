@@ -1,22 +1,37 @@
-import './css/User.css'; 
-
-import React, { useEffect } from 'react';
+import './css/User.css';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import ReactModal from 'react-modal'; // Import React-Modal
 import { getUsers, toggleUserBlockStatus } from '../../slices/admin/userSlice';
+
+// Style the modal using custom CSS or inline styles
+const modalStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+    padding: '2rem',
+    borderRadius: '10px',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+  },
+  overlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+};
 
 const Users = () => {
   const dispatch = useDispatch();
   const { users, loading, error, currentPage, totalPages } = useSelector((state) => state.users);
 
-  // useEffect(() => {
-  //   console.log('Users state:', users); 
-  // }, [users]);
-  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     dispatch(getUsers({ page: currentPage }));
   }, [dispatch, currentPage]);
-
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
@@ -24,9 +39,21 @@ const Users = () => {
     }
   };
 
+  const openConfirmationModal = (user) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  };
 
-  const handleToggleBlockStatus = (userId) => {
-    dispatch(toggleUserBlockStatus(userId));
+  const closeConfirmationModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const confirmToggleBlockStatus = () => {
+    if (selectedUser) {
+      dispatch(toggleUserBlockStatus(selectedUser._id));
+      closeConfirmationModal();
+    }
   };
 
   if (loading) return <div>Loading...</div>;
@@ -34,38 +61,38 @@ const Users = () => {
 
   return (
     <div className="p-4">
-    <h1 className="text-2xl font-bold mb-4">Users</h1>
-    <table className="min-w-full bg-white border border-gray-300">
-      <thead>
-        <tr>
-          <th className="py-2 px-4 border-b text-center">Name</th>
-          <th className="py-2 px-4 border-b text-center">Email</th>
-          <th className="py-2 px-4 border-b text-center">Status</th>
-          <th className="py-2 px-4 border-b text-center">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {users.map((user) => (
-          <tr key={user._id}>
-            <td className="py-2 px-4 border-b text-center">{user.name}</td>
-            <td className="py-2 px-4 border-b text-center">{user.email}</td>
-            <td className="py-2 px-4 border-b text-center">
-              {user.isActive ? 'Active' : 'Blocked'}
-            </td>
-            <td className="py-2 px-4 border-b text-center">
-              <button
-                onClick={() => handleToggleBlockStatus(user._id)}
-                className={`py-1 px-2 rounded-md text-white 
-                  ${user.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} transition duration-200`}
-              >
-                {user.isActive ? 'Block' : 'UnBlock'}
-              </button>
-            </td>
+      <h1 className="text-2xl font-bold mb-4">Users</h1>
+      <table className="min-w-full bg-white border border-gray-300">
+        <thead>
+          <tr>
+            <th className="py-2 px-4 border-b text-center">Name</th>
+            <th className="py-2 px-4 border-b text-center">Email</th>
+            <th className="py-2 px-4 border-b text-center">Status</th>
+            <th className="py-2 px-4 border-b text-center">Action</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
-    <div className="pagination flex justify-center items-center mt-4 space-x-2">
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user._id}>
+              <td className="py-2 px-4 border-b text-center">{user.name}</td>
+              <td className="py-2 px-4 border-b text-center">{user.email}</td>
+              <td className="py-2 px-4 border-b text-center">
+                {user.isActive ? 'Active' : 'Blocked'}
+              </td>
+              <td className="py-2 px-4 border-b text-center">
+                <button
+                  onClick={() => openConfirmationModal(user)}
+                  className={`py-1 px-2 rounded-md text-white 
+                    ${user.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} transition duration-200`}
+                >
+                  {user.isActive ? 'Block' : 'UnBlock'}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="pagination flex justify-center items-center mt-4 space-x-2">
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
@@ -98,8 +125,40 @@ const Users = () => {
           Next
         </button>
       </div>
-  </div>
-);
+
+      {/* Confirmation Modal */}
+      {selectedUser && (
+        <ReactModal
+          isOpen={isModalOpen}
+          onRequestClose={closeConfirmationModal}
+          style={modalStyles}
+          ariaHideApp={false}
+        >
+          <h2 className="text-xl font-bold mb-4">Confirm Action</h2>
+          <p className="mb-6">
+            Are you sure you want to {selectedUser.isActive ? 'block' : 'unblock'} user{' '}
+            <strong>{selectedUser.name}</strong>?
+          </p>
+          <div className="flex justify-end space-x-4">
+            <button
+              onClick={closeConfirmationModal}
+              className="py-2 px-4 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmToggleBlockStatus}
+              className={`py-2 px-4 text-white rounded-lg ${
+                selectedUser.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
+              } transition duration-200`}
+            >
+              Confirm
+            </button>
+          </div>
+        </ReactModal>
+      )}
+    </div>
+  );
 };
 
 export default Users;
