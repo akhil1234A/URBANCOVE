@@ -1,4 +1,5 @@
 const Category = require('../models/Category');
+const Product = require('../models/Product')
 
 //Admin: Get All Categories
 exports.listCategories = async (req, res) => {
@@ -55,7 +56,7 @@ exports.addCategory = async(req,res)=>{
 exports.editCategory = async (req, res) => {
   const { category, isActive } = req.body;
 
-   
+  console.log(isActive); 
    if (!category || !category.trim()) {
     return res.status(400).json({ message: 'Category name is required' });
   }
@@ -81,6 +82,13 @@ exports.editCategory = async (req, res) => {
 
       if (!updatedCategory) return res.status(404).json({ message: 'Category not found' });
 
+      if (isActive === false) {
+        await Product.updateMany(
+          { category: updatedCategory._id },
+          { isActive: false }
+        );
+      }
+
       res.json(updatedCategory);
   } catch (error) {
       res.status(500).json({ message: 'Server error', error });
@@ -90,6 +98,7 @@ exports.editCategory = async (req, res) => {
 //Admin: soft delete an category
 exports.deleteCategory = async (req, res) => {
   try {
+      console.log('jhi')
       const category = await Category.findById(req.params.id);
       if (!category) return res.status(404).json({ message: 'Category not found' });
 

@@ -1,5 +1,6 @@
 const SubCategory = require('../models/SubCategory');
 const Category = require('../models/Category');
+const Product = require('../models/Product');
 
 
 //Admin: Add a Sub Category 
@@ -48,6 +49,14 @@ exports.editSubCategory = async (req, res) => {
           return res.status(404).json({ message: 'Subcategory not found' });
       }
       res.status(200).json({ message: "Subcategory updated successfully", updatedSubCategory });
+
+      if (isActive === false) {
+        await Product.updateMany(
+          { subCategory: updatedSubCategory._id },
+          { isActive: false }
+        );
+      }
+      
   } catch (error) {
       res.status(500).json({ message: 'Server error', error });
   }
@@ -56,7 +65,7 @@ exports.editSubCategory = async (req, res) => {
 //Admin: Delete a Sub Category
 exports.deleteSubCategory = async (req, res) => {
   const { id } = req.params;
-
+  console.log(id);
   try {
       const deletedSubCategory = await SubCategory.findByIdAndUpdate(id, { isActive: false }, { new: true });
       if (!deletedSubCategory) {
