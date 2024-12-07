@@ -158,14 +158,25 @@ exports.addProduct = async (req, res) => {
     }
 };
 
-
-//Admin: Edit a Product
+// Admin: Edit a Product
 exports.editProduct = async (req, res) => {
-  const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller, isActive, removeImages = [] } = req.body;
+  const { 
+    productName, 
+    productDescription, 
+    category, 
+    subCategory, 
+    price, 
+    stock, 
+    size, 
+    isBestSeller, 
+    isActive, 
+    removeImages 
+  } = req.body;
+
   let newImages = [];
 
   try {
-    // Process new image uploads, if any
+    // Process new image uploads
     if (req.files && req.files.length > 0) {
       newImages = await Promise.all(req.files.map(async (file) => await processImage(file.path)));
     }
@@ -177,8 +188,11 @@ exports.editProduct = async (req, res) => {
     }
 
     // Filter out images marked for removal
+    const imagesToRemove = Array.isArray(removeImages) 
+      ? removeImages 
+      : JSON.parse(removeImages || '[]');
     
-    const updatedImages = product.images.filter((img, index) => !removeImages.includes(index.toString()));
+    const updatedImages = product.images.filter(img => !imagesToRemove.includes(img));
 
     // Combine existing and new images
     const finalImages = [...updatedImages, ...newImages];
@@ -194,8 +208,8 @@ exports.editProduct = async (req, res) => {
         ...(price && { price }),
         ...(stock && { stock }),
         ...(size && { size: Array.isArray(size) ? size : [size] }),
-        ...(finalImages.length > 0 && { images: finalImages }), 
-        isBestSeller,
+        ...(finalImages.length > 0 && { images: finalImages }), // Set updated images explicitly
+        ...(typeof isBestSeller !== "undefined" && { isBestSeller }),
         ...(typeof isActive !== "undefined" && { isActive }),
       },
       { new: true }
@@ -207,6 +221,7 @@ exports.editProduct = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 
