@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux'
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import ImageUpload from '../../components/Admin/ImageUpload';
 import ImageCropper from '../../components/Admin/ImageCropper';
-import { toast } from 'react-toastify'; 
 import { fetchCategories, fetchSubCategoriesByCategory } from '../../slices/admin/categorySlice';
 import { addProduct } from '../../slices/admin/productSlice';
-import { useNavigate } from 'react-router-dom';
 
 const AddProduct = () => {
-  const dispatch = useDispatch(); 
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const categories = useSelector((state) => state.categories.categories);
+  
   const [subCategories, setSubCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
@@ -23,19 +25,31 @@ const AddProduct = () => {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [bestseller, setBestseller] = useState(false);
+  const [selectedSize, setSelectedSize] = useState('');
+  const [stock, setStock] = useState(0);
 
-  const navigate = useNavigate();
-  
-  const defaultQuantities = {
-    S: 10,
-    M: 15,
-    L: 20,
-    XL: 25,
-    XXL: 30
-  };
+  const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
-  const [sizes, setSizes] = useState(['L', 'XL']);
-  const [stock, setStock] = useState(defaultQuantities); // Store quantities for each size
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    dispatch(fetchCategories(token));
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      const token = localStorage.getItem('adminToken');
+      dispatch(fetchSubCategoriesByCategory({ categoryId: selectedCategory, token }))
+        .then((response) => {
+          if (fetchSubCategoriesByCategory.fulfilled.match(response)) {
+            setSubCategories(response.payload);
+          } else {
+            toast.error('Error fetching subcategories.');
+          }
+        });
+    } else {
+      setSubCategories([]);
+    }
+  }, [selectedCategory, dispatch]);
 
   const setCroppedImage = (index, croppedImage) => {
     const newCroppedImages = [...croppedImages];
@@ -46,25 +60,21 @@ const AddProduct = () => {
   const handleCropComplete = (index) => {
     setCropperOpen((prev) => {
       const newOpen = [...prev];
-      newOpen[index] = false; // Close the cropper for this image
+      newOpen[index] = false;
       return newOpen;
     });
   };
 
-  // Utility function to convert base64 data URL to a Blob
-const dataURLToBlob = (dataURL) => {
-  const byteString = atob(dataURL.split(',')[1]); // Decode the base64 string
-  const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0]; // Extract MIME type
-  const ab = new ArrayBuffer(byteString.length);
-  const ia = new Uint8Array(ab);
-
-  for (let i = 0; i < byteString.length; i++) {
-    ia[i] = byteString.charCodeAt(i);
-  }
-
-  return new Blob([ab], { type: mimeString });
-};
-
+  const dataURLToBlob = (dataURL) => {
+    const byteString = atob(dataURL.split(',')[1]);
+    const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: mimeString });
+  };
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
@@ -72,8 +82,8 @@ const dataURLToBlob = (dataURL) => {
     const token = localStorage.getItem('adminToken');
 
     try {
-      if (!name || !selectedCategory || price <= 0) {
-        toast.error('Ensure all fields are filled, and price is positive');
+      if (!name || !selectedCategory || !selectedSize || price <= 0 || stock <= 0) {
+        toast.error('Please fill all required fields with valid values.');
         return;
       }
 
@@ -90,11 +100,8 @@ const dataURLToBlob = (dataURL) => {
       formData.append('isBestSeller', bestseller);
       formData.append('isActive', true);
       formData.append('price', parseFloat(price));
-
-      const totalStock = sizes.reduce((acc, size) => acc + (stock[size] || 0), 0);
-      formData.append('stock', totalStock);
-
-    
+      formData.append('stock', stock);
+      formData.append('size', selectedSize);
 
       croppedImages.forEach((croppedImage) => {
         if (croppedImage) {
@@ -102,16 +109,6 @@ const dataURLToBlob = (dataURL) => {
           formData.append('images', file, `processed-${Date.now()}.png`);
         }
       });
-
-      sizes.forEach((size) => {
-        formData.append('size[]', size);
-        // formData.append(`stock[${size}]`, stock[size]); // Add stock per size
-
-      });
-
-      
-
-     
 
       const resultAction = await dispatch(addProduct({ productData: formData, token }));
 
@@ -136,37 +133,12 @@ const dataURLToBlob = (dataURL) => {
     setPrice('');
     setImages([null, null, null, null]);
     setCroppedImages([null, null, null, null]);
-    setSizes(['L', 'XL']);
+    setSelectedSize('');
+    setStock(0);
     setBestseller(false);
     setCropperOpen([false, false, false, false]);
-    setStock(defaultQuantities); // Reset stock to default quantities
-    setSubCategories([])
+    setSubCategories([]);
   };
-
-  useEffect(() => {
-    
-    const token = localStorage.getItem('adminToken');
-    dispatch(fetchCategories(token));
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (selectedCategory) {
-      const token = localStorage.getItem('adminToken');
-      dispatch(fetchSubCategoriesByCategory({ categoryId: selectedCategory, token }))
-        .then((response) => {
-          if (fetchSubCategoriesByCategory.fulfilled.match(response)) {
-            setSubCategories(response.payload);
-          } else {
-            toast.error('Error fetching subcategories.');
-          }
-        });
-    } else {
-      setSubCategories([]); // Clear subcategories if no category is selected
-    }
-  }, [selectedCategory, dispatch]);
-
-  // Calculate total stock based on selected sizes
-  const totalStock = sizes.reduce((acc, size) => acc + (stock[size] || 0), 0);
 
   return (
     <form onSubmit={onSubmitHandler} className="flex flex-col w-full items-start gap-4 p-5 bg-white rounded shadow-md">
@@ -182,7 +154,7 @@ const dataURLToBlob = (dataURL) => {
             setCroppedImage={(croppedImage) => setCroppedImage(index, croppedImage)}
             setCropperOpen={() => setCropperOpen((prev) => {
               const newOpen = [...prev];
-              newOpen[index] = false; // Close the cropper when needed
+              newOpen[index] = false;
               return newOpen;
             })}
             onCropComplete={() => handleCropComplete(index)}
@@ -190,7 +162,6 @@ const dataURLToBlob = (dataURL) => {
         )
       ))}
 
-      {/* Product name */}
       <div className="w-full">
         <label className="block mb-2">Product Name</label>
         <input
@@ -203,7 +174,6 @@ const dataURLToBlob = (dataURL) => {
         />
       </div>
 
-      {/* Product description */}
       <div className="w-full">
         <label className="block mb-2">Product Description</label>
         <textarea
@@ -215,50 +185,48 @@ const dataURLToBlob = (dataURL) => {
         />
       </div>
 
-      {/* Category, subcategory, price, stock */}
-      <div className="flex gap-4">
-      <div className="w-full">
-        <label htmlFor="category" className="block mb-2">Category</label>
-        <select
-          id="category"
-          value={selectedCategory} 
-          onChange={(e) => {
-            setSelectedCategory(e.target.value);
-            setSelectedSubCategory(''); 
-          }}
-          className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-          <option value="" disabled>Select a category</option>
-          {categories.map((category) => (
-            <option key={category._id} value={category._id}>
-              {category.category}
+      <div className="flex gap-4 flex-wrap">
+        <div className="w-full md:w-1/2">
+          <label htmlFor="category" className="block mb-2">Category</label>
+          <select
+            id="category"
+            value={selectedCategory} 
+            onChange={(e) => {
+              setSelectedCategory(e.target.value);
+              setSelectedSubCategory(''); 
+            }}
+            className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+          >
+            <option value="" disabled>Select a category</option>
+            {categories.map((category) => (
+              <option key={category._id} value={category._id}>
+                {category.category}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="w-full md:w-1/2">
+          <label htmlFor="subCategory" className="block mb-2">Subcategory</label>
+          <select
+            id="subCategory"
+            value={selectedSubCategory}
+            onChange={(e) => setSelectedSubCategory(e.target.value)}
+            className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+            disabled={subCategories.length === 0}
+          >
+            <option value="" disabled>
+              {subCategories.length > 0 ? 'Select a subcategory' : 'Select a category first'}
             </option>
-          ))}
-        </select>
-      </div>
+            {subCategories.map((subCategory) => (
+              <option key={subCategory._id} value={subCategory._id}>
+                {subCategory.subCategory}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div className="w-full">
-  <label htmlFor="subCategory" className="block mb-2">Subcategory</label>
-  <select
-    id="subCategory"
-    value={selectedSubCategory}
-    onChange={(e) => setSelectedSubCategory(e.target.value)}
-    className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-    disabled={subCategories.length === 0} // Disable if no subcategories are available
-  >
-    <option value="" disabled>
-      {subCategories.length > 0 ? 'Select a subcategory' : 'Select a category first'}
-    </option> {/* Placeholder option */}
-    {subCategories.map((subCategory) => (
-      <option key={subCategory._id} value={subCategory._id}>
-        {subCategory.subCategory}
-      </option>
-    ))}
-  </select>
-</div>
-
-
-        <div className="w-full">
+        <div className="w-full md:w-1/2">
           <label className="block mb-2">Product Price</label>
           <input
             onChange={(e) => setPrice(e.target.value)}
@@ -270,36 +238,31 @@ const dataURLToBlob = (dataURL) => {
           />
         </div>
 
-        <div className="w-full">
-          <label className="block mb-2">Overall Stock</label>
-          <input
-            value={totalStock} // Total stock based on selected sizes
-            className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none bg-gray-100 cursor-not-allowed"
-            readOnly
-          />
+        <div className="w-full md:w-1/2">
+          <label className="block mb-2">Product Size</label>
+          <select
+            value={selectedSize}
+            onChange={(e) => setSelectedSize(e.target.value)}
+            className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+            required
+          >
+            <option value="">Select a size</option>
+            {sizes.map((size) => (
+              <option key={size} value={size}>{size}</option>
+            ))}
+          </select>
         </div>
-      </div>
 
-      {/* Product sizes with default stock */}
-      <div className="w-full">
-        <p className="mb-2">Product Sizes</p>
-        <div className="flex gap-3">
-          {Object.keys(defaultQuantities).map((size) => (
-            <div key={size} className="flex items-center">
-              <input
-                type="checkbox"
-                checked={sizes.includes(size)}
-                onChange={() => {
-                  setSizes((prevSizes) =>
-                    prevSizes.includes(size)
-                      ? prevSizes.filter((s) => s !== size) // Remove size if already selected
-                      : [...prevSizes, size] // Add size if not selected
-                  );
-                }}
-              />
-              <label className="ml-2">{size}</label>
-            </div>
-          ))}
+        <div className="w-full md:w-1/2">
+          <label className="block mb-2">Stock</label>
+          <input
+            type="number"
+            value={stock}
+            onChange={(e) => setStock(parseInt(e.target.value))}
+            className="w-full max-w-md border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+            placeholder="Enter stock quantity"
+            required
+          />
         </div>
       </div>
 
@@ -308,8 +271,9 @@ const dataURLToBlob = (dataURL) => {
           type="checkbox"
           checked={bestseller}
           onChange={() => setBestseller(!bestseller)}
+          id="bestseller"
         />
-        <label className="ml-2">Best Seller</label>
+        <label htmlFor="bestseller" className="ml-2">Best Seller</label>
       </div>
 
       <button
@@ -324,3 +288,4 @@ const dataURLToBlob = (dataURL) => {
 };
 
 export default AddProduct;
+

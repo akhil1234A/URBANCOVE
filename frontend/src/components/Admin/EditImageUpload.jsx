@@ -1,26 +1,55 @@
 import { useState } from 'react';
-import { toast } from 'react-toastify'
+import { toast } from 'react-toastify';
 
-const ImageUpload = ({ images, setImages, setCropperOpen }) => {
-  const [cropIndex, setCropIndex] = useState(null); // To track which image is currently being cropped
+const ImageUpload = ({ images, setImages, setCropperOpen, setIsNewImage }) => {
+  const MAX_IMAGES = 4; // Limit to 4 images
 
   const handleImageChange = (files) => {
-    const newImages = [...images];
-    Array.from(files).forEach((file, index) => {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Only image files are allowed');
+    const newImages = [...images];  // Copy the current images state
+    let addedCount = 0;  // Track how many new images have been added
+
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Only image files are allowed.");
         return;
       }
 
-      newImages[index] = URL.createObjectURL(file);
-      setImages(newImages);
+      if (addedCount + newImages.filter(img => img !== null).length < MAX_IMAGES) {
+        const firstNullIndex = newImages.findIndex((image) => image === null);
+
+        if (firstNullIndex !== -1) {
+          newImages[firstNullIndex] = URL.createObjectURL(file); // Add the new image
+          addedCount++;
+
+          // Update `isNewImage` for newly added images
+          setIsNewImage((prev) => {
+            const newIsNewImage = [...prev];
+            newIsNewImage[firstNullIndex] = true; // Mark this image as new
+            return newIsNewImage;
+          });
+        } else if (newImages.length < MAX_IMAGES) {
+          newImages.push(URL.createObjectURL(file));
+          addedCount++;
+
+          // Update `isNewImage` for newly added images
+          setIsNewImage((prev) => {
+            const newIsNewImage = [...prev, true];
+            return newIsNewImage;
+          });
+        }
+      }
     });
+
+    if (addedCount + newImages.filter(img => img !== null).length >= MAX_IMAGES) {
+      toast.warning("You can upload up to 4 images.");
+    }
+
+    setImages(newImages);  // Update the images state
   };
 
   const handleCropOpen = (index) => {
-    setCropIndex(index);
     setCropperOpen((prev) => {
-      const newOpen = [...prev];
+      const newOpen = Array.isArray(prev) ? [...prev] : [false, false, false, false];
       newOpen[index] = true; // Open cropper for the selected image
       return newOpen;
     });
@@ -58,3 +87,4 @@ const ImageUpload = ({ images, setImages, setCropperOpen }) => {
 };
 
 export default ImageUpload;
+
