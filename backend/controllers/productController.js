@@ -2,6 +2,8 @@ const Product = require('../models/Product');
 const Offer = require('../models/Offer');
 const fs = require('fs');
 const uploadToCloudinary = require('../utils/cloudinaryUploader')
+const Category = require('../models/Category');
+const SubCategory = require('../models/SubCategory')
 
 
 const processImage = async (filePath) => {
@@ -217,17 +219,37 @@ exports.deleteProduct = async (req, res) => {
     const { isActive } = req.body;
     const { productId } = req.params;
 
-    
-
-    const product = await Product.findById(productId);
+   
+    const product = await Product.findById(productId).populate('category subCategory');
     if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    
+    const { category, subCategory } = product;
+
+    if (isActive) {
+      if (!category?.isActive) {
+        return res.status(400).json({ 
+          message: 'Cannot list product because the associated category is inactive.' 
+        });
+      }
+
+      if (!subCategory?.isActive) {
+        return res.status(400).json({ 
+          message: 'Cannot list product because the associated sub-category is inactive.' 
+        });
+      }
+    }
 
     
     product.isActive = isActive;
     await product.save();
 
-    res.json({ isActive: product.isActive, message: `Product has been ${isActive ? 'listed' : 'unlisted'}` });
-} catch (error) {
+    res.json({
+      isActive: product.isActive,
+      message: `Product has been ${isActive ? 'listed' : 'unlisted'}`,
+    });
+
+  } catch (error) {
     res.status(500).json({ message: 'Server error', error });
-}
+  }
 };

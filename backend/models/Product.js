@@ -11,7 +11,7 @@ const ProductSchema = new mongoose.Schema({
     size: { type: [String], required: true }, 
     images: { type: [String], required: true }, 
     isBestSeller: { type: Boolean, default: false }, 
-    isActive:{type:Boolean, default: true},
+    isActive:{type:Boolean, default: false},
     isWishListed: {type:Boolean, default:false}
 }, { timestamps: true }); 
 
