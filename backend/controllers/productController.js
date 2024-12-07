@@ -161,53 +161,53 @@ exports.addProduct = async (req, res) => {
 
 //Admin: Edit a Product
 exports.editProduct = async (req, res) => {
-  const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller, isActive } = req.body;
-  let images;
-  // console.log('form body', req.body);
-  // console.log('form files', req.files);
+  const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller, isActive, removeImages = [] } = req.body;
+  let newImages = [];
 
   try {
-    if (req.files) {
-      // Ensure at least 3 images are uploaded
-      // if (Array.isArray(req.files) && req.files.length < 3) {
-      //   return res.status(400).json({ message: 'At least 3 images are required' });
-      // }
-
-      // Handle single or multiple file uploads
-      if (Array.isArray(req.files) && req.files.length>0) {
-        images = await Promise.all(req.files.map(async (file) => await processImage(file.path)));
-      } 
+    // Process new image uploads, if any
+    if (req.files && req.files.length > 0) {
+      newImages = await Promise.all(req.files.map(async (file) => await processImage(file.path)));
     }
 
+    // Retrieve the current product
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Filter out images marked for removal
+    
+    const updatedImages = product.images.filter((img, index) => !removeImages.includes(index.toString()));
+
+    // Combine existing and new images
+    const finalImages = [...updatedImages, ...newImages];
+
+    // Update the product
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
-      { 
+      {
         ...(productName && { productName }),
         ...(productDescription && { productDescription }),
         ...(category && { category }),
         ...(subCategory && { subCategory }),
         ...(price && { price }),
         ...(stock && { stock }),
-        ...(size && { size: Array.isArray(size) ? size : [size] }), 
-        ...(images && { images }), 
+        ...(size && { size: Array.isArray(size) ? size : [size] }),
+        ...(finalImages.length > 0 && { images: finalImages }), 
         isBestSeller,
-        ...(typeof isActive !== 'undefined' && { isActive }) 
+        ...(typeof isActive !== "undefined" && { isActive }),
       },
       { new: true }
     );
 
-    if (!updatedProduct) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    console.log('Updated product:', updatedProduct);
     res.json(updatedProduct);
-
   } catch (error) {
-    console.error('Server error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Server error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 
