@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const orderSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  orderReference: { type: String, unique: true }, 
   items: [
     {
       productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
@@ -21,30 +23,68 @@ const orderSchema = new mongoose.Schema({
 });
 
 orderSchema.pre('save', function (next) {
-  console.log(`Processing order update: Order ID: ${this._id}, Status: ${this.status}, Payment Method: ${this.paymentMethod}`);
-
-  if (this.paymentMethod === 'cod') {
-    if (this.status === 'Cancelled') {
-      this.paymentStatus = 'Cancelled';
-    } else if (this.status === 'Returned') {
-      this.paymentStatus = 'Refunded';
-    } else if (this.status === 'Delivered') {
-      this.paymentStatus = 'Paid';
+  try {
+    // Generate orderReference if not present
+    if (!this.orderReference) {
+      const randomSuffix = crypto.randomBytes(3).toString('hex').toUpperCase(); 
+      const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, ''); 
+      this.orderReference = `ORD-${datePart}-${randomSuffix}`;
     }
-    console.log(`COD payment status updated to: ${this.paymentStatus}`);
-  }
 
-  if (this.paymentMethod === 'razorpay' && this.paymentStatus !== 'Failed') {
-    if (this.status === 'Cancelled' || this.status === 'Returned') {
-      this.paymentStatus = 'Refunded';
-    } else if (this.status === 'Delivered') {
-      this.paymentStatus = 'Paid';
+    console.log(`Processing order: ID=${this._id}, Status=${this.status}, Payment Method=${this.paymentMethod}`);
+
+    // Ensure valid state transitions
+    if (this.isModified('status')) {
+      if (this.status === 'Cancelled' && ['Shipped', 'Delivered'].includes(this.previousStatus)) {
+        return next(new Error("Cannot cancel an order already shipped or delivered."));
+      }
     }
-    console.log(`Razorpay payment status updated to: ${this.paymentStatus}`);
-  }
 
-  next();
+    // Payment method: COD
+    if (this.paymentMethod === 'cod') {
+      if (this.status === 'Cancelled') {
+        this.paymentStatus = 'Cancelled';
+      } else if (this.status === 'Returned') {
+        this.paymentStatus = 'Refunded';
+      } else if (this.status === 'Delivered') {
+        this.paymentStatus = 'Paid';
+      }
+    }
+
+    // Payment method: Razorpay
+    if (this.paymentMethod === 'razorpay') {
+      if (this.paymentStatus === 'Failed') {
+        if (this.status === 'Delivered') {
+          this.paymentStatus = 'Paid';
+          this.paymentMethod = 'cod'; 
+        }
+      } else {
+        if (this.status === 'Cancelled' || this.status === 'Returned') {
+          this.paymentStatus = 'Refunded';
+        } else if (this.status === 'Delivered') {
+          this.paymentStatus = 'Paid';
+        }
+      }
+    }
+
+    // Payment method: Wallet
+    if (this.paymentMethod === 'wallet') {
+      if (this.status === 'Returned') {
+        this.paymentStatus = 'Refunded';
+      } else if (this.status === 'Delivered') {
+        this.paymentStatus = 'Paid';
+      }
+    }
+
+    next(); 
+  } catch (error) {
+    next(error); 
+  }
 });
+
+
+
+
 
 
 module.exports = mongoose.model('Order', orderSchema);

@@ -138,7 +138,6 @@ const cancelOrder = async (req, res) => {
     }
 
     order.status = "Cancelled";
-    const refund = order.totalAmount;
     await order.save();
 
    
@@ -150,12 +149,14 @@ const cancelOrder = async (req, res) => {
       });
     }
 
+    console.log(order.orderReference);
+
     if(order.paymentMethod != 'cod' && order.paymentStatus !='Failed'){
       await Transaction.create({
         userId,
         type: "credit",
-        amount: refund,
-        description: `Refund for canceled order ${orderId}`,
+        amount: order.totalAmount,
+        description: `Refund for canceled order ${order.orderReference}`,
         date: new Date(),
       });
     }
@@ -195,13 +196,15 @@ const returnOrder = async (req, res) => {
       });
     }
 
+    console.log('paymentStatus',order.paymentStatus)
+
     // Process refund if payment method is not COD
-    if (order.paymentMethod !== "cod" && order.paymentStatus !=='Failed') {
+    if (order.paymentStatus ==='Refunded') {
       await Transaction.create({
         userId,
         type: "credit",
         amount: order.totalAmount,
-        description: `Refund for returned order ${orderId}`,
+        description: `Refund for returned order ${order.orderReference}`,
         date: new Date(),
       });
     }
@@ -458,20 +461,20 @@ const updateOrderStatus = async (req, res) => {
       }
     }
 
-    if (["Cancelled", "Returned"].includes(status)) {
-      if (order.paymentMethod !== "cod" && order.paymentStatus !=='Failed') {
+    await order.save();
+
+   
+      if (order.status === 'Cancelled' && order.paymentStatus ==='Refunded') {
         await Transaction.create({
           userId: order.user,
           type: "credit",
           amount: order.totalAmount,
-          description: `Refund for returned order ${orderId}`,
+          description: `Refund for returned order ${order.orderReference}`,
           date: new Date(),
         });
       }      
-    }
+    
 
-
-    await order.save();
     res
       .status(200)
       .json({ message: "Order status updated successfully", order });
