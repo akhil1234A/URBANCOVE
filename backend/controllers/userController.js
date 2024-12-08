@@ -225,5 +225,87 @@ const updatePassword = async (req,res)=>{
 }
 
 
-module.exports = { signUp, verifyOtp, login, resendOtp, googleAuth, updatePassword };
+//User: Forgot Password
+const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // Token valid for 15 minutes
+
+        await user.save();
+
+        // Send email
+        const transporter = nodemailer.createTransport({
+            service: 'Gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Password Reset Request',
+            text: `You requested a password reset. Click the link to reset your password: ${resetUrl}`,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.status(200).json({ success: true, message: "Password reset link sent to your email." });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error sending password reset email", error: error.message });
+    }
+};
+
+//User: Reset Password
+const resetPassword = async (req, res) => {
+    console.log(req.params);
+
+
+    try {
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+        console.log(token)
+        console.log(hashedToken);
+
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: { $gt: Date.now() }, // Check token validity
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: "Invalid or expired reset token" });
+        }
+
+        // Update password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+
+        // Clear reset token fields
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Password reset successful" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error resetting password", error: error.message });
+    }
+};
+
+
+module.exports = { signUp, verifyOtp, login, resendOtp, googleAuth, updatePassword, forgotPassword, resetPassword};
 

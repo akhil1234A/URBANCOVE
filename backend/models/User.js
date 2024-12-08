@@ -8,6 +8,8 @@ const userSchema = new mongoose.Schema({
   },},
   isActive:{type:Boolean, default:true},
   isVerified: { type: Boolean, default: false },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
   otp: {type:String},
   otpExpiry: {type:Date},
   googleID: { type: String, unique: true }

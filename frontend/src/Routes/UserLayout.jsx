@@ -21,6 +21,7 @@ import OrderSuccess from '../Pages/User/OrderSuccess';
 import UserProtectedRoutes from './UserProtectedRoutes';
 import Wishlist from '../Pages/User/Wishlist';
 import Wallet from '../Pages/User/Wallet';
+import ChangePassword from '../Pages/User/ChangePassword';
 
 const UserLayout = () => {
 
@@ -72,6 +73,7 @@ const UserLayout = () => {
 
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/otp-verify" element={<OtpVerification />} />
+        <Route path="/reset-password/:token" element={<ChangePassword />} />
       </Routes>
       <Footer />
     </div>

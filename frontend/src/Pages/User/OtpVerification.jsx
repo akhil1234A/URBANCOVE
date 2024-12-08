@@ -9,7 +9,7 @@ const OtpVerification = () => {
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const { state } = useLocation();
   const userEmail = state?.email;
-  const initialExpiry = state?.otpExpiry || Date.now() + 1 * 60 * 1000; // Default to 1 min if not provided
+  const initialExpiry = state?.otpExpiry || Date.now() + 1 * 60 * 1000; 
   const [timer, setTimer] = useState(Math.max(0, Math.floor((initialExpiry - Date.now()) / 1000)));
   const dispatch = useDispatch();
 
