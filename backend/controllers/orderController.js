@@ -149,7 +149,7 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    console.log(order.orderReference);
+
 
     if(order.paymentMethod != 'cod' && order.paymentStatus !='Failed'){
       await Transaction.create({

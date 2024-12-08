@@ -19,7 +19,7 @@ const ViewOrder = () => {
   };
 
   const handleCancelOrder = () => {
-    alert(`Order #${order.id} has been cancelled.`);
+    alert(`Order #${order.orderReference} has been cancelled.`);
     navigate('/orders'); // Redirect to order history after cancellation
   };
 
@@ -31,7 +31,7 @@ const ViewOrder = () => {
         {/* Order Information */}
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">Order #{order.id}</h3>
+            <h3 className="text-lg font-semibold text-gray-800">Order #{order.orderReference}</h3>
             <p className="text-gray-500">Date: {order.date}</p>
             <p className={`font-semibold ${order.status === 'Processing' ? 'text-yellow-500' : 'text-gray-500'}`}>
               Status: {order.status}

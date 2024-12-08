@@ -94,7 +94,7 @@ const SalesReport = () => {
     const dataForExcel = [
       ...summaryData,
       ...allOrders.map((order) => ({
-        OrderID: order._id,
+        OrderID: order.orderReference,
         Product: order.items.map((item) => item.productId.productName).join(', '),
         Quantity: order.items.reduce((acc, item) => acc + item.quantity, 0),
         Amount: `₹${order.totalAmount}`,
@@ -130,7 +130,7 @@ const SalesReport = () => {
     });
 
     const reportContent = allOrders.map((order) => [
-      order._id,
+      order.orderReference,
       order.items.map((item) => item.productId.productName).join(', '),
       order.items.reduce((acc, item) => acc + item.quantity, 0),
       `Rs.${order.totalAmount}`,
@@ -217,7 +217,7 @@ const SalesReport = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {allOrders.map((order, index) => (
               <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order._id}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderReference}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {order.items.map((item, idx) => (
                     <p key={idx}>{item.productId.productName}</p>

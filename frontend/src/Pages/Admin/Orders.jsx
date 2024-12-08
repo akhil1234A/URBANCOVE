@@ -62,61 +62,74 @@ const Orders = () => {
     <div>
       <h1 className='text-2xl font-bold mb-4'>Order Management</h1>
       <div>
-        {orders.map((order, index) => (
-          <div 
-            className="grid grid-cols-1 sm:grid-cols-[0.5fr_2fr_1fr] lg:grid-cols-[0.5fr_2fr_1fr_1fr_1fr] gap-3 items-start border-2 border-gray-200 p-5 md:p-8 my-3 md:my-4 text-xs sm:text-sm text-gray-700" 
-            key={index}
-          >
-            <div>
-             
-              <img className="w-12" src={assets.parcel_icon} alt="Parcel Icon" />
-            </div>
-            <div>
-             
-              <div>
-                {order.items.map((item, idx) => {
-                  return (
-                    <p className="py-0.5" key={idx}>
-                      {item.productId.productName} x {item.quantity} <span> {item.size} </span>
-                      {idx < order.items.length - 1 && ', '}
-                    </p>
-                  );
-                })}
-              </div>
-              <p className="mb-2 font-medium">{`${order.user.name} (${order.user.email})`}</p>
-              {/* Address */}
-              <div>
-                <p>{order.deliveryAddress.street}</p>
-                <p>{`${order.deliveryAddress.city}, ${order.deliveryAddress.state}, ${order.deliveryAddress.country}, ${order.deliveryAddress.postcode}`}</p>
-              </div>
-              <p>{order.deliveryAddress.phoneNumber}</p>
-            </div>
-            <div>
-              {/* Order Details */}
-              <p className="text-sm sm:text-[15px]">Items: {order.items.length}</p>
-              <p className="mt-3">Method: {order.paymentMethod}</p>
-              <p>Payment: {order.paymentStatus}</p>
-              <p>Date: {new Date(order.placedAt).toLocaleDateString()}</p>
-            </div>
-            {/* Total Amount */}
-            <p className="text-sm sm:text-[15px]">₹{order.totalAmount}</p>
-            <div className="flex flex-col">
-              {/* Status Update Dropdown */}
-              <select
-                value={order.status}
-                onChange={(event) => handleStatusChange(event, order._id)}
-                className="p-2 font-semibold"
-              >
-                {getAllowedStatuses(order.status).map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-             
-            </div>
-          </div>
+      {orders.map((order, index) => (
+  <div 
+    className="grid grid-cols-1 sm:grid-cols-[0.5fr_2fr_1fr] lg:grid-cols-[0.5fr_2fr_1fr_1fr_1fr] gap-3 items-start border-2 border-gray-200 p-5 md:p-8 my-3 md:my-4 text-xs sm:text-sm text-gray-700" 
+    key={index}
+  >
+    {/* Parcel Icon with Truncated Order Reference */}
+    <div>
+      <img className="w-12" src={assets.parcel_icon} alt="Parcel Icon" />
+      <p 
+        className="mt-2 text-gray-500 text-xs sm:text-sm truncate" 
+        title={`Order ID: ${order.orderReference}`} // Full ID on hover
+      >
+        <strong>Order ID:</strong>
+        <br />
+        {order.orderReference.slice(-6)}
+      </p>
+
+    </div>
+
+    {/* Order Items and User Details */}
+    <div>
+      <div>
+        {order.items.map((item, idx) => (
+          <p className="py-0.5" key={idx}>
+            {item.productId.productName} x {item.quantity} <span> {item.size} </span>
+            {idx < order.items.length - 1 && ', '}
+          </p>
         ))}
+      </div>
+      <p className="text-sm sm:text-[15px]">{`${order.user.name} (${order.user.email})`}</p>
+      
+      {/* Delivery Address */}
+      <div>
+        <p>{order.deliveryAddress.street}</p>
+        <p>{`${order.deliveryAddress.city}, ${order.deliveryAddress.state}, ${order.deliveryAddress.country}, ${order.deliveryAddress.postcode}`}</p>
+      </div>
+      <p>{order.deliveryAddress.phoneNumber}</p>
+    </div>
+
+    {/* Payment and Order Details */}
+    <div>
+      <p className="text-sm sm:text-[15px]">Items: {order.items.length}</p>
+      <p className="mt-3">Method: {order.paymentMethod}</p>
+      <p>Payment: {order.paymentStatus}</p>
+      <p>Date: {new Date(order.placedAt).toLocaleDateString()}</p>
+    </div>
+
+    {/* Total Amount */}
+    <p className="text-sm sm:text-[15px]">₹{order.totalAmount}</p>
+
+    {/* Status Update Dropdown */}
+    <div className="flex flex-col">
+      <select
+        value={order.status}
+        onChange={(event) => handleStatusChange(event, order._id)}
+        className="p-2 font-semibold"
+      >
+        {getAllowedStatuses(order.status).map((status) => (
+          <option key={status} value={status}>
+            {status}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+      ))}
+
+
       </div>
       {/* Pagination */}
       <div className="pagination flex justify-center mt-4 space-x-2">

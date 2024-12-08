@@ -39,7 +39,7 @@ export const generateInvoice = async (order) => {
     doc.setTextColor(100);
     doc.text(`Invoice Number: INV-${order._id.slice(-6)}`, 20, 80);
     doc.text(`Date: ${new Date(order.placedAt).toLocaleDateString()}`, 20, 85);
-    doc.text(`Order ID: ${order._id}`, 20, 90);
+    doc.text(`Order ID: ${order.orderReference}`, 20, 90);
 
     // Customer details
     doc.setFontSize(12);

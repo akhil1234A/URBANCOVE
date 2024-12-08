@@ -161,7 +161,7 @@ const OrderHistory = () => {
   const handleDownload = async (order) => {
     try {
       const doc = await generateInvoice(order);
-      const fileName = `invoice-${order._id}.pdf`;
+      const fileName = `invoice-${order.orderReference}.pdf`;
       doc.save(fileName);
       toast.success("Invoice downloaded successfully!");
     } catch (error) {
@@ -189,7 +189,7 @@ const OrderHistory = () => {
             <div key={order._id} className="p-5 border border-gray-300 rounded-lg bg-white shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Order #{order._id}</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">Order Id: {order.orderReference}</h3>
                   <p className="text-sm text-gray-500">Date: {formatDate(order.placedAt)}</p>
                 </div>
                 <p className={`font-semibold text-lg ${getStatusStyle(order.status)}`}>{order.status}</p>
