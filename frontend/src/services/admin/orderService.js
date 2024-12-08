@@ -1,11 +1,10 @@
-import axios from 'axios';
-import { toast } from 'react-toastify'; // Importing toast
+import { adminAxios, userAxios } from '../../utils/api';
+import { toast } from 'react-toastify'; 
 
-const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/orders`;
+const BASE_URL = '/orders';
 
 
-const getUserToken = () => localStorage.getItem('token');
-const getAdminToken = () => localStorage.getItem('adminToken');
+
 
 
 //User: Place an Order
@@ -13,12 +12,8 @@ const orderService = {
   
   placeOrder: async (orderData) => {
    
-      const userToken = getUserToken();
-      const response = await axios.post(BASE_URL, orderData, {
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
+      
+      const response = await userAxios.post(BASE_URL, orderData);
       // toast success("Order placed successfully!");
       return response.data;
     
@@ -27,12 +22,8 @@ const orderService = {
   // User: Cancel an order (User token)
   cancelOrder: async (orderId) => {
     try {
-      const userToken = getUserToken();
-      const response = await axios.put(`${BASE_URL}/${orderId}`, null, {
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
+     
+      const response = await userAxios.put(`${BASE_URL}/${orderId}`);
 
      
       toast.success("Order cancelled successfully!");
@@ -47,11 +38,7 @@ const orderService = {
   // Admin: Fetch all orders (Admin token)
   viewAllOrders: async (page = 1, limit = 10) => {
     try {
-      const adminToken = getAdminToken();
-      const response = await axios.get(`${BASE_URL}/admin/orders`, {
-        headers: {
-          Authorization: `Bearer ${adminToken}`,
-        },
+      const response = await adminAxios.get(`${BASE_URL}/admin/orders`, {
         params: { page, limit }, 
       });
   
@@ -66,15 +53,9 @@ const orderService = {
   // Admin: Update order status (Admin token)
   updateOrderStatus: async (orderId, status) => {
     try {
-      const adminToken = getAdminToken();
-      const response = await axios.patch(
+      const response = await adminAxios.patch(
         `${BASE_URL}/admin/orders/${orderId}`,
         { status },
-        {
-          headers: {
-            Authorization: `Bearer ${adminToken}`,
-          },
-        }
       );
 
       toast.success("Order status updated successfully!");
@@ -88,17 +69,11 @@ const orderService = {
 
   //User: View User Orders
   viewUserOrders: async (page, limit) => {
-    const userToken = getUserToken();
-    const response = await axios.get(`${BASE_URL}/user`, {
-      headers: {
-        Authorization: `Bearer ${userToken}`,
-      },
+    const response = await userAxios.get(`${BASE_URL}/user`, {
       params: { page, limit },
     });
     return response.data;
   },
-  
-
 };
 
 export default orderService;

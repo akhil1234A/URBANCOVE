@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { userAxios } from '../../utils/api';
 import { toast } from 'react-toastify';
 import Title from "../../components/User/Title";
 
@@ -11,10 +11,7 @@ const CouponList = () => {
   useEffect(() => {
     const fetchCoupons = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/coupons/list`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await userAxios.get(`/coupons/list`);
         setCoupons(response.data.coupons);
         setLoading(false);
       } catch (err) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { userAxios } from '../../utils/api';
 import './wallet.css';
 
 const Wallet = () => {
@@ -15,11 +15,7 @@ const Wallet = () => {
     setError(null);
 
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/user/wallet/balance?page=${page}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const response = await userAxios.get(`/user/wallet/balance?page=${page}`);
 
       const { balance, transactions, currentPage, totalPages } = response.data;
       setBalance(balance);

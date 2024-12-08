@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { adminAxios } from '../../utils/api';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx'; 
@@ -45,15 +45,9 @@ const SalesReport = () => {
         endDate: endDate ? new Date(endDate).toISOString() : null,
         period,
       };
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/admin/sales-report/generate-sales-report`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
-          },
-        }
-      );
+      const response = await adminAxios.post(
+        `/admin/sales-report/generate-sales-report`,
+        payload);
       const { salesSummary, allOrders } = response.data;
 
       setSummary({

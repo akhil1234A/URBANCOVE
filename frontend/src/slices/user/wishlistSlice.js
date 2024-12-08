@@ -1,11 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { userAxios } from '../../utils/api';
 
-const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/user/wishlist`;
+const BASE_URL = `/user/wishlist`;
 
-const getAuthToken = () => {
-  return localStorage.getItem('token');
-};
+
 
 
 // User: Fetch wishlist
@@ -13,9 +11,7 @@ export const fetchWishlist = createAsyncThunk(
   'wishlist/fetchWishlist',
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(BASE_URL, {
-        headers: { Authorization: `Bearer ${getAuthToken()}` },
-      });
+      const response = await userAxios.get(BASE_URL);
       return response.data.products;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to fetch wishlist');
@@ -28,12 +24,9 @@ export const addToWishlist = createAsyncThunk(
   'wishlist/addToWishlist',
   async (productId, thunkAPI) => {
     try {
-      const response = await axios.post(
+      const response = await userAxios.post(
         BASE_URL,
         { productId },
-        {
-          headers: { Authorization: `Bearer ${getAuthToken()}` },
-        }
       );
       return response.data.message;
     } catch (error) {
@@ -47,9 +40,7 @@ export const removeFromWishlist = createAsyncThunk(
   'wishlist/removeFromWishlist',
   async (productId, thunkAPI) => {
     try {
-      await axios.delete(`${BASE_URL}/${productId}`, {
-        headers: { Authorization: `Bearer ${getAuthToken()}` },
-      });
+      await userAxios.delete(`${BASE_URL}/${productId}`);
       return productId;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to remove product from wishlist');

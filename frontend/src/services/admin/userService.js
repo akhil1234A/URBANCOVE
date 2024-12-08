@@ -1,29 +1,13 @@
-import axios from 'axios';
+import { adminAxios } from "../../utils/api";
 
 //Admin: Get all Users
 export const fetchUsers = async (page, limit) => {
-  const token = localStorage.getItem('adminToken');
-  const response = await axios.get(
-    `${import.meta.env.VITE_API_BASE_URL}/admin/users?page=${page}&limit=${limit}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const response = await adminAxios.get(`/admin/users?page=${page}&limit=${limit}`);
   return response.data;
 };
 
 //Admin: Block an User
 export const toggleBlockUser = async (userId) => {
-  const token = localStorage.getItem('adminToken');
-  // console.log(token);
-  // console.log(userId);
-  const response = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/admin/users/${userId}/block`, {}, {
-    headers: {
-      Authorization: `Bearer ${token}`, 
-    },
-  });
-  console.log(response);
+  const response = await adminAxios.put(`/admin/users/${userId}/block`);
   return response.data;
 };

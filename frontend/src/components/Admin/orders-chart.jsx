@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { adminAxios } from "../../utils/api";
 import {
   LineChart,
   Line,
@@ -11,24 +12,16 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { getAdminToken } from "../../utils/auth";
-import { ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react";
 
+// Fetch orders data
 async function getOrdersData(period) {
-  const token = getAdminToken();
-  const res = await fetch(
-    `${import.meta.env.VITE_API_BASE_URL}/admin/sales-report/orders-chart?period=${period}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-  if (!res.ok) throw new Error("Failed to fetch orders data");
-  const { data } = await res.json();
-  return data;
+  const res = await adminAxios.get(`/admin/sales-report/orders-chart?period=${period}`);
+  if (!res.data.success) throw new Error("Failed to fetch chart data");
+  return res.data.data; // Extract data array
 }
 
+// Custom tooltip for the chart
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
@@ -54,7 +47,11 @@ export function OrdersChart() {
     setLoading(true);
     getOrdersData(period)
       .then((newData) => {
-        setData(newData);
+        // Sort data by date (if needed)
+        const sortedData = newData.sort(
+          (a, b) => new Date(a.name) - new Date(b.name)
+        );
+        setData(sortedData);
         setLoading(false);
       })
       .catch((err) => {
@@ -66,7 +63,8 @@ export function OrdersChart() {
 
   const latestValue = data[data.length - 1]?.value || 0;
   const previousValue = data[data.length - 2]?.value || 0;
-  const percentageChange = ((latestValue - previousValue) / previousValue) * 100;
+  const percentageChange =
+    previousValue > 0 ? ((latestValue - previousValue) / previousValue) * 100 : 0;
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 transition-all duration-300 hover:shadow-xl">

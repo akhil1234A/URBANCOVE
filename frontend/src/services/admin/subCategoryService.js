@@ -1,6 +1,6 @@
-import axios from 'axios';
+import { adminAxios } from "../../utils/api";
 
-const API_URL = `${import.meta.env.VITE_API_BASE_URL}/admin/categories/subcategories`;
+const API_URL = `/admin/categories/subcategories`;
 
 // Helper for Error Handling
 const handleError = (error) => {
@@ -10,11 +10,9 @@ const handleError = (error) => {
 };
 
 // Admin: Fetch all subcategories
-export const fetchSubCategories = async (token) => {
+export const fetchSubCategories = async () => {
   try {
-    const response = await axios.get(API_URL, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await adminAxios.get(API_URL);
     return response.data;
   } catch (error) {
     handleError(error);
@@ -22,11 +20,9 @@ export const fetchSubCategories = async (token) => {
 };
 
 // Admin: Add a new subcategory
-export const addSubCategory = async (data, token) => {
+export const addSubCategory = async (data) => {
   try {
-    const response = await axios.post(API_URL, data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await adminAxios.post(API_URL, data);
     return response.data.newSubCategory;
   } catch (error) {
     handleError(error);
@@ -34,11 +30,9 @@ export const addSubCategory = async (data, token) => {
 };
 
 // Admin: Update an existing subcategory
-export const updateSubCategory = async (id, data, token) => {
+export const updateSubCategory = async (id, data) => {
   try {
-    const response = await axios.put(`${API_URL}/${id}`, data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await adminAxios.put(`${API_URL}/${id}`, data);
     return response.data.updatedSubCategory;
   } catch (error) {
     handleError(error);
@@ -46,11 +40,9 @@ export const updateSubCategory = async (id, data, token) => {
 };
 
 // Admin: Toggle the status of a subcategory
-export const toggleSubCategoryStatus = async (id, isActive, token) => {
+export const toggleSubCategoryStatus = async (id, isActive) => {
   try {
-    const response = await axios.put(`${API_URL}/${id}`, { isActive }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await adminAxios.put(`${API_URL}/${id}`, { isActive });
     return response.data;
   } catch (error) {
     handleError(error);

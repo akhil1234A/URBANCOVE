@@ -1,18 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getAdminToken } from "../../utils/auth"
 import { ArrowUp, ArrowDown, Loader2 } from 'lucide-react'
+import { adminAxios } from "../../utils/api"
 
 async function fetchTopSellingProducts() {
-  const token = getAdminToken()
-  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/sales-report/top-selling-product`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  })
-  if (!res.ok) throw new Error('Failed to fetch top selling products')
-  return res.json()
+  
+  const res = await adminAxios(`/admin/sales-report/top-selling-product`)
+  return res.data;
 }
 
 export function TopSellingProducts() {

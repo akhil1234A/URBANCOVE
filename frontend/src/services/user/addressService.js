@@ -1,44 +1,27 @@
-import axios from 'axios';
-const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/user/address`; 
+import { userAxios } from "../../utils/api";
+
+const API_BASE_URL = `/user/address`; 
 
 // User: Add a new address
 export const addAddress = async (token, addressData) => {
-  const response = await axios.post(`${API_BASE_URL}/`, addressData, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  const response = await userAxios.post(`${API_BASE_URL}/`, addressData);
   return response.data.address; 
 };
 
 // User: Get all addresses for the user
-export const getAddresses = async (token) => {
-  const response = await axios.get(`${API_BASE_URL}/`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export const getAddresses = async () => {
+  const response = await userAxios.get(`${API_BASE_URL}/`);
   return response.data.addresses; 
 };
 
 // User: Update an existing address
 export const updateAddress = async (token, addressId, addressData) => {
-  const response = await axios.put(`${API_BASE_URL}/${addressId}`, addressData, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  const response = await userAxios.put(`${API_BASE_URL}/${addressId}`, addressData);
   return response.data.address; 
 };
 
 // User: Delete an address
 export const deleteAddress = async (token, addressId) => {
-  const response = await axios.delete(`${API_BASE_URL}/${addressId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await userAxios.delete(`${API_BASE_URL}/${addressId}`);
   return { _id: addressId };
 };

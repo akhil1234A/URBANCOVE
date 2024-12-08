@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import Select from "react-select";
-import axios from "axios";
+import { adminAxios } from "../../utils/api";
 import "./css/Offer.css";
 import { fetchSubCategoriesThunk } from "../../slices/admin/subCategorySlice";
 import { getOfferById, updateOffer } from "../../slices/admin/offerSlice";
@@ -54,8 +54,8 @@ const EditOfferPage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/admin/products?limit=100`
+        const response = await adminAxios.get(
+          `admin/products?limit=100`
         );
         setProducts(
           response.data.products.map((product) => ({

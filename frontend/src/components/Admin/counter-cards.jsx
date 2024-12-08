@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { adminAxios } from '../../utils/api';
 import { Users, ShoppingBag, Package, Layers } from 'lucide-react';
-import { getAdminToken } from '../../utils/auth';
+
 
 function CounterCards() {
   const [counters, setCounters] = useState([]);
@@ -10,14 +11,8 @@ function CounterCards() {
   useEffect(() => {
     async function fetchCounters() {
       try {
-        const token = getAdminToken();
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/sales-report/counters`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!res.ok) throw new Error('Failed to fetch counters');
-        const data = await res.json();
+        const res = await adminAxios.get(`/admin/sales-report/counters`);
+        const data = res.data;
         setCounters([
           { title: 'Active Users', value: data.activeUsers, icon: Users, color: 'bg-blue-500' },
           { title: 'Total Orders', value: data.totalOrders, icon: ShoppingBag, color: 'bg-green-500' },

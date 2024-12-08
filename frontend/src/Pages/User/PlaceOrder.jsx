@@ -1,5 +1,5 @@
 import { useState, useEffect} from "react";
-import axios from 'axios';
+import { userAxios } from "../../utils/api";
 import Title from "../../components/User/Title";
 import { assets } from "../../assets/assets";
 import { useDispatch, useSelector } from "react-redux";
@@ -127,18 +127,13 @@ const PlaceOrder = () => {
   
     try {
       // Step 1: Create Razorpay order from backend
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/orders/razorpay`, 
+      const response = await userAxios.post(
+        `/orders/razorpay`, 
         {
           addressId: selectedAddress,
           cartItems,
           totalAmount,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, 
-          },
-        }
       );
   
       const { razorpayOrderId, amount, currency } = response.data;
@@ -163,14 +158,9 @@ const PlaceOrder = () => {
           // console.log("Sending to backend for verification:", verifyData);
           try {
             // Step 3: Verify the payment and finalize the order
-            const verifyResponse = await axios.post(
-              `${import.meta.env.VITE_API_BASE_URL}/orders/verify`, 
+            const verifyResponse = await userAxios.post(
+              `/orders/verify`, 
               verifyData, 
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`, 
-                },
-              }
             );
   
             if (verifyResponse.data.success) {
@@ -187,17 +177,14 @@ const PlaceOrder = () => {
           escape: true,
           ondismiss: async () => {
             try {
-              await axios.post(
-                `${import.meta.env.VITE_API_BASE_URL}/orders/create-failed`,
+              await userAxios.post(
+                `/orders/create-failed`,
                 {
                   razorpayOrderId,
                   cartItems,
                   addressId: selectedAddress,
                   totalAmount,
                 },
-                {
-                  headers: { Authorization: `Bearer ${token}` },
-                }
               );
               toast.error("Payment canceled. Order created with status: Failed.");
               navigate('/success');
@@ -265,12 +252,11 @@ const PlaceOrder = () => {
       return;
     }
   
-    const token = localStorage.getItem('token');
+   
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/coupons/apply`,
+      const response = await userAxios.post(
+        `/coupons/apply`,
         { couponCode, total },
-        { headers: { Authorization: `Bearer ${token}` } }
       );
       setDiscount(response.data.discount); 
       toast.success("Coupon applied successfully!");
@@ -282,12 +268,10 @@ const PlaceOrder = () => {
 
   // Remove coupon
   const handleRemoveCoupon = async () => {
-    const token = localStorage.getItem('token');
     try {
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/coupons/remove`,
+      await userAxios.post(
+        `/coupons/remove`,
         {couponCode},
-        { headers: { Authorization: `Bearer ${token}` } }
       );
       setDiscount(0);
       setCouponCode('');

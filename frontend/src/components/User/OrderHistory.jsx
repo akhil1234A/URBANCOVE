@@ -4,7 +4,7 @@ import { cancelOrder, viewUserOrders } from '../../slices/admin/orderSlice';
 import { AiOutlineShoppingCart, AiOutlineClockCircle } from 'react-icons/ai'; 
 import { toast } from 'react-toastify'; 
 import { generateInvoice } from "../../utils/invoiceUtils";
-import axios from 'axios';
+import { userAxios } from '../../utils/api';
 import CancelOrderModal from './CancelOrderModal';
 import ReturnOrderModal from './ReturnOrderModal';
 
@@ -45,19 +45,8 @@ const OrderHistory = () => {
   const confirmReturnOrder = async () => {
     if (selectedOrderId) {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          toast.error("User is not authenticated. Please log in.");
-          return;
-        }
-
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/orders/${selectedOrderId}/return`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await userAxios.post(
+          `/orders/${selectedOrderId}/return`);
 
         if (response.status === 200) {
           toast.success("Order returned successfully!");
@@ -74,23 +63,14 @@ const OrderHistory = () => {
 
   const handleRetryPayment = async (order) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error("User is not authenticated. Please log in.");
-        return;
-      }
-  
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/orders/razorpay`,
+      const response = await userAxios.post(
+        `/orders/razorpay`,
         {
           orderId: order._id, 
           addressId: order.deliveryAddress._id,
           cartItems: order.items,
           totalAmount: order.totalAmount,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
       );
   
       const { razorpayOrderId, amount, currency } = response.data;
@@ -108,10 +88,9 @@ const OrderHistory = () => {
               orderId: order._id, 
             };
   
-            const verifyResponse = await axios.post(
-              `${import.meta.env.VITE_API_BASE_URL}/orders/verify`,
+            const verifyResponse = await userAxios.post(
+              `/orders/verify`,
               verifyData,
-              { headers: { Authorization: `Bearer ${token}` } }
             );
   
             if (verifyResponse.data.success) {

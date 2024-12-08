@@ -154,11 +154,7 @@ const getOrdersChart = async (req, res) => {
     } else if (period === 'monthly') {
       groupId = { $dateToString: { format: '%Y-%m-%d', date: '$placedAt' } }; // Day, month, year
     } else if (period === 'weekly') {
-      // Group by year and ISO week number
-      groupId = {
-        year: { $year: '$placedAt' },
-        isoWeek: { $isoWeek: '$placedAt' },
-      };
+      groupId = { $dateToString: { format: '%Y-%m-%d', date: '$placedAt' } };
     }
 
     const ordersChartData = await Order.aggregate([
@@ -170,14 +166,14 @@ const getOrdersChart = async (req, res) => {
           totalOrders: { $sum: 1 },
         },
       },
-      { $sort: { '_id.year': 1, '_id.isoWeek': 1 } },
+      { $sort: { '_id.year': 1, '_id.isoWeek': 1, '_id':1, } },
     ]);
 
     // Transform weekly data for consistency
     const transformedData = ordersChartData.map((item) => {
       if (period === 'weekly') {
         return {
-          name: `Week ${item._id.isoWeek}, ${item._id.year}`,
+          name: item._id,
           value: item.totalSales,
         };
       } else {

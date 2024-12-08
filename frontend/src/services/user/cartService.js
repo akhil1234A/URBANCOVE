@@ -1,22 +1,16 @@
-import axios from 'axios';
+import { userAxios } from '../../utils/api';
 import { toast } from 'react-toastify';
 
-const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/user/cart`;
+const BASE_URL = `/user/cart`;
 
-const getToken = () => {
-  return localStorage.getItem('token');
-};
 
 const cartService = {
   //User: Add to cart
   addToCart: async (productId, quantity) => {
     try {
-      const response = await axios.post(
+      const response = await userAxios.post(
         BASE_URL,
         { productId, quantity },
-        {
-          headers: { Authorization: `Bearer ${getToken()}` },
-        }
       );
       return response.data;
     } catch (error) {
@@ -27,12 +21,9 @@ const cartService = {
   //User: Update quantity of Cart Item 
   updateCartItemQuantity: async (productId, quantity) => {
     try {
-      const response = await axios.put(
+      const response = await userAxios.put(
         `${BASE_URL}/${productId}`,
         { quantity },
-        {
-          headers: { Authorization: `Bearer ${getToken()}` },
-        }
       );
       return response.data;
     } catch (error) {
@@ -43,9 +34,7 @@ const cartService = {
   //User: Remove from Cart
   removeFromCart: async (productId) => {
     try {
-      const response = await axios.delete(`${BASE_URL}/${productId}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const response = await userAxios.delete(`${BASE_URL}/${productId}`);
       return response.data;
     } catch (error) {
       handleSimpleError(error);
@@ -55,9 +44,7 @@ const cartService = {
   //User: Get All Cart Items
   getUserCart: async () => {
     try {
-      const response = await axios.get(BASE_URL, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const response = await userAxios.get(BASE_URL);
       return response.data;
     } catch (error) {
       handleSimpleError(error);

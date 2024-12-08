@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import { userAxios } from '../../utils/api';
 import { toast } from 'react-toastify';
 
 const ForgotPassword = () => {
@@ -15,7 +15,7 @@ const ForgotPassword = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/forgot-password`, { email });
+      const response = await userAxios.post(`/api/user/forgot-password`, { email });
       if (response.data.success) {
         toast.success('Password reset email sent successfully. Please check your inbox.');
       } else {
