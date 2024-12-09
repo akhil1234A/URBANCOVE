@@ -65,12 +65,12 @@ const UserLayout = () => {
         <Route path="/wallet" element={<UserProtectedRoutes element={<Wallet/>} />} /> 
         
         <Route path="/login" element={
-          <GoogleOAuthProvider clientId="951211049648-sbiee4qcea4nknn77kaeu33bkcik31vm.apps.googleusercontent.com">
+          <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_ID}>
             <UserLogin />
           </GoogleOAuthProvider>
         } />
         <Route path="/signup" element={
-          <GoogleOAuthProvider clientId="951211049648-sbiee4qcea4nknn77kaeu33bkcik31vm.apps.googleusercontent.com">
+          <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_ID}>
             <UserSignup />
           </GoogleOAuthProvider>
         } />
