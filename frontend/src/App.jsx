@@ -10,7 +10,7 @@ import { fetchProductsForUser } from './slices/admin/productSlice';
 import AdminLogin from './Pages/Admin/Login';
 import AdminRoutes from './Routes/AdminRoutes';
 import ProtectedRoute from './Routes/ProtectedRoutes';
-
+import NotFound from './Pages/NotFound'
 import UserLayout from './Routes/UserLayout'
 
 const App = () => {

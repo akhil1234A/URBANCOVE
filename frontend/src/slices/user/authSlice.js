@@ -78,7 +78,8 @@ const authSlice = createSlice({
       state.token = null;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      state.error = null;
+      state.error = null
+      state.isLoading = false;
     },
     resetError: (state) => {
       state.error = null;

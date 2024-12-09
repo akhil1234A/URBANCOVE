@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+import { isTokenExpired } from './jwtdecode';
 
 const getToken = (role = 'user') => {
   if (role === 'admin') {
@@ -21,11 +21,22 @@ const createAxiosInstance = (role = 'user') => {
     (config) => {
       const token = getToken(role);
       if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+        if (isTokenExpired(token)) {
+            // Redirect to login if expired
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+        } else {
+            config.headers["Authorization"] = `Bearer ${token}`;
+        }
+    }
       return config;
     },
     (error) => {
+      if (error.response && error.response.status === 401) {
+        console.error("Token expired. Redirecting to login.");
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+    }
       return Promise.reject(error);
     }
   );

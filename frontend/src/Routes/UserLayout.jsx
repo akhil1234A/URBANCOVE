@@ -22,6 +22,7 @@ import UserProtectedRoutes from './UserProtectedRoutes';
 import Wishlist from '../Pages/User/Wishlist';
 import Wallet from '../Pages/User/Wallet';
 import ChangePassword from '../Pages/User/ChangePassword';
+import NotFound from '../Pages/NotFound';
 
 const UserLayout = () => {
 
@@ -45,11 +46,14 @@ const UserLayout = () => {
   };
 
   return (
+    <>
     <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
       <Navbar toggleSearchBar={toggleSearchBar}/>
       {searchVisible && <SearchBar toggleSearchBar={toggleSearchBar} />}
       <Routes>
+      
         <Route path="/" element={<Home  products={products}/>} />
+        <Route path="/*" element={<NotFound />} />
         <Route path="/collection" element={<Collection  />} />
         <Route path="/product/:productID" element={<Product />} />
 
@@ -77,6 +81,8 @@ const UserLayout = () => {
       </Routes>
       <Footer />
     </div>
+    </>
+    
   );
 };
 

@@ -47,7 +47,7 @@ const AdminRoutes = () => {
           }}
         >
           <Routes>
-            <Route path="/" element={<AdminDashboard />} />
+            <Route path="/*" element={<AdminDashboard />} />
             <Route path="users" element={<Users />} />
             <Route path="categories" element={<Categories />} />
             <Route path="subcategories" element={<SubCategory />} />

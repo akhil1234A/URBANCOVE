@@ -3,21 +3,21 @@ import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import adminReducer from '../slices/admin/adminSlice';
 import userReducer from '../slices/admin/userSlice';
-import productReducer from '../slices/admin/productSlice'
-import authReducer from '../slices/user/authSlice'
-import categoriesReucer from '../slices/admin/categorySlice'
-import subCategoriesReducer from '../slices/admin/subCategorySlice'
-import addressReducer from '../slices/user/addressSlice'
-import cartReducer from '../slices/user/cartSlice'
-import orderReducer from '../slices/admin/orderSlice'
+import productReducer from '../slices/admin/productSlice';
+import authReducer from '../slices/user/authSlice';
+import categoriesReducer from '../slices/admin/categorySlice';
+import subCategoriesReducer from '../slices/admin/subCategorySlice';
+import addressReducer from '../slices/user/addressSlice';
+import cartReducer from '../slices/user/cartSlice';
+import orderReducer from '../slices/admin/orderSlice';
 import offerReducer from '../slices/admin/offerSlice';
 import couponReducer from '../slices/admin/couponSlice';
-import wishlistReducer from '../slices/user/wishlistSlice'
+import wishlistReducer from '../slices/user/wishlistSlice';
 
 const persistConfig = {
-  key: 'root', 
+  key: 'admin',
   storage,
-  whitelist: ['admin'], 
+  whitelist: ['admin'], // Only persist the admin reducer state
 };
 
 const persistedAdminReducer = persistReducer(persistConfig, adminReducer);
@@ -25,10 +25,10 @@ const persistedAdminReducer = persistReducer(persistConfig, adminReducer);
 export const store = configureStore({
   reducer: {
     admin: persistedAdminReducer,
-    users: userReducer, 
+    users: userReducer,
     products: productReducer,
     auth: authReducer,
-    categories: categoriesReucer,
+    categories: categoriesReducer,
     subCategories: subCategoriesReducer,
     address: addressReducer,
     cart: cartReducer,
@@ -38,7 +38,9 @@ export const store = configureStore({
     wishlist: wishlistReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({ serializableCheck: false }),
+    getDefaultMiddleware({
+      serializableCheck: false, 
+    }),
 });
 
 export const persistor = persistStore(store);
