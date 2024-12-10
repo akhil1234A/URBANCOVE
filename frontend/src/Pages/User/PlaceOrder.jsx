@@ -9,6 +9,7 @@ import CartTotal from "../../components/User/CartTotal";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import CouponList from "../../components/User/CouponList";
+import { getUserCart } from "../../slices/user/cartSlice";
 
 const PlaceOrder = () => {
   const dispatch = useDispatch();
@@ -16,6 +17,7 @@ const PlaceOrder = () => {
 
   const { addresses, loading, error } = useSelector((state) => state.address);
   const { cartItems, total} = useSelector((state) => state.cart);
+  const [finalTotal,setFinalTotal] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [couponCode, setCouponCode] = useState('');
 
@@ -40,15 +42,49 @@ const PlaceOrder = () => {
     postcode: "",
   });
   
-  const deliveryFee = 40; // This can be dynamic based on your logic
-  const finalTotal = total + deliveryFee;
+  const deliveryFee = 40; 
   const totalAmount = finalTotal - discount;
 
+ 
+  // Update final total when total changes
+  useEffect(() => {
+    setFinalTotal(total + deliveryFee);
+  }, [total, deliveryFee]);
+
+  // Load saved cart data on component mount
+  useEffect(() => {
+    const savedCartData = localStorage.getItem('cartData');
+    if (savedCartData) {
+      const { discount, couponCode } = JSON.parse(savedCartData);
+      setDiscount(discount || 0);
+      setCouponCode(couponCode || '');
+    }
+  }, []);
+
+
+  useEffect(() => {
+    dispatch(getUserCart());
+  }, [dispatch]);
+
+ 
   // Fetch addresses on component mount
   useEffect(() => {
     const token = localStorage.getItem('token');
-    dispatch(fetchAddresses(token));
+    if (token) {
+      dispatch(fetchAddresses(token));
+    }
   }, [dispatch]);
+
+
+  useEffect(() => {
+    // Save cart data to localStorage
+    const cartData = {
+      finalTotal,
+      discount,
+      couponCode
+    };
+    localStorage.setItem('cartData', JSON.stringify(cartData));
+  }, [finalTotal, discount, couponCode]);
 
   const handleAddressChange = (id) => {
     setSelectedAddress(id);
@@ -165,6 +201,10 @@ const PlaceOrder = () => {
   
             if (verifyResponse.data.success) {
               toast.success("Payment verified successfully!");
+              localStorage.removeItem('cartData');
+             
+              setDiscount(0);
+              setCouponCode('');
               navigate('/success');
             } else {
               toast.error("Payment verification failed.");
@@ -187,6 +227,10 @@ const PlaceOrder = () => {
                 },
               );
               toast.error("Payment canceled. Order created with status: Failed.");
+              localStorage.removeItem('cartData');
+             
+              setDiscount(0);
+              setCouponCode('');
               navigate('/success');
             } catch (error) {
               console.error("Failed to handle payment cancellation:", error);
@@ -218,6 +262,9 @@ const PlaceOrder = () => {
   
     try {
       await dispatch(placeOrder(orderData)).unwrap();
+      localStorage.removeItem('cartData');
+      setDiscount(0);
+      setCouponCode('');
       navigate('/success');
     } catch (error) {
       console.log(error);
@@ -338,7 +385,7 @@ const PlaceOrder = () => {
       {/* Right Side - Payment and Cart Summary */}
       <div className="mt-8">
         <div className="mt-8 min-w-80">
-        <CartTotal subtotal={total} deliveryFee={deliveryFee} total={finalTotal} discount={discount} />
+        <CartTotal subtotal={finalTotal-deliveryFee} deliveryFee={deliveryFee} total={finalTotal} discount={discount} />
         </div>
 
           {/* Coupon input and apply/remove buttons */}

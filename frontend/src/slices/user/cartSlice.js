@@ -73,6 +73,9 @@ const cartSlice = createSlice({
       .addCase(addToCart.fulfilled, (state, action) => {
         state.loading = false;
         state.cartItems.push(action.payload.cartItem); 
+        state.total += action.payload.cartItem.price * action.payload.cartItem.quantity; 
+        state.total = state.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
       })
       .addCase(addToCart.rejected, (state, action) => {
         state.loading = false;
@@ -88,7 +91,11 @@ const cartSlice = createSlice({
         const updatedItem = action.payload.cartItem;
         const index = state.cartItems.findIndex(item => item.productId === updatedItem.productId);
         if (index >= 0) {
+          const oldItem = state.cartItems[index];
           state.cartItems[index].quantity = updatedItem.quantity;
+
+          state.total += (updatedItem.quantity - oldItem.quantity) * updatedItem.price;
+          state.total = state.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
         }
       })
       .addCase(updateCartItemQuantity.rejected, (state, action) => {
@@ -102,7 +109,12 @@ const cartSlice = createSlice({
       })
       .addCase(removeFromCart.fulfilled, (state, action) => {
         state.loading = false;
-        state.cartItems = state.cartItems.filter(item => item.productId !== action.meta.arg);
+        const removedItem = state.cartItems.find(item => item.productId === action.meta.arg);
+        if (removedItem) {
+          state.total -= removedItem.price * removedItem.quantity; // Update total
+          state.cartItems = state.cartItems.filter(item => item.productId !== action.meta.arg);
+        }
+        state.total = state.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
       })
       .addCase(removeFromCart.rejected, (state, action) => {
         state.loading = false;
@@ -116,6 +128,8 @@ const cartSlice = createSlice({
       .addCase(getUserCart.fulfilled, (state, action) => {
         state.loading = false;
         state.cartItems = action.payload.cartItems; // Assuming `cartItems` is returned
+        state.total = action.payload.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0); // Update total after fetching
+        state.total = state.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
       })
       .addCase(getUserCart.rejected, (state, action) => {
         state.loading = false;

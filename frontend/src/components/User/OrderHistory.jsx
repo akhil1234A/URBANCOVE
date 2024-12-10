@@ -47,10 +47,9 @@ const OrderHistory = () => {
       try {
         const response = await userAxios.post(
           `/orders/${selectedOrderId}/return`);
-
         if (response.status === 200) {
           toast.success("Order returned successfully!");
-          dispatch(viewUserOrders());
+          await dispatch(viewUserOrders({ page: currentPage, limit: 5 }));
         }
       } catch (error) {
         console.error("Failed to return order:", error);
@@ -69,7 +68,7 @@ const OrderHistory = () => {
           orderId: order._id, 
           addressId: order.deliveryAddress._id,
           cartItems: order.items,
-          totalAmount: order.totalAmount,
+          totalAmount:  Math.round(order.totalAmount),
         },
       );
   
@@ -95,7 +94,7 @@ const OrderHistory = () => {
   
             if (verifyResponse.data.success) {
               toast.success("Payment verified successfully!");
-              dispatch(viewUserOrders());
+              await dispatch(viewUserOrders({ page: currentPage, limit: 5 }));
             } else {
               toast.error("Payment verification failed.");
             }

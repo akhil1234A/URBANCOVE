@@ -1,6 +1,6 @@
 import Title from './Title';
 
-const CartTotal = ({ subtotal, deliveryFee, total, discount=0 }) => {
+const CartTotal = ({ subtotal=0, deliveryFee=40, total=0, discount=0 }) => {
   const currency = "₹";
   const discountedTotal = total - discount;
 

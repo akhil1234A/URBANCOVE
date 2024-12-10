@@ -125,7 +125,7 @@ const cancelOrder = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const order = await Order.findOne({ _id: orderId, user: userId });
+    const order = await Order.findOne({ _id: orderId, user: userId }).populate("items.productId", "productName price").populate("user", "name email");
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -434,7 +434,7 @@ const updateOrderStatus = async (req, res) => {
   const { status } = req.body; 
 
   try {
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId).populate("user", "name email").populate("items.productId", "productName");
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
