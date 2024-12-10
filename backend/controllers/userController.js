@@ -272,13 +272,14 @@ const forgotPassword = async (req, res) => {
 
 //User: Reset Password
 const resetPassword = async (req, res) => {
-    console.log(req.params);
-
+   const { token } = req.params;
+   const { newPassword } = req.body;
+  
+  
 
     try {
         const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-        console.log(token)
-        console.log(hashedToken);
+        
 
         const user = await User.findOne({
             resetPasswordToken: hashedToken,
