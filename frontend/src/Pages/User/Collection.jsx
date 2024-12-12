@@ -1,6 +1,7 @@
 import  { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchProductsForUser, selectProducts, selectLoading, setCurrentPage, setSort, setFilters, setSearch } from '../../slices/admin/productSlice';
+import { fetchWishlist } from '../../slices/user/wishlistSlice';
 import { assets } from '../../assets/assets';
 import Title from '../../components/User/Title';
 import ProductItem from '../../components/User/ProductItem';
@@ -9,6 +10,15 @@ const Collection = () => {
   const dispatch = useDispatch();
   const currency = '₹';
 
+  const { items: wishlistItems, error: wishlistError } = useSelector((state) => state.wishlist);
+
+  useEffect(() => {
+    dispatch(fetchWishlist());
+  }, [dispatch]);
+
+  const isInWishlist = (productId) => {
+    return wishlistItems.some((wishlistItem) => wishlistItem.productId._id === productId);
+  };
 
   const productList = useSelector(selectProducts);
   const loading = useSelector(selectLoading);
@@ -201,7 +211,7 @@ const Collection = () => {
              image={item.images[0]} 
              currency={currency}
              discountedPrice={item?.discountedPrice || 0}
-             wishlist={item?.isWishListed}
+             wishlist={isInWishlist(item._id)}
            />
           ))}
         </div>

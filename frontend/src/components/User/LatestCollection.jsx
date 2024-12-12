@@ -1,8 +1,22 @@
 import Title from './Title';
 import ProductItem from './ProductItem';
-
+import { fetchWishlist } from '../../slices/user/wishlistSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { useEffect } from 'react';
 const LatestCollection = ({ products }) => {
   const currency = '₹'; 
+  const dispatch = useDispatch();
+
+  const { items: wishlistItems, error: wishlistError } = useSelector((state) => state.wishlist);
+
+  useEffect(() => {
+    dispatch(fetchWishlist());
+  }, [dispatch]);
+
+  const isInWishlist = (productId) => {
+    return wishlistItems.some((wishlistItem) => wishlistItem.productId._id === productId);
+  };
+  
 
   return (
     <div className='my-10'>
@@ -24,7 +38,7 @@ const LatestCollection = ({ products }) => {
             price={item.price}
             currency={currency}
             discountedPrice={item?.discountedPrice || 0}
-            wishlist={item?.isWishListed}
+            wishlist={isInWishlist(item._id)}
           />
         ))}
       </div>

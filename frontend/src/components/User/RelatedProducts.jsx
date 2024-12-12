@@ -1,9 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import Title from './Title';
 import ProductItem from './ProductItem';
+import { fetchWishlist } from '../../slices/user/wishlistSlice';
+import { useDispatch, useSelector } from 'react-redux';
+
 
 const RelatedProducts = ({ category, subCategory, products, currentProductId}) => {
   const [related, setRelated] = useState([]);
+
+  const dispatch = useDispatch();
+
+  const { items: wishlistItems, error: wishlistError } = useSelector((state) => state.wishlist);
+
+  useEffect(() => {
+    dispatch(fetchWishlist());
+  }, [dispatch]);
+
+  const isInWishlist = (productId) => {
+    return wishlistItems.some((wishlistItem) => wishlistItem.productId._id === productId);
+  };
 
   useEffect(() => {
     if (products.length > 0) {
@@ -30,6 +45,7 @@ const RelatedProducts = ({ category, subCategory, products, currentProductId}) =
               name={item.productName} 
               price={item.price} 
               image={item.images[0]} 
+              wishlist={isInWishlist(item._id)}
             />
           ))
         ) : (
