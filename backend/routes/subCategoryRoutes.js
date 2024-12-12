@@ -8,6 +8,6 @@ const {adminAuth} = require('../middlewares/authMiddleware')
 router.post('/', adminAuth, addSubCategory);
 router.get('/', adminAuth, listSubCategories);
 router.put('/:id', adminAuth, editSubCategory);
-router.delete('/:id', adminAuth, deleteSubCategory);
+router.patch('/:id', adminAuth, deleteSubCategory);
 
 module.exports = router;

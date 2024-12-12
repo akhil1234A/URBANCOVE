@@ -15,7 +15,6 @@ const SubCategory = () => {
   const { list: subCategories, loading, error } = useSelector((state) => state.subCategories);
   const { categories = [] } = useSelector((state) => state.categories); 
 
-  console.log(categories);
 
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -141,14 +140,20 @@ const SubCategory = () => {
             <select
               name="categoryId"
               value={currentSubCategory.categoryId}
-              onChange={(e) => setCurrentSubCategory({ ...currentSubCategory, categoryId: e.target.value })}
+              onChange={(e) => {
+                setCurrentSubCategory((prev) => ({ ...prev, categoryId: e.target.value }));
+              }}
               className="border border-gray-300 p-2 w-full rounded mt-2"
             >
               <option value="">Select Category</option>
-              {Array.isArray(categories) && categories.map((category) => (
-                <option key={category._id} value={category._id}>{category.category}</option>
-              ))}
+              {Array.isArray(categories) &&
+                categories.map((category) => (
+                  <option key={category._id} value={category._id}>
+                    {category.category}
+                  </option>
+                ))}
             </select>
+
             <div className="flex justify-between mt-4">
               <button className="bg-gray-400 text-white px-4 py-2 rounded" onClick={() => setShowModal(false)}>
                 Close
@@ -160,7 +165,7 @@ const SubCategory = () => {
           </div>
         </div>
       )}
-      <ToastContainer />
+      
     </div>
   );
 };

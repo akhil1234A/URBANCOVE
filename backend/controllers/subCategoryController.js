@@ -41,10 +41,29 @@ exports.listSubCategories = async (req, res) => {
 //Admin: Edit a Sub Category
 exports.editSubCategory = async (req, res) => {
   const { id } = req.params;
-  const { subCategory, isActive } = req.body;
-
+  const { subCategory, category, isActive } = req.body;
+ 
   try {
-      const updatedSubCategory = await SubCategory.findByIdAndUpdate(id, { subCategory, isActive }, { new: true });
+
+    const existingSubCategory = await SubCategory.findOne({
+      subCategory,
+      category,
+      _id: { $ne: id }, 
+    });
+    
+    if (existingSubCategory) {
+      return res.status(400).json({
+        message: 'A subcategory with the same name and category already exists.',
+      });
+    }
+    
+    const updatedSubCategory = await SubCategory.findByIdAndUpdate(
+      id,
+      { subCategory, category, isActive },
+      { new: true }
+    ).populate('category', '_id category');
+    
+      console.log(updatedSubCategory);
       if (!updatedSubCategory) {
           return res.status(404).json({ message: 'Subcategory not found' });
       }
@@ -65,14 +84,26 @@ exports.editSubCategory = async (req, res) => {
 //Admin: Delete a Sub Category
 exports.deleteSubCategory = async (req, res) => {
   const { id } = req.params;
-  console.log(id);
+  const { isActive } = req.body;
+
   try {
-      const deletedSubCategory = await SubCategory.findByIdAndUpdate(id, { isActive: false }, { new: true });
-      if (!deletedSubCategory) {
-          return res.status(404).json({ message: 'Subcategory not found' });
-      }
-      res.status(200).json({ message: "Subcategory soft deleted successfully", deletedSubCategory });
+  
+    const updatedSubCategory = await SubCategory.findByIdAndUpdate(
+      id,
+      { isActive },
+      { new: true }
+    );
+
+    if (!updatedSubCategory) {
+      return res.status(404).json({ message: 'Subcategory not found' });
+    }
+
+    res.status(200).json({
+      message: `Subcategory ${isActive ? 'activated' : 'deactivated'} successfully`,
+      updatedSubCategory,
+    });
   } catch (error) {
-      res.status(500).json({ message: 'Server error', error });
+    console.error('Error toggling subcategory status:', error);
+    res.status(500).json({ message: 'Server error', error });
   }
 };

@@ -108,8 +108,13 @@ const subcategorySlice = createSlice({
         state.error = null;
       })
       .addCase(toggleSubCategoryStatusThunk.fulfilled, (state, action) => {
-        const index = state.list.findIndex(sub => sub._id === action.payload._id);
-        if (index >= 0) state.list[index].isActive = action.payload.isActive;
+        const updatedSubCategory = action.payload.updatedSubCategory;
+        const index = state.list.findIndex(sub => sub._id === updatedSubCategory._id);
+        
+        if (index >= 0) {
+          // Update the isActive status in the state
+          state.list[index].isActive = updatedSubCategory.isActive;
+        }
       })
       .addCase(toggleSubCategoryStatusThunk.rejected, (state, action) => {
         state.error = action.payload || 'Failed to toggle subcategory status';

@@ -42,7 +42,8 @@ export const updateSubCategory = async (id, data) => {
 // Admin: Toggle the status of a subcategory
 export const toggleSubCategoryStatus = async (id, isActive) => {
   try {
-    const response = await adminAxios.put(`${API_URL}/${id}`, { isActive });
+    console.log(isActive);
+    const response = await adminAxios.patch(`${API_URL}/${id}`, { isActive } );
     return response.data;
   } catch (error) {
     handleError(error);

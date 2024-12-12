@@ -12,7 +12,6 @@ const ProductSchema = new mongoose.Schema({
     images: { type: [String], required: true }, 
     isBestSeller: { type: Boolean, default: false }, 
     isActive:{type:Boolean, default: false},
-    isWishListed: {type:Boolean, default:false}
 }, { timestamps: true }); 
 
 module.exports = mongoose.model('Product', ProductSchema);
