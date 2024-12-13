@@ -6,8 +6,9 @@ import { addToCart } from '../../slices/user/cartSlice'
 import { assets } from '../../assets/assets';
 import RelatedProducts from '../../components/User/RelatedProducts';
 import ZoomModal from '../../components/User/ZoomModal';
-import { ToastContainer, toast } from 'react-toastify';
+import {  toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { addToWishlist } from '../../slices/user/wishlistSlice';
 
 
 
@@ -58,7 +59,7 @@ const Reviews = ({ reviews }) => (
   </div>
 );
 
-const ProductInfo = ({ productData, size, setSize, onAddToCart}) => {
+const ProductInfo = ({ productData, size, setSize, onAddToCart, onAddToWishlist }) => {
   const isOutOfStock = productData.stock <= 0;
   const isRunningLow = productData.stock > 0 && productData.stock < 5; // You can adjust the threshold
 
@@ -114,13 +115,21 @@ const ProductInfo = ({ productData, size, setSize, onAddToCart}) => {
       </div>
       
       {/* Add to Cart Button */}
-      <button 
-      onClick={onAddToCart}
-        className={`bg-black text-white px-8 py-3 text-sm ${isOutOfStock ? 'opacity-50 cursor-not-allowed' : 'active:bg-gray-700'}`} 
-        disabled={isOutOfStock}
-      >
-        {isOutOfStock ? 'Out of Stock' : 'ADD TO CART'}
-      </button>
+      <div className="flex gap-4">
+        <button 
+          onClick={onAddToCart}
+          className={`bg-black text-white px-8 py-3 text-sm ${isOutOfStock ? 'opacity-50 cursor-not-allowed' : 'active:bg-gray-700'}`} 
+          disabled={isOutOfStock}
+        >
+          {isOutOfStock ? 'Out of Stock' : 'ADD TO CART'}
+        </button>
+        <button
+          onClick={onAddToWishlist}
+          className="bg-orange-500 text-white px-6 py-3 text-sm active:bg-orange-600"
+        >
+          ADD TO WISHLIST
+        </button>
+      </div>
       
       <hr className="mt-8 sm:w-4/5" />
       <div className="text-sm text-gray-500 mt-5 flex flex-col gap-1">
@@ -171,12 +180,32 @@ const Product = () => {
     }
     if (productData) {
       if (productData.stock > 0) {
-        dispatch(addToCart({ productId: productData._id, quantity: 1 }));
+        dispatch(addToCart({ productId: productData._id, quantity: 1 }))
+        .unwrap()
+        .then(() => {
+          toast.success('Item added to your Cart!');
+        })
+        .catch((error) => {
+          toast.error(error || 'Failed to add item to Cart.');
+        });
        
       } else {
         toast.error('This product is currently out of stock.');
       }
     }
+  };
+
+
+  const handleAddToWishlist = (e) => {
+    e.preventDefault(); // Prevent navigation when clicking the icon
+    dispatch(addToWishlist(productData._id))
+      .unwrap()
+      .then(() => {
+        toast.success('Item added to your wishlist!');
+      })
+      .catch((error) => {
+        toast.error(error || 'Failed to add item to wishlist.');
+      });
   };
 
   const handleImageClick = () => setIsZoomed(true);  // Open zoom modal on image click
@@ -218,7 +247,7 @@ const Product = () => {
         </div>
 
         {/* Product Info */}
-        <ProductInfo  productData={ productData}  size={size} setSize={setSize} onAddToCart={handleAddToCart}/>
+        <ProductInfo  productData={ productData}  size={size} setSize={setSize} onAddToCart={handleAddToCart} onAddToWishlist={handleAddToWishlist}/>
       </div>
 
 

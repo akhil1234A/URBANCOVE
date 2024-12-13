@@ -124,7 +124,7 @@ exports.getUserCart = async (req, res) => {
     const userId = req.user.id;
 
     try {
-        const cartItems = await Cart.find({ userId }).populate('productId', 'productName price discountedPrice stock images');
+        const cartItems = await Cart.find({ userId }).populate('productId', 'productName price discountedPrice stock images size');
 
         const formattedCartItems = cartItems.map(item => ({
             _id: item._id,
@@ -135,6 +135,7 @@ exports.getUserCart = async (req, res) => {
             originalPrice: item.productId.price,
             stock: item.productId.stock,
             quantity: item.quantity,
+            size: item.productId.size,
         }));
 
        

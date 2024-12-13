@@ -131,7 +131,7 @@ const Cart = () => {
                           {item.price ? item.price.toFixed(2) : "0.00"}
                           </p>
                         <p className="px-2 sm:px-3 sm:py-1 border bg-slate-50">
-                          {item.sizes || "N/A"}
+                          {item.size || "N/A"}
                         </p>
                       </div>
                       {isInvalid && (

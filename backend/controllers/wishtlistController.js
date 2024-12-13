@@ -1,5 +1,5 @@
 const Wishlist = require('../models/Wishlist');
-const Product = require('../models/Product');
+
 
 
 //User: Add to Wishlist
@@ -19,9 +19,6 @@ const addToWishlist = async (req, res) => {
   if (wishlist) {
     wishlist.products.push({ productId });
     await wishlist.save();
-    const product = await Product.findById(productId);
-    product.isWishListed = true;
-    await product.save();
   } else {
     await Wishlist.create({ userId, products: [{ productId }] });
   }
@@ -45,9 +42,7 @@ const removeFromWishlist = async (req, res) => {
   );
   await wishlist.save();
 
-  const product = await Product.findById(productId);
-    product.isWishListed = false;
-    await product.save();
+
 
   res.status(200).json({ message: 'Product removed from wishlist' });
 };
