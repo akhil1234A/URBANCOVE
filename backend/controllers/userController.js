@@ -183,12 +183,21 @@ const login = async (req, res) => {
         if (!user) {
             user = await User.create({ email, name, googleID });
         } else {
+            if (!user.isActive) {
+                return res.status(400).json({ message: "User not found or account is blocked." });
+            }
             user.googleID = googleID;
             await user.save();
         }
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '12h' });
 
-        res.json({ success: true, user, token });
+        res.json({ success: true, user: { 
+            _id: user._id, 
+            name: user.name, 
+            email: user.email, 
+            isActive: user.isActive, 
+            googleId: user.googleID
+          }, token });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Server error during Google authentication' });
