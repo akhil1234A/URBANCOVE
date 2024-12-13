@@ -1,17 +1,30 @@
-import { useRef } from 'react';
+import React, { useRef } from 'react';
 import Cropper from 'react-cropper';
 import 'cropperjs/dist/cropper.css';
 
-const ImageCropper = ({ imageURL, setCroppedImage, setCropperOpen, onCropComplete }) => {
-  const cropperRef = useRef(null);
+interface ImageCropperProps {
+  imageURL: string;
+  setCroppedImage: (croppedImage: string) => void;
+  setCropperOpen: (open: boolean) => void;
+  onCropComplete: () => void;
+}
 
-  const getCroppedImg = () => {
+const ImageCropper: React.FC<ImageCropperProps> = ({ imageURL, setCroppedImage, setCropperOpen, onCropComplete }) => {
+  const cropperRef = useRef<Cropper>(null);
+
+  const getCroppedImg = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // Prevent form submission
     if (cropperRef.current) {
       const cropper = cropperRef.current.cropper;
       const croppedImage = cropper.getCroppedCanvas().toDataURL();
       setCroppedImage(croppedImage);
-      onCropComplete(); 
+      onCropComplete();
     }
+  };
+
+  const handleCancel = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // Prevent form submission
+    setCropperOpen(false);
   };
 
   return (
@@ -27,7 +40,7 @@ const ImageCropper = ({ imageURL, setCroppedImage, setCropperOpen, onCropComplet
         />
         <div className="flex justify-between mt-2">
           <button onClick={getCroppedImg} className="bg-green-500 text-white px-4 py-2 rounded">Crop</button>
-          <button onClick={() => setCropperOpen(false)} className="bg-red-500 text-white px-4 py-2 rounded">Cancel</button>
+          <button onClick={handleCancel} className="bg-red-500 text-white px-4 py-2 rounded">Cancel</button>
         </div>
       </div>
     </div>
@@ -35,3 +48,4 @@ const ImageCropper = ({ imageURL, setCroppedImage, setCropperOpen, onCropComplet
 };
 
 export default ImageCropper;
+

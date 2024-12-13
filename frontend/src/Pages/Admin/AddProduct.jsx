@@ -66,15 +66,17 @@ const AddProduct = () => {
   };
 
   const dataURLToBlob = (dataURL) => {
-    const byteString = atob(dataURL.split(',')[1]);
-    const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i);
+    const arr = dataURL.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
     }
-    return new Blob([ab], { type: mimeString });
+    return new Blob([u8arr], { type: mime });
   };
+
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
@@ -103,10 +105,16 @@ const AddProduct = () => {
       formData.append('stock', stock);
       formData.append('size', selectedSize);
 
-      croppedImages.forEach((croppedImage) => {
+      croppedImages.forEach((croppedImage, index) => {
         if (croppedImage) {
           const file = dataURLToBlob(croppedImage);
           formData.append('images', file, `processed-${Date.now()}.png`);
+        } else if (images[index]) {
+          fetch(images[index])
+            .then(res => res.blob())
+            .then(blob => {
+              formData.append('images', blob, `original-${Date.now()}.png`);
+            });
         }
       });
 
@@ -146,21 +154,22 @@ const AddProduct = () => {
 
       <ImageUpload images={images} setImages={setImages} setCropperOpen={setCropperOpen} />
 
-      {images.map((image, index) => (
-        cropperOpen[index] && (
-          <ImageCropper
-            key={index}
-            imageURL={image}
-            setCroppedImage={(croppedImage) => setCroppedImage(index, croppedImage)}
-            setCropperOpen={() => setCropperOpen((prev) => {
-              const newOpen = [...prev];
-              newOpen[index] = false;
-              return newOpen;
-            })}
-            onCropComplete={() => handleCropComplete(index)}
-          />
-        )
-      ))}
+{images.map((image, index) => (
+  cropperOpen[index] && image && (
+    <ImageCropper
+      key={index}
+      imageURL={image}
+      setCroppedImage={(croppedImage) => setCroppedImage(index, croppedImage)}
+      setCropperOpen={(open) => setCropperOpen((prev) => {
+        const newOpen = [...prev];
+        newOpen[index] = open;
+        return newOpen;
+      })}
+      onCropComplete={() => handleCropComplete(index)}
+    />
+  )
+))}
+
 
       <div className="w-full">
         <label className="block mb-2">Product Name</label>
