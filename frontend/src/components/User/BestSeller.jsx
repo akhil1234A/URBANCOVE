@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 
 
+
 const BestSeller = ({ products }) => {
   const currency = '₹'; 
 
@@ -14,7 +15,7 @@ const BestSeller = ({ products }) => {
   const { items: wishlistItems, error: wishlistError } = useSelector((state) => state.wishlist);
 
   useEffect(() => {
-    dispatch(fetchWishlist());
+    dispatch(fetchWishlist())
   }, [dispatch]);
 
   const isInWishlist = (productId) => {

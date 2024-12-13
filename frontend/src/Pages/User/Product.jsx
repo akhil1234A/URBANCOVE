@@ -9,7 +9,7 @@ import ZoomModal from '../../components/User/ZoomModal';
 import {  toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { addToWishlist } from '../../slices/user/wishlistSlice';
-
+import { ClipLoader } from 'react-spinners';
 
 
 // Sub-components
@@ -212,7 +212,9 @@ const Product = () => {
   const handleCloseZoom = () => setIsZoomed(false);   // Close zoom modal on close click
 
   return loading ? (
-    <div>Loading product details...</div>
+    <div className="flex justify-center items-center h-screen">
+    <ClipLoader color="#36D7B7" size={50} /> {/* Spinner */}
+  </div>
   ) : productData ? (
     <div className="border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100">
       <nav className="text-gray-600 text-sm mb-6">

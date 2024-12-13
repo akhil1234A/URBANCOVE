@@ -3,7 +3,7 @@ import { FaHeart } from 'react-icons/fa';
 import { FaTag } from 'react-icons/fa';  
 import { addToWishlist } from '../../slices/user/wishlistSlice';
 import { useDispatch } from 'react-redux';
-
+import { toast } from 'react-toastify';
 
 
 const ProductItem = ({ id, image, name, price, currency='₹', discountedPrice, wishlist}) => {
@@ -17,7 +17,7 @@ const ProductItem = ({ id, image, name, price, currency='₹', discountedPrice, 
 
   // Handle adding to wishlist
   const handleAddToWishlist = (e) => {
-    e.preventDefault(); // Prevent navigation when clicking the icon
+    e.preventDefault(); 
     dispatch(addToWishlist(id))
       .unwrap()
       .then(() => {
@@ -44,8 +44,8 @@ const ProductItem = ({ id, image, name, price, currency='₹', discountedPrice, 
           src={image}
           alt={name}
           onError={(e) => {
-            e.target.onerror = null; // Prevent looping
-            e.target.src = 'fallback-image-url'; // Replace with your actual fallback image URL
+            e.target.onerror = null; 
+            e.target.src = 'fallback-image-url'; 
           }}
         />
       </div>

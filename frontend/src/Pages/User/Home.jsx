@@ -11,11 +11,11 @@ const Home = ({products}) => {
 
 
 const latestCollection = Array.isArray(products)
-  ? [...products].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 8)
+  ? [...products].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 10)
   : [];
 
 
-const bestSellers = Array.isArray(products) ? [...products].filter(product => product.isBestSeller).slice(0,4) : [];
+const bestSellers = Array.isArray(products) ? [...products].filter(product => product.isBestSeller).slice(0,5) : [];
 
   return (
     <div>

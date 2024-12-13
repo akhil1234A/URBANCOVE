@@ -9,6 +9,7 @@ import {
   updateOffer,
   deactivateOffer,
 } from '../../slices/admin/offerSlice';
+import { ClipLoader } from 'react-spinners';
 
 const OfferManagement = () => {
   const dispatch = useDispatch();
@@ -49,7 +50,11 @@ const OfferManagement = () => {
       <h3 className="text-3xl font-semibold mb-6">Manage Offers</h3>
 
       
-      {loading && <p>Loading...</p>}
+      {loading && 
+         <div className="flex justify-center items-center h-screen">
+         <ClipLoader color="#36D7B7" size={50} /> {/* Spinner */}
+       </div>
+      }
       {error && <p className="text-red-600">{error}</p>}
 
       {/* Offers List */}

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import ReactModal from 'react-modal'; // Import React-Modal
 import { getUsers, toggleUserBlockStatus } from '../../slices/admin/userSlice';
+import { ClipLoader } from 'react-spinners';
 
 // Style the modal using custom CSS or inline styles
 const modalStyles = {
@@ -56,7 +57,13 @@ const Users = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+    <ClipLoader color="#36D7B7" size={50} /> {/* Spinner */}
+  </div>
+    )
+  }
   if (error) return <div>Error: {error}</div>;
 
   return (

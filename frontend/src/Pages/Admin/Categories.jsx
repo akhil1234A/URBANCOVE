@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchCategories, addCategory, updateCategory, toggleCategoryStatus } from '../../slices/admin/categorySlice';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { ClipLoader } from 'react-spinners';
 
 const Categories = () => {
   const dispatch = useDispatch();
@@ -72,18 +73,7 @@ const Categories = () => {
     }
   };
   
-  // const toggleStatus = async (categoryId, currentStatus) => {
-  //   const token = localStorage.getItem('adminToken');
-  //   setLoadingAction(true);
-  //   try {
-  //     await dispatch(toggleCategoryStatus({ token, categoryId, currentStatus }));
-  //     toast.success(`Category ${currentStatus ? 'unlisted' : 'listed'} successfully`);
-  //   } catch (error) {
-  //     toast.error('Failed to toggle category status: ' + error.message);
-  //   } finally {
-  //     setLoadingAction(false);
-  //   }
-  // };
+ 
 
   return (
     <div className="p-5">
@@ -96,7 +86,9 @@ const Categories = () => {
       </button>
 
       {loading ? (
-        <div>Loading categories...</div>
+        <div className="flex justify-center items-center h-screen">
+        <ClipLoader color="#36D7B7" size={50} /> {/* Spinner */}
+      </div>
       ) : (
         <ul className="mb-4">
           {categories.map(category => (

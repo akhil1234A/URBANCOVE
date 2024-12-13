@@ -156,6 +156,11 @@ const selectProductSort = state => state.products.sort;
 export const selectProducts = createSelector(
   [selectProductItems, selectProductFilters, selectProductSort],
   (items, filters, sort) => {
+    if (!filters || Object.keys(filters).length === 0) {
+      // If no filters are set, return items as is (useful for admin)
+      return items;
+    }
+
     let filteredProducts = items;
 
     // Apply category filter
@@ -204,6 +209,7 @@ export const selectProducts = createSelector(
     return filteredProducts;
   }
 );
+
 
 export const selectLoading = (state) => state.products.loading;
 

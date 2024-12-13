@@ -5,6 +5,7 @@ import { fetchWishlist } from '../../slices/user/wishlistSlice';
 import { assets } from '../../assets/assets';
 import Title from '../../components/User/Title';
 import ProductItem from '../../components/User/ProductItem';
+import { ClipLoader } from 'react-spinners';
 
 const Collection = () => {
   const dispatch = useDispatch();
@@ -88,7 +89,11 @@ const Collection = () => {
   };
 
   if (loading) {
-    return <div>Loading products...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <ClipLoader color="#36D7B7" size={50} />
+      </div>
+    );
   }
 
   return (

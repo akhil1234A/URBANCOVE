@@ -7,6 +7,7 @@ import { generateInvoice } from "../../utils/invoiceUtils";
 import { userAxios } from '../../utils/api';
 import CancelOrderModal from './CancelOrderModal';
 import ReturnOrderModal from './ReturnOrderModal';
+import { PulseLoader } from 'react-spinners'
 
 const OrderHistory = () => {
   const dispatch = useDispatch();
@@ -154,8 +155,8 @@ const OrderHistory = () => {
       <div className="space-y-6">
         {loading ? (
           <p className="flex items-center justify-center text-gray-500">
-            <AiOutlineClockCircle className="animate-spin mr-2 text-2xl" />
-            Loading orders...
+             <PulseLoader color="#4A90E2" loading={loading} size={10} />
+            
           </p>
         ) : orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-gray-500">

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAddresses, addNewAddress, updateExistingAddress, deleteUserAddress } from '../../slices/user/addressSlice';
 import { toast, ToastContainer } from 'react-toastify';
+import { ClipLoader } from 'react-spinners';
 
 const AddressManagement = () => {
   const dispatch = useDispatch();
@@ -51,7 +52,7 @@ const AddressManagement = () => {
     if (!currentAddress.phoneNumber) newErrors.phoneNumber = 'Phone number is required';
     else if (!/^\d{10}$/.test(currentAddress.phoneNumber)) newErrors.phoneNumber = 'Phone number must be 10 digits';
     if (!currentAddress.postcode) newErrors.postcode = 'Postcode is required';
-    else if (!/^\d{5}$/.test(currentAddress.postcode)) newErrors.postcode = 'Postcode must be 5 digits';
+    else if (!/^\d{6}$/.test(currentAddress.postcode)) newErrors.postcode = 'Postcode must be 6 digits';
 
     return newErrors;
   };
@@ -120,7 +121,13 @@ const AddressManagement = () => {
     }
   };
 
-  if (loading) return <p>Loading addresses...</p>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <ClipLoader color="#36D7B7" size={50} /> {/* Spinner */}
+      </div>
+    );
+  }
 
   if (error) {
     const errorMessage = error.message || error.response?.data?.message || 'Something went wrong';

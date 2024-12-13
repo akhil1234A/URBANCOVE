@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import CouponList from "../../components/User/CouponList";
 import { getUserCart } from "../../slices/user/cartSlice";
+import { ClipLoader } from "react-spinners";
 
 const PlaceOrder = () => {
   const dispatch = useDispatch();
@@ -143,8 +144,8 @@ useEffect(() => {
     }
   
     // Specific validation for postcode (should be 5 digits)
-    if (newAddress.postcode && newAddress.postcode.length !== 5) {
-      errors.postcode = "Postcode should be 5 digits";
+    if (newAddress.postcode && newAddress.postcode.length !== 6) {
+      errors.postcode = "Postcode should be 6 digits";
       isValid = false;
     }
   
@@ -376,7 +377,11 @@ useEffect(() => {
   
 
   if (loading) {
-    return <div>Loading...</div>; 
+    return (
+      <div className="flex justify-center items-center h-screen">
+    <ClipLoader color="#36D7B7" size={50} /> {/* Spinner */}
+  </div>
+    ); 
   }
 
   if (error) {

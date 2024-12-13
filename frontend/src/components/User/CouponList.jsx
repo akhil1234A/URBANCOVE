@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { userAxios } from '../../utils/api';
 import { toast } from 'react-toastify';
 import Title from "../../components/User/Title";
+import { PulseLoader } from 'react-spinners'
 
 const CouponList = () => {
   const [coupons, setCoupons] = useState([]);
@@ -23,8 +24,12 @@ const CouponList = () => {
     fetchCoupons();
   }, []);
 
-  if (loading) {
-    return <div className="text-center py-4">Loading...</div>;
+   if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <PulseLoader color="#36D7B7" size={10} /> {/* Spinner */}
+      </div>
+    );
   }
 
   if (error || coupons.length === 0) {

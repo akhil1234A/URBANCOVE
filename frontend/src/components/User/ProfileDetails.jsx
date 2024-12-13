@@ -102,6 +102,7 @@ const ProfileDetails = () => {
                 value={password}
                 readOnly
               />
+          {!user?.googleId ? ( 
               <button
                 type="button"
                 className="ml-4 py-2 px-4 bg-blue-600 text-white rounded-md transition duration-200 ease-in-out hover:bg-blue-500"
@@ -109,6 +110,9 @@ const ProfileDetails = () => {
               >
                 Change
               </button>
+            ) : (
+              <span className="ml-4 text-gray-500">Password change disabled</span> 
+            )}
             </div>
           </div>
         </div>

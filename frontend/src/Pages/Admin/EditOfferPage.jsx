@@ -7,6 +7,7 @@ import "./css/Offer.css";
 import { fetchSubCategoriesThunk } from "../../slices/admin/subCategorySlice";
 import { getOfferById, updateOffer } from "../../slices/admin/offerSlice";
 import { toast } from "react-toastify";
+import { ClipLoader}  from 'react-spinners'
 
 const EditOfferPage = () => {
   const navigate = useNavigate();
@@ -191,7 +192,11 @@ const EditOfferPage = () => {
     }
   };
 
-  if (offerLoading) return <div>Loading...</div>;
+  if (offerLoading){
+    <div className="flex justify-center items-center h-screen">
+    <ClipLoader color="#36D7B7" size={50} /> {/* Spinner */}
+  </div>
+  }
 
   return (
     <div className="container mx-auto p-6">

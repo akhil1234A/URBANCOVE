@@ -23,6 +23,8 @@ import Wishlist from '../Pages/User/Wishlist';
 import Wallet from '../Pages/User/Wallet';
 import ChangePassword from '../Pages/User/ChangePassword';
 import NotFound from '../Pages/NotFound';
+import About from '../Pages/User/About';
+import Contact from '../Pages/User/Contact';
 
 const UserLayout = () => {
 
@@ -55,6 +57,8 @@ const UserLayout = () => {
         <Route path="/" element={<Home  products={products}/>} />
         <Route path="/*" element={<NotFound />} />
         <Route path="/collection" element={<Collection  />} />
+        <Route path="/about" element={<About/>} />
+        <Route path="/contact" element={<Contact/>} />
         <Route path="/product/:productID" element={<Product />} />
 
         <Route path="/account" element={<UserProtectedRoutes element={<UserAccount />} />} />
@@ -63,6 +67,7 @@ const UserLayout = () => {
         <Route path="/success" element={<UserProtectedRoutes element={<OrderSuccess />} />} />
         <Route path="/wishlist" element={<UserProtectedRoutes element={<Wishlist/>} />} /> 
         <Route path="/wallet" element={<UserProtectedRoutes element={<Wallet/>} />} /> 
+        
         
         <Route path="/login" element={
           <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_ID}>
