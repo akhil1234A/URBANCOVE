@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCategories, addCategory, updateCategory, toggleCategoryStatus } from '../../slices/admin/categorySlice';
+import { fetchCategories, addCategory, updateCategory } from '../../slices/admin/categorySlice';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ClipLoader } from 'react-spinners';

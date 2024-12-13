@@ -90,7 +90,7 @@ const AddProduct = () => {
       }
 
       if (croppedImages.filter(Boolean).length < 3) {
-        toast.error('Please upload and crop at least 3 images.');
+        toast.info('Please upload and crop at least 3 images.');
         return;
       }
 
