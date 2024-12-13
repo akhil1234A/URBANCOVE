@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
 import { userAxios } from '../../utils/api';
 import './wallet.css';
+import { toast } from "react-toastify"
 
 const Wallet = () => {
   const [balance, setBalance] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1); 
+  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [addAmount, setAddAmount] = useState(0);
 
   const fetchWalletDetails = async (page = 1) => {
     setLoading(true);
@@ -38,6 +42,103 @@ const Wallet = () => {
       setCurrentPage(newPage);
     }
   };
+
+
+  const showToast = (type, message) => {
+    const toastId = `${type}-${message}`;
+    if (!toast.isActive(toastId)) {
+      toast[type](message, { toastId });
+    }
+  };
+
+  const handleAddMoney = async () => {
+    if (!addAmount || isNaN(addAmount) || addAmount <= 0) {
+      showToast('info', 'Please enter a valid amount.');      
+      return;
+    }
+
+    try {
+      const { data } = await userAxios.post('/user/wallet/initiate', { amount: addAmount });
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
+        amount: data.amount,
+        currency: 'INR',
+        name: 'URBANCOVE',
+        description: 'Add Money to Wallet',
+        order_id: data.orderId,
+        handler: async (response) => {
+          setIsModalOpen(false);
+          try {
+            const verifyData = {
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+              amount: addAmount,
+            };
+
+            const [result] = await Promise.all([
+              userAxios.post('/user/wallet/verify', verifyData),
+              fetchWalletDetails(currentPage),
+            ]);
+  
+            if (result.data.success) {
+              showToast('success', 'Wallet updated successfully!');
+            }
+
+          } catch (verifyError) {
+          showToast('error', 'Payment verification failed. Please contact support.');
+
+          }
+        },
+        theme: {
+          color: '#3399cc',
+        },
+        modal: {
+          ondismiss: () => {
+            setIsModalOpen(false); 
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error('Error initiating payment:', error);
+      showToast('error', 'Failed to initiate payment. Please try again.');
+    } finally {
+      setIsModalOpen(false); 
+    }
+  };
+
+  const renderModal = () => (
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
+        <h2 className="text-xl font-semibold mb-4">Add Money to Wallet</h2>
+        <input
+          type="number"
+          placeholder="Enter amount"
+          value={addAmount}
+          onChange={(e) => setAddAmount(e.target.value)}
+          className="border rounded px-3 py-2 w-full mb-4"
+        />
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={() => setIsModalOpen(false)}
+            className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleAddMoney}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderPagination = () => (
     <div className="flex justify-center space-x-4 mt-6">
@@ -95,7 +196,7 @@ const Wallet = () => {
         {transactions.map((transaction) => (
           <div key={transaction._id} className="p-4 border border-gray-300 rounded-lg shadow-sm bg-white">
             <div className="flex justify-between items-center mb-2">
-              <span className="font-medium text-gray-700">{transaction.type === 'credit' ? 'Refund' : 'Debit'}</span>
+              <span className="font-medium text-gray-700">{transaction.type === 'credit' ? 'Credit' : 'Debit'}</span>
               <span className={`font-bold ${transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
                 ₹{transaction.amount.toFixed(2)}
               </span>
@@ -104,10 +205,12 @@ const Wallet = () => {
             <p className="text-xs text-gray-400">{new Date(transaction.date).toLocaleString()}</p>
           </div>
         ))}
-      {renderPagination()}
+        {renderPagination()}
       </div>
     );
   };
+
+
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
@@ -118,7 +221,16 @@ const Wallet = () => {
         <div className="mt-2">{renderBalance()}</div>
       </div>
 
-      <div>
+     <button
+        onClick={() => setIsModalOpen(true)}
+        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+      >
+        Add Money
+      </button>
+     
+      {isModalOpen && renderModal()}
+
+      <div className="mt-8">
         <h3 className="text-lg font-semibold text-gray-800">Transaction History</h3>
         <div className="mt-4">{renderTransactions()}</div>
       </div>

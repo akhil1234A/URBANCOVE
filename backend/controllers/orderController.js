@@ -55,13 +55,22 @@ const placeOrder = async (req, res) => {
 
     const discountAmount = originalPrice - totalAmount + shippingCost;
 
-
-    if (paymentMethod == 'cod') {
+    if (paymentMethod === 'wallet') {
+      
+      // Record transaction
+      await Transaction.create({
+        userId,
+        amount: totalAmount,
+        type: 'debit',
+        description: 'Order payment using wallet',
+      });
+    }
+    
       const newOrder = await Order.create({
         user: userId,
         items: cartItems,
         paymentMethod,
-        paymentStatus: "Pending",
+        paymentStatus: paymentMethod === 'wallet' ? 'Paid' : 'Pending',
         deliveryAddress: address,
         totalAmount,
         discountAmount,
@@ -72,10 +81,7 @@ const placeOrder = async (req, res) => {
       await Cart.deleteMany({ userId });
 
       res.status(201).json({ message: 'Order placed successfully', order: newOrder });
-    } else {
-      
-      res.status(400).json({ message: "Razorpay payment should be handled separately." });
-    }
+    
   } catch (error) {
     console.log(error);
     console.error(error);

@@ -42,6 +42,23 @@ const PlaceOrder = () => {
     postcode: "",
   });
   
+  const [walletBalance, setWalletBalance] = useState(0);
+
+useEffect(() => {
+  const fetchWalletBalance = async () => {
+    try {
+      const response = await userAxios.get(`/user/wallet/balance`);
+      setWalletBalance(response.data.balance); 
+    } catch (error) {
+      console.error("Failed to fetch wallet balance:", error);
+      toast.error("Failed to fetch wallet balance.");
+    }
+  };
+
+  fetchWalletBalance();
+}, []);
+
+
   const deliveryFee = 40; 
   const totalAmount = finalTotal - discount;
 
@@ -281,7 +298,9 @@ const PlaceOrder = () => {
       return;
     }
   
-    if (method === "razorpay") {
+    if (method === "wallet") {
+      await handleWalletOrder();
+    } else if (method === "razorpay") {
       await handleRazorpayOrder();
     } else if (method === "cod") {
       handleCODOrder();
@@ -325,6 +344,33 @@ const PlaceOrder = () => {
       toast.success("Coupon removed successfully!");
     } catch (error) {
       toast.error("Failed to remove coupon");
+    }
+  };
+  
+
+  const handleWalletOrder = async () => {
+    if (walletBalance < totalAmount) {
+      toast.error("Insufficient wallet balance. Please choose another payment method.");
+      return;
+    }
+  
+    const orderData = {
+      addressId: selectedAddress,
+      paymentMethod: "wallet",
+      cartItems,
+      totalAmount,
+    };
+  
+    try {
+      await dispatch(placeOrder(orderData)).unwrap();
+      localStorage.removeItem('cartData');
+      setDiscount(0);
+      setCouponCode('');
+      navigate('/success');
+      toast.success("Order placed successfully using wallet balance!");
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message || "Order placement failed. Try again.");
     }
   };
   
@@ -425,13 +471,28 @@ const PlaceOrder = () => {
         <div className="mt-12">
           <Title text1="PAYMENT" text2="METHOD" />
           <div className="flex gap-3 flex-col lg:flex-row">
-            <div
-              onClick={() => setMethod("stripe")}
-              className="flex items-center gap-3 border p-2 px-3 cursor-pointer"
-            >
-              <p className={`min-w-3.5 h-3.5 border rounded-full ${method === "stripe" ? "bg-green-400" : ""}`} />
-              <img className="h-5 mx-4" src={assets.stripe_logo} alt="Stripe Logo" />
-            </div>
+          <div
+      onClick={() => {
+        if (walletBalance >= totalAmount) {
+          setMethod("wallet");
+        } else {
+          toast.error("Insufficient wallet balance. Please select another payment method.");
+        }
+      }}
+      className={`flex items-center gap-3 border p-2 px-3 cursor-pointer ${
+        walletBalance < totalAmount ? "cursor-not-allowed opacity-50" : ""
+      }`}
+    >
+      <p
+        className={`min-w-3.5 h-3.5 border rounded-full ${
+          method === "wallet" ? "bg-green-400" : ""
+        }`}
+      />
+      <p className="text-gray-500 text-sm font-medium mx-4">
+        Wallet (Balance: ₹{walletBalance})
+      </p>
+    </div>
+
             <div
               onClick={() => setMethod("razorpay")}
               className="flex items-center gap-3 border p-2 px-3 cursor-pointer"
