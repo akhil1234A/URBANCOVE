@@ -6,6 +6,7 @@ import { assets } from '../../assets/assets';
 import Title from '../../components/User/Title';
 import ProductItem from '../../components/User/ProductItem';
 import { ClipLoader } from 'react-spinners';
+import { isTokenExpired } from '../../utils/jwtdecode';
 
 const Collection = () => {
   const dispatch = useDispatch();
@@ -14,7 +15,10 @@ const Collection = () => {
   const { items: wishlistItems, error: wishlistError } = useSelector((state) => state.wishlist);
 
   useEffect(() => {
-    dispatch(fetchWishlist());
+    const token = localStorage.getItem('token');
+    if (token && !isTokenExpired(token)) {
+      dispatch(fetchWishlist());
+    }
   }, [dispatch]);
 
   const isInWishlist = (productId) => {
