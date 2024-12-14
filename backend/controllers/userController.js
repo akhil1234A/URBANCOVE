@@ -13,7 +13,18 @@ const signUp = async (req, res) => {
         
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: "User already exists" });
+            if (!existingUser.isVerified) {
+                if (existingUser.otpExpiry < Date.now()) {
+                    // Remove unverified expired user
+                    await User.deleteOne({ email });
+                } else {
+                    return res.status(400).json({ 
+                        message: "User already exists but not verified. Please verify your account or wait for the OTP to expire." 
+                    });
+                }
+            } else {
+                return res.status(400).json({ message: "User already exists." });
+            }
         }
 
         
