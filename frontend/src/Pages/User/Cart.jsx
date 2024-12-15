@@ -17,17 +17,15 @@ const Cart = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-
   const { cartItems, total, error } = useSelector((state) => state.cart);
-  const products = useSelector((state) => state.products.items);
-
   const loading = false;
 
+  // Fetch cart items on component mount
   useEffect(() => {
     dispatch(getUserCart());
   }, [dispatch]);
 
-
+  // Display error messages from the Redux store
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -35,43 +33,45 @@ const Cart = () => {
     }
   }, [error, dispatch]);
 
+  // Recalculate the cart total whenever items are updated
   useEffect(() => {
     dispatch(setCartTotal());
   }, [cartItems, dispatch]);
 
-  // Derive invalid items based on stock and activity
-  const invalidItems = cartItems.filter((item) => {
-    const product = products.find((p) => p._id === item.productId);
-    return !product || !product.isActive || product.stock < item.quantity;
-  });
+  // Identify invalid items based on stock and active status
+  const invalidItems = cartItems.filter(
+    (item) => !item.isActive || item.stock < item.quantity
+  );
 
+  // Handle quantity change
   const handleQuantityChange = (productId, newQuantity) => {
     if (newQuantity < 1) {
       toast.error("Quantity must be at least 1");
       return;
     }
 
-    const product = products.find((item) => item._id === productId);
+    const item = cartItems.find((item) => item.productId === productId);
 
-    if (product) {
+    if (item) {
       if (newQuantity > 5) {
         toast.error("Maximum quantity per user is 5");
         return;
       }
-      if (newQuantity > product.stock) {
+      if (newQuantity > item.stock) {
         toast.error("Insufficient stock");
         return;
       }
     }
 
-
     dispatch(updateCartItemQuantity({ productId, quantity: newQuantity }));
   };
 
+  // Handle item removal
   const handleRemoveItem = (productId) => {
     dispatch(removeFromCart(productId));
   };
 
+  // Handle checkout logic
   const handleCheckout = () => {
     if (invalidItems.length > 0) {
       toast.error(
@@ -100,9 +100,7 @@ const Cart = () => {
         <>
           <div>
             {cartItems.map((item) => {
-              const product = products.find((p) => p._id === item.productId);
-              const isInvalid =
-                !product || !product.isActive || product.stock < item.quantity;
+              const isInvalid = !item.isActive || item.stock < item.quantity;
 
               return (
                 <div
@@ -129,18 +127,16 @@ const Cart = () => {
                         <p>
                           {currency}
                           {item.price ? item.price.toFixed(2) : "0.00"}
-                          </p>
+                        </p>
                         <p className="px-2 sm:px-3 sm:py-1 border bg-slate-50">
                           {item.size || "N/A"}
                         </p>
                       </div>
                       {isInvalid && (
                         <p className="text-red-500 text-sm">
-                          {product
-                            ? !product.isActive
-                              ? "This product is inactive."
-                              : "Insufficient stock."
-                            : "Product not found."}
+                          {!item.isActive
+                            ? "This product is inactive."
+                            : "Insufficient stock."}
                         </p>
                       )}
                     </div>
@@ -149,7 +145,7 @@ const Cart = () => {
                     className="border max-w-10 sm:max-w-20 px-1 sm:px-2 py-1"
                     type="number"
                     min={1}
-                    max={product?.stock || 1}
+                    max={item.stock || 1}
                     value={item.quantity}
                     onChange={(e) =>
                       handleQuantityChange(item.productId, Number(e.target.value))

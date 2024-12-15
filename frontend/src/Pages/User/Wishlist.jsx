@@ -78,7 +78,7 @@ const Wishlist = () => {
       ) : (
         <div>
           {wishlistItems.map((item) => {
-  const product = item.productId; // Directly use the populated product data
+  const product = item.productId; 
   const isInvalid =
     !product || !product.isActive || product.stock < 1;
 

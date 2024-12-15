@@ -167,7 +167,7 @@ const Product = () => {
   useEffect(() => {
     console.log('changed',productID);
     if (!productData) {
-      dispatch(fetchProductsForUser());
+      dispatch(fetchProductsForUser({ page: 1, limit: 20}));
     } else if (productData.images) {
       setCurrentImage(productData.images[0]);
     }
