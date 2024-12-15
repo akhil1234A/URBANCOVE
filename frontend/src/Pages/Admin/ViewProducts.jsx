@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { FaEdit } from 'react-icons/fa';
-import { fetchProductsForAdmin, updateProductStatus, selectProducts } from '../../slices/admin/productSlice';
+import { fetchProductsForAdmin, updateProductStatus } from '../../slices/admin/productSlice';
 import { useNavigate } from 'react-router-dom';
 
 const ViewProducts = () => {
@@ -38,10 +38,17 @@ const ViewProducts = () => {
         toast.success(`Product is now ${newIsActive ? 'active' : 'inactive'}`);
       })
       .catch((error) => {
-        console.error(error);
-        toast.error(error.message || 'Error updating product status. Please try again later.');
+        console.error('Error object:', error);
+  
+        // Check if the error has a response with the message
+        if (error.response && error.response.data && error.response.data.message) {
+          toast.error(error.response.data.message);  // Use backend error message
+        } else {
+          toast.error(error.message || 'Error updating product status. Please try again later.');
+        }
       });
   };
+  
 
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) {

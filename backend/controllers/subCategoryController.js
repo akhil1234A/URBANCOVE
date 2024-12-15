@@ -63,7 +63,7 @@ exports.editSubCategory = async (req, res) => {
       { new: true }
     ).populate('category', '_id category');
     
-      console.log(updatedSubCategory);
+      
       if (!updatedSubCategory) {
           return res.status(404).json({ message: 'Subcategory not found' });
       }
@@ -98,6 +98,13 @@ exports.deleteSubCategory = async (req, res) => {
       return res.status(404).json({ message: 'Subcategory not found' });
     }
 
+    if (isActive === false) {
+      await Product.updateMany(
+        { subCategory: updatedSubCategory._id },
+        { isActive: false }
+      );
+    }
+
     res.status(200).json({
       message: `Subcategory ${isActive ? 'activated' : 'deactivated'} successfully`,
       updatedSubCategory,
@@ -105,5 +112,40 @@ exports.deleteSubCategory = async (req, res) => {
   } catch (error) {
     console.error('Error toggling subcategory status:', error);
     res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+
+//Collection: Active Categories 
+exports.listUniqueActiveCategories = async (req, res) => {
+  try {
+    const uniqueCategories = await Category.aggregate([
+      { $match: { isActive: true } },
+      { $group: { _id: "$category" } },
+      { $sort: { _id: 1 } }, 
+    ]);
+
+    res.status(200).json(
+      uniqueCategories.map((item) => ({ category: item._id }))
+    );
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch categories", error });
+  }
+};
+
+//Collection: Active Sub Categories
+exports.listUniqueActiveSubCategories = async (req, res) => {
+  try {
+    const uniqueSubCategories = await SubCategory.aggregate([
+      { $match: { isActive: true } }, 
+      { $group: { _id: "$subCategory" } }, 
+      { $sort: { _id: 1 } }, 
+    ]);
+
+    res.status(200).json(
+      uniqueSubCategories.map((item) => ({ subCategory: item._id }))
+    );
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch subcategories", error });
   }
 };

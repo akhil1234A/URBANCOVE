@@ -3,6 +3,7 @@ import Title from './Title';
 import ProductItem from './ProductItem';
 import { fetchWishlist } from '../../slices/user/wishlistSlice';
 import { useDispatch, useSelector } from 'react-redux';
+import { isTokenExpired } from '../../utils/jwtdecode';
 
 
 const RelatedProducts = ({ category, subCategory, products, currentProductId}) => {
@@ -13,7 +14,10 @@ const RelatedProducts = ({ category, subCategory, products, currentProductId}) =
   const { items: wishlistItems, error: wishlistError } = useSelector((state) => state.wishlist);
 
   useEffect(() => {
-    dispatch(fetchWishlist());
+    const token = localStorage.getItem('token');
+    if (token && !isTokenExpired(token)) {
+      dispatch(fetchWishlist());
+    }
   }, [dispatch]);
 
   const isInWishlist = (productId) => {

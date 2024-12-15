@@ -1,12 +1,13 @@
 import  { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchProductsForUser, selectProducts, selectLoading, setCurrentPage, setSort, setFilters, setSearch } from '../../slices/admin/productSlice';
+import { fetchProductsForUser, selectProducts, selectLoading, setCurrentPage, setSort, setFilters } from '../../slices/admin/productSlice';
 import { fetchWishlist } from '../../slices/user/wishlistSlice';
 import { assets } from '../../assets/assets';
 import Title from '../../components/User/Title';
 import ProductItem from '../../components/User/ProductItem';
 import { ClipLoader } from 'react-spinners';
 import { isTokenExpired } from '../../utils/jwtdecode';
+import { userAxios } from '../../utils/api';
 
 const Collection = () => {
   const dispatch = useDispatch();
@@ -36,7 +37,37 @@ const Collection = () => {
   const filters = useSelector((state) => state.products.filters);
   
 
-  const [localFilters, setLocalFilters] = useState(filters);
+  const [localFilters, setLocalFilters] = useState({
+    categories: filters.categories || [],
+    subCategories: filters.subCategories || [],
+    priceRange: filters.priceRange || { min: 0, max: Infinity },
+    inStock: filters.inStock || false,
+  });
+  const [categories, setCategories] = useState([]);
+  const [subCategories, setSubCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        setIsLoading(true);
+        const [categoriesResponse, subCategoriesResponse] = await Promise.all([
+          userAxios.get('/collection/categories'),
+          userAxios.get('/collection/subcategories'),
+        ]);
+        setCategories(categoriesResponse.data);
+        setSubCategories(subCategoriesResponse.data);
+      } catch (err) {
+        setError(err.message || 'Failed to fetch collections.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCollections();
+  }, []);
 
   useEffect(() => {
     dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search }));
@@ -92,10 +123,23 @@ const Collection = () => {
     dispatch(setFilters(localFilters));
   };
 
-  if (loading) {
+  if (loading || isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <ClipLoader color="#36D7B7" size={50} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-center text-red-500">
+          {error.message || 'An unexpected error occurred.'} <br />
+          <span className="text-sm text-gray-600">
+            Please try reloading the page or contact support if the problem persists.
+          </span>
+        </p>
       </div>
     );
   }
@@ -114,17 +158,18 @@ const Collection = () => {
         <div className={`border border-gray-300 pl-5 py-3 mt-6 sm:block`}>
           <p className='mb-3 text-sm font-medium'>CATEGORIES</p>
           <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
-            {['Men', 'Women', 'Kids'].map(category => (
-              <p key={category} className='flex gap-2'>
-                <input
-                  className='w-3'
-                  type="checkbox"
-                  value={category}
-                  checked={localFilters.categories.includes(category)}
-                  onChange={() => handleCategoryFilterChange(category)}
-                /> {category}
-              </p>
-            ))}
+          {categories.map((category) => (
+            <p key={category._id} className='flex gap-2'>
+              <input
+                className='w-3'
+                type="checkbox"
+                value={category.category}
+                checked={localFilters.categories.includes(category.category)}
+                onChange={() => handleCategoryFilterChange(category.category)}
+              />
+              {category.category}
+            </p>
+          ))}
           </div>
         </div>
 
@@ -132,17 +177,18 @@ const Collection = () => {
         <div className={`border border-gray-300 pl-5 py-3 my-5 sm:block`}>
           <p className='mb-3 text-sm font-medium'>TYPE</p>
           <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
-            {['Topwear', 'Bottomwear', 'Winterwear'].map(subCategory => (
-              <p key={subCategory} className='flex gap-2'>
-                <input
-                  className='w-3'
-                  type="checkbox"
-                  value={subCategory}
-                  checked={localFilters.subCategories.includes(subCategory)}
-                  onChange={() => handleSubCategoryFilterChange(subCategory)}
-                /> {subCategory}
-              </p>
-            ))}
+          {subCategories.map((subCategory) => (
+            <p key={subCategory._id} className='flex gap-2'>
+              <input
+                className='w-3'
+                type="checkbox"
+                value={subCategory.subCategory}
+                checked={localFilters.subCategories.includes(subCategory.subCategory)}
+                onChange={() => handleSubCategoryFilterChange(subCategory.subCategory)}
+              />
+              {subCategory.subCategory}
+            </p>
+          ))}
           </div>
         </div>
 

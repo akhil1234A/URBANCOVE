@@ -1,5 +1,5 @@
 const express = require('express');
-const { addProduct, editProduct, listProducts, deleteProduct } = require('../controllers/productController');
+const { addProduct, editProduct, listProducts, deleteProduct, adminListProducts, getLatestProducts, getBestSellerProducts } = require('../controllers/productController');
 const { adminAuth } = require('../middlewares/authMiddleware');
 const multer = require('multer');  
 
@@ -18,12 +18,17 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 
-//Admin: Product Management 
 
+//Home
 router.get('/', listProducts);
-router.get('/:productId?', listProducts);
-router.post('/', adminAuth, upload.array('images', 4), addProduct);
-router.patch('/:id', adminAuth, upload.array('images', 4), editProduct);
-router.patch('/:productId/delete', adminAuth, deleteProduct);
+router.get('/latest', getLatestProducts);
+router.get('/best-sellers',getBestSellerProducts);
+
+//Admin: Product Management 
+router.get('/admin',adminListProducts);
+router.get('/admin/:productId?', listProducts);
+router.post('/admin/', adminAuth, upload.array('images', 4), addProduct);
+router.patch('/admin/:id', adminAuth, upload.array('images', 4), editProduct);
+router.patch('/admin/:productId/delete', adminAuth, deleteProduct);
 
 module.exports = router;

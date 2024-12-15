@@ -43,7 +43,7 @@ const CreateOfferPage = () => {
 
     const fetchProducts = async () => {
       try {
-        const response = await adminAxios.get(`/admin/products?limit=100`);
+        const response = await adminAxios.get(`/products?limit=100`);
         const formattedProducts = response.data.products.map((product) => ({
           value: product._id,
           label: product.productName,

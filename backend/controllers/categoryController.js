@@ -1,6 +1,7 @@
 const Category = require('../models/Category');
 const Product = require('../models/Product')
 
+
 //Admin: Get All Categories
 exports.listCategories = async (req, res) => {
   try {
@@ -98,7 +99,7 @@ exports.editCategory = async (req, res) => {
 //Admin: soft delete an category
 exports.deleteCategory = async (req, res) => {
   try {
-      console.log('jhi')
+     
       const category = await Category.findById(req.params.id);
       if (!category) return res.status(404).json({ message: 'Category not found' });
 

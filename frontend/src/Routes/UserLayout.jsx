@@ -2,7 +2,6 @@ import { useState , useEffect} from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from '../components/User/Navbar';
 import Footer from '../components/User/Footer';
-import SearchBar from '../Components/User/SearchBar';
 import Home from '../Pages/User/Home';
 import Collection from '../Pages/User/Collection';
 import Product from '../Pages/User/Product';
@@ -11,8 +10,8 @@ import ForgotPassword from '../Pages/User/ForgotPassword';
 import OtpVerification from '../Pages/User/OtpVerification';
 import UserSignup from '../Pages/User/UserSignup';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchProductsForUser, selectProducts } from '../slices/admin/productSlice';
+import { useSelector } from 'react-redux';
+import { selectProducts } from '../slices/admin/productSlice';
 import PlaceOrder from '../Pages/User/PlaceOrder';
 
 import UserAccount from '../Pages/User/UserAccount';
@@ -25,36 +24,52 @@ import ChangePassword from '../Pages/User/ChangePassword';
 import NotFound from '../Pages/NotFound';
 import About from '../Pages/User/About';
 import Contact from '../Pages/User/Contact';
+import { userAxios } from '../utils/api';
+import { ClipLoader } from 'react-spinners'
 
 const UserLayout = () => {
+  
+  const [latestProducts, setLatestProducts] = useState([]);
+  const [bestSellerProducts, setBestSellerProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [searchVisible, setSearchVisible] = useState(false);
+  
+    useEffect(() => {
+      const fetchProducts = async () => {
+        try {
+          const [latestResponse, bestSellersResponse] = await Promise.all([
+            userAxios.get('/products/latest'),
+            userAxios.get('/products/best-sellers'),
+          ]);
+  
+          setLatestProducts(latestResponse.data.products);
+          setBestSellerProducts(bestSellersResponse.data.products);
+        } catch (error) {
+          console.error("Error fetching products:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchProducts();
+    }, []);
 
-  const dispatch = useDispatch();
-
-  const products = useSelector(selectProducts);
-
-  const search = useSelector((state) => state.products.search);
-
-  useEffect(() => {
-    dispatch(fetchProductsForUser(
-      {page:1, limit:100, search}
-    ));
-  }, [dispatch,search]);
-
-
-  const toggleSearchBar = () => {
-    setSearchVisible((prev) => !prev);
-  };
-
+    if (loading) {
+      
+      return (
+        <div className="flex justify-center items-center h-screen">
+          <ClipLoader size={50} color={"#36D7B7"} loading={loading} />
+        </div>
+      );
+    }
   return (
     <>
     <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
-      <Navbar toggleSearchBar={toggleSearchBar}/>
-      {searchVisible && <SearchBar toggleSearchBar={toggleSearchBar} />}
+      <Navbar />
+      
       <Routes>
       
-        <Route path="/" element={<Home  products={products}/>} />
+        <Route path="/" element={<Home  latest={latestProducts} best={bestSellerProducts}/>} />
         <Route path="/*" element={<NotFound />} />
         <Route path="/collection" element={<Collection  />} />
         <Route path="/about" element={<About/>} />

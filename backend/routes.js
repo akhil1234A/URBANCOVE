@@ -14,11 +14,13 @@ const couponRoutes = require('./routes/couponRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes')
 const walletRoutes = require('./routes/walletRoutes')
 const salesRoutes = require('./routes/salesRoute');
+const collectionRoutes = require('./routes/collectionRoutes');
+
 
 router.use('/admin', adminRoutes);
 router.use('/admin/categories',categoryRoutes);
 router.use('/admin/categories/subcategories',subCategoryRoutes);
-router.use('/admin/products',productRoutes);
+router.use('/products',productRoutes);
 router.use('/admin/offers', offerRoutes);
 router.use('/admin/sales-report',salesRoutes);
 router.use('/user',userRoutes);
@@ -28,5 +30,7 @@ router.use('/user/wishlist',wishlistRoutes);
 router.use('/user/wallet',walletRoutes);
 router.use('/orders', orderRoutes);
 router.use('/coupons',couponRoutes);
+router.use('/collection',collectionRoutes);
+
 
 module.exports = router;

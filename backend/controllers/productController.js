@@ -17,37 +17,32 @@ const processImage = async (filePath) => {
 };
 
 
-// Admin: list all products
+// Home: List All Active Products 
 exports.listProducts = async (req, res) => {
   try {
-    const { type } = req.params;
-    const { page = 1, limit = 10, isAdmin = false, productId, search } = req.query;
+    const { page = 1, limit = 10, productId, search } = req.query;
 
-    let query = isAdmin === 'true' ? {} : { isActive: true };
+    let query = { isActive: true };
 
     if (productId) {
       query._id = productId;
-    } else {
-      if (type === 'latest') {
-        query = { ...query };
-      } else if (type === 'bestSeller') {
-        query = { ...query, isBestSeller: true };
-      }
     }
 
+    // Apply search filter if provided
     if (search) {
-      query.productName = { $regex: search, $options: 'i' }; // Case-insensitive search
+      query.productName = { $regex: search, $options: 'i' }; 
     }
 
+    // Define pagination and sorting options
     const options = {
       limit: parseInt(limit),
       skip: (parseInt(page) - 1) * parseInt(limit),
-      sort: type === 'latest' ? { createdAt: -1 } : {}
+      sort: { createdAt: -1 }, 
     };
 
     const products = await Product.find(query)
       .populate('category subCategory')
-      .limit(options.limit)
+      .limit(options.limit) 
       .skip(options.skip)
       .sort(options.sort);
 
@@ -120,7 +115,7 @@ exports.listProducts = async (req, res) => {
       products: updatedProducts,
       currentPage: parseInt(page),
       totalPages: Math.ceil(totalCount / limit),
-      totalItems: totalCount
+      totalItems: totalCount,
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
@@ -129,7 +124,174 @@ exports.listProducts = async (req, res) => {
 
 
 
-  
+//Home: Latest Products 
+exports.getLatestProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ isActive: true }) 
+      .sort({ createdAt: -1 }) 
+      .limit(10)
+      .populate('category subCategory');
+
+    const activeOffers = await Offer.find({
+      isActive: true,
+      startDate: { $lte: new Date() },
+      endDate: { $gte: new Date() },
+    });
+
+    const updatedProducts = await Promise.all(
+      products.map(async (product) => {
+        const subCategoryId = product.subCategory?._id || product.subCategory;
+
+        // Identify offers applicable to the product
+        const productOffer = activeOffers.find(
+          (offer) =>
+            offer.type === 'product' &&
+            offer.products.some((productId) => productId.toString() === product._id.toString())
+        );
+
+        const categoryOffer = activeOffers.find(
+          (offer) =>
+            offer.type === 'category' &&
+            offer.categories.some((categoryId) => categoryId.toString() === subCategoryId?.toString())
+        );
+
+        // Calculate discounts
+        let productDiscount = 0;
+        let categoryDiscount = 0;
+
+        if (productOffer) {
+          productDiscount =
+            productOffer.discountType === 'percentage'
+              ? (product.price * productOffer.discountValue) / 100
+              : productOffer.discountValue;
+        }
+
+        if (categoryOffer) {
+          categoryDiscount =
+            categoryOffer.discountType === 'percentage'
+              ? (product.price * categoryOffer.discountValue) / 100
+              : categoryOffer.discountValue;
+        }
+
+        // Apply the highest discount
+        const discount = Math.max(productDiscount, categoryDiscount);
+        const discountedPrice = product.price - discount;
+        const finalDiscountedPrice = discountedPrice < 0 ? 0 : discountedPrice;
+
+        return {
+          ...product.toObject(),
+          discountedPrice: finalDiscountedPrice,
+        };
+      })
+    );
+
+    res.json({ products: updatedProducts });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+//Home: Best Seller's
+exports.getBestSellerProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ isActive: true, isBestSeller: true })
+      .limit(10) 
+      .populate('category subCategory');
+
+    const activeOffers = await Offer.find({
+      isActive: true,
+      startDate: { $lte: new Date() },
+      endDate: { $gte: new Date() },
+    });
+
+    const updatedProducts = await Promise.all(
+      products.map(async (product) => {
+        const subCategoryId = product.subCategory?._id || product.subCategory;
+
+        // Identify offers applicable to the product
+        const productOffer = activeOffers.find(
+          (offer) =>
+            offer.type === 'product' &&
+            offer.products.some((productId) => productId.toString() === product._id.toString())
+        );
+
+        const categoryOffer = activeOffers.find(
+          (offer) =>
+            offer.type === 'category' &&
+            offer.categories.some((categoryId) => categoryId.toString() === subCategoryId?.toString())
+        );
+
+        // Calculate discounts
+        let productDiscount = 0;
+        let categoryDiscount = 0;
+
+        if (productOffer) {
+          productDiscount =
+            productOffer.discountType === 'percentage'
+              ? (product.price * productOffer.discountValue) / 100
+              : productOffer.discountValue;
+        }
+
+        if (categoryOffer) {
+          categoryDiscount =
+            categoryOffer.discountType === 'percentage'
+              ? (product.price * categoryOffer.discountValue) / 100
+              : categoryOffer.discountValue;
+        }
+
+        // Apply the highest discount
+        const discount = Math.max(productDiscount, categoryDiscount);
+        const discountedPrice = product.price - discount;
+        const finalDiscountedPrice = discountedPrice < 0 ? 0 : discountedPrice;
+
+        return {
+          ...product.toObject(),
+          discountedPrice: finalDiscountedPrice,
+        };
+      })
+    );
+
+    res.json({ products: updatedProducts });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+
+//Admin: List All Products
+exports.adminListProducts = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, productId } = req.query;
+
+    let query = {}; // Admin can see all products
+
+    if (productId) {
+      query._id = productId;
+    }
+
+    const options = {
+      limit: parseInt(limit),
+      skip: (parseInt(page) - 1) * parseInt(limit),
+    };
+
+    const products = await Product.find(query)
+      .populate('category subCategory')
+      .limit(options.limit)
+      .skip(options.skip);
+
+    const totalCount = await Product.countDocuments(query);
+
+    res.json({
+      products,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalCount / limit),
+      totalItems: totalCount,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
 
 // Admin: Add a New Product
 exports.addProduct = async (req, res) => {
@@ -234,28 +396,35 @@ exports.deleteProduct = async (req, res) => {
     const { isActive } = req.body;
     const { productId } = req.params;
 
-   
-    const product = await Product.findById(productId).populate('category subCategory');
-    if (!product) return res.status(404).json({ message: 'Product not found' });
+    const product = await Product.findById(productId).populate([
+      { path: 'category', select: 'isActive' },
+      { path: 'subCategory', select: 'isActive' }
+    ]);
 
-    
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
     const { category, subCategory } = product;
+    console.log('Category:', category);
+    console.log('SubCategory:', subCategory);
 
     if (isActive) {
       if (!category?.isActive) {
+        console.log('Category is inactive');
         return res.status(400).json({ 
           message: 'Cannot list product because the associated category is inactive.' 
         });
       }
 
       if (!subCategory?.isActive) {
+        console.log('SubCategory is inactive');
         return res.status(400).json({ 
           message: 'Cannot list product because the associated sub-category is inactive.' 
         });
       }
     }
 
-    
     product.isActive = isActive;
     await product.save();
 
@@ -265,6 +434,8 @@ exports.deleteProduct = async (req, res) => {
     });
 
   } catch (error) {
+    console.error('Error in deleteProduct:', error);
     res.status(500).json({ message: 'Server error', error });
   }
 };
+
