@@ -119,9 +119,11 @@ const Collection = () => {
     }));
   };
 
-  const applyFilters = () => {
+  const applyFilters = async () => {
+    dispatch(fetchProductsForUser({ page: currentPage, limit: 20, search }));
     dispatch(setFilters(localFilters));
   };
+  
 
   if (loading || isLoading) {
     return (
