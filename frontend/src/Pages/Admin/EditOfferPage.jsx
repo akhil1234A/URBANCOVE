@@ -56,7 +56,7 @@ const EditOfferPage = () => {
     const fetchProducts = async () => {
       try {
         const response = await adminAxios.get(
-          `admin/products?limit=100`
+          `/products/admin?limit=100`
         );
         setProducts(
           response.data.products.map((product) => ({

@@ -131,7 +131,7 @@ const authSlice = createSlice({
       })
       .addCase(resendOtp.fulfilled, (state) => {
         state.isLoading = false;
-        console.log("OTP successfully resent:", payload);
+       
       })
       .addCase(resendOtp.rejected, (state, { payload }) => {
         state.isLoading = false;

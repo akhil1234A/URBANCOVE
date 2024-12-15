@@ -32,6 +32,7 @@ const OtpVerification = () => {
     e.preventDefault();
     try {
       const response = await dispatch(verifyOtp({ email: userEmail, otp })).unwrap();
+      console.log(response);
       if (response.success) {
         toast.success('OTP verified successfully!');
         window.location.href = '/';
@@ -39,7 +40,7 @@ const OtpVerification = () => {
         toast.error(response.message);
       }
     } catch (error) {
-      toast.error('Failed to verify OTP.');
+      toast.error(error.message);
     }
   };
 
@@ -63,13 +64,19 @@ const OtpVerification = () => {
         setIsResendDisabled(true);
         const newExpiry = Date.now() + 1 * 60 * 1000; // Reset to 1 minute from now
         setTimer(60);
-        await dispatch(resendOtp(userEmail)).unwrap(); // Pass userEmail directly
-        toast.success('OTP resent successfully!');
-    } catch (error) {
-        toast.error('Failed to resend OTP.');
+        const response = await dispatch(resendOtp(userEmail)).unwrap(); 
+
+        if (response?.success) {
+          toast.success('New OTP sent to your email.');
+        } else {
+          toast.error(response?.message || 'Failed to resend OTP.');
+        }
+      } catch (error) {
+        const errorMessage = error?.message || 'Failed to resend OTP.';
+        toast.error(errorMessage);  
         setIsResendDisabled(false);
-    }
-};
+      }
+    };
 
  
 
