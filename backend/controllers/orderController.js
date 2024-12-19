@@ -5,86 +5,120 @@ const Cart = require("../models/Cart");
 const Transaction = require('../models/Transaction')
 const razorpayInstance = require("../utils/Razorpay");
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 
 
 // User: Place an Order
 const placeOrder = async (req, res) => {
   const { addressId, paymentMethod, cartItems, totalAmount } = req.body;
   const userId = req.user.id;
-  // console.log("req body", req.body);
   const shippingCost = 40;
 
-  try {
+  // Start a MongoDB session for handling transactions
+  const session = await mongoose.startSession();
 
-    if(paymentMethod === 'cod' && totalAmount > 1000){
-      return res.status(400).json({message: "Order above Rs 1000 should not be allowed for COD"});
+  try {
+    // Start transaction
+    session.startTransaction();
+
+    if (paymentMethod === "cod" && totalAmount > 1000) {
+      throw new Error("Order above Rs 1000 should not be allowed for COD");
     }
 
     if (!cartItems || cartItems.length === 0) {
-      return res.status(400).json({ message: "No items in the order" });
+      throw new Error("No items in the order");
     }
 
-    // fetching address
-    const address = await Address.findById(addressId);
+    // Fetch delivery address
+    const address = await Address.findById(addressId).session(session);
     if (!address) {
-      return res.status(400).json({ message: "Invalid delivery address" });
+      throw new Error("Invalid delivery address");
     }
 
-    // stock availability
+    // Check stock availability for all products
     for (let item of cartItems) {
-      const product = await Product.findById(item.productId);
+      const product = await Product.findById(item.productId).session(session);
       if (!product || product.stock < item.quantity) {
-        return res.status(400).json({
-          message: `Product ${item.productId} is out of stock or unavailable`,
-        });
+        throw new Error(`Product ${item.productId} is out of stock or unavailable`);
       }
     }
-  
-    // stock deduction
+
+    // Deduct stock for all items
     for (let item of cartItems) {
-      await Product.findByIdAndUpdate(item.productId, {
-        $inc: { stock: -item.quantity },
-      });
+      const result = await Product.findByIdAndUpdate(
+        item.productId,
+        { $inc: { stock: -item.quantity } },
+        { session, new: true }
+      );
+
+      if (result.stock < 0) {
+        throw new Error(`Stock for product ${item.productId} ran out during processing`);
+      }
     }
 
-    // amount calculation
+    // Calculate discount amount
     const originalPrice = cartItems.reduce(
       (total, item) => total + item.originalPrice * item.quantity,
       0
     );
-
     const discountAmount = originalPrice - totalAmount + shippingCost;
 
-    if (paymentMethod === 'wallet') {
-      
+    // Handle wallet payment if applicable
+    if (paymentMethod === "wallet") {
+      const walletBalance = await Wallet.findOne({ userId }).session(session);
+      if (!walletBalance || walletBalance.balance < totalAmount) {
+        throw new Error("Insufficient wallet balance");
+      }
+
+      // Deduct from wallet
+      walletBalance.balance -= totalAmount;
+      await walletBalance.save({ session });
+
       // Record transaction
-      await Transaction.create({
-        userId,
-        amount: totalAmount,
-        type: 'debit',
-        description: 'Order payment using wallet',
-      });
+      await Transaction.create(
+        [
+          {
+            userId,
+            amount: totalAmount,
+            type: "debit",
+            description: "Order payment using wallet",
+          },
+        ],
+        { session }
+      );
     }
-    
-      const newOrder = await Order.create({
-        user: userId,
-        items: cartItems,
-        paymentMethod,
-        paymentStatus: paymentMethod === 'wallet' ? 'Paid' : 'Pending',
-        deliveryAddress: address,
-        totalAmount,
-        discountAmount,
-        status: 'Pending',
-      });
 
-     
-      await Cart.deleteMany({ userId });
+    // Create new order
+    const newOrder = await Order.create(
+      [
+        {
+          user: userId,
+          items: cartItems,
+          paymentMethod,
+          paymentStatus: paymentMethod === "wallet" ? "Paid" : "Pending",
+          deliveryAddress: address,
+          totalAmount,
+          discountAmount,
+          status: "Pending",
+        },
+      ],
+      { session }
+    );
 
-      res.status(201).json({ message: 'Order placed successfully', order: newOrder });
-    
+    // Clear user's cart
+    await Cart.deleteMany({ userId }, { session });
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(201).json({ message: "Order placed successfully", order: newOrder });
   } catch (error) {
-    console.log(error);
-    console.error(error);
+    // Roll back the transaction in case of any failure
+    await session.abortTransaction();
+    session.endSession();
+
+    console.error("Error placing order:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -261,91 +295,113 @@ const createRazorpayOrder = async (req, res) => {
 
 //User: Razory Pay Verification Step 2 in User Flow Front End 
 const verifyPayment = async (req, res) => {
-  const { razorpayOrderId, razorpayPaymentId, razorpaySignature, cartItems, addressId, totalAmount, orderId } = req.body;
+  const {
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature,
+    cartItems,
+    addressId,
+    totalAmount,
+    orderId,
+  } = req.body;
   const shippingCharge = 40;
-  // console.log(req.body);
-  // console.log(razorpayOrderId, razorpayPaymentId, razorpaySignature);
- 
+
+  // Verify Razorpay signature
   const body = razorpayOrderId + "|" + razorpayPaymentId;
   const expectedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
     .update(body)
-    .digest('hex');
+    .digest("hex");
 
-    if (expectedSignature !== razorpaySignature) {
-      return res.status(400).json({ success: false, message: 'Payment verification failed' });
-    }
-  
-    // console.log('Signature verified successfully');
-    
+  if (!safeCompare(expectedSignature, razorpaySignature)) {
+    return res.status(400).json({ success: false, message: "Payment verification failed" });
+  }
+
+  try {
+    // Start a session for concurrency handling
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
-
+      // Handle existing order
       if (orderId) {
-        // Update an existing order
-        const order = await Order.findById(orderId);
+        const order = await Order.findOneAndUpdate(
+          { _id: orderId, paymentStatus: "Failed" },
+          { paymentStatus: "Paid" },
+          { new: true, session }
+        );
         if (!order) {
-          return res.status(400).json({ success: false, message: 'Order not found.' });
+          throw new Error("Order not found or already paid.");
         }
-  
-        order.paymentStatus = 'Paid';
-        await order.save();
-  
+
+        await session.commitTransaction();
+        session.endSession();
         return res.status(200).json({ success: true, order });
       }
-      
+
+      // Validate cart items
       if (!cartItems || cartItems.length === 0) {
-        return res.status(400).json({ message: 'No items in the order' });
+        throw new Error("No items in the order.");
       }
-  
-     
-      const address = await Address.findById(addressId);
+
+      // Validate address
+      const address = await Address.findById(addressId).session(session);
       if (!address) {
-        return res.status(400).json({ message: 'Invalid delivery address' });
+        throw new Error("Invalid delivery address.");
       }
-  
-      // Stock availability check: ensure all products are available in the required quantity
+
+      // Check and deduct stock atomically
       for (let item of cartItems) {
-        const product = await Product.findById(item.productId);
-        if (!product || product.stock < item.quantity) {
-          return res.status(400).json({
-            message: `Product ${item.productId} is out of stock or unavailable`,
-          });
+        const product = await Product.findOneAndUpdate(
+          { _id: item.productId, stock: { $gte: item.quantity } }, // Ensure sufficient stock
+          { $inc: { stock: -item.quantity } }, // Deduct stock
+          { new: true, session }
+        );
+        if (!product) {
+          throw new Error(`Product ${item.productId} is out of stock or unavailable.`);
         }
       }
-  
-      // Stock deduction: update the stock for each product in the cart
-      for (let item of cartItems) {
-        await Product.findByIdAndUpdate(item.productId, {
-          $inc: { stock: -item.quantity },
-        });
-      }
-  
-      // Calculate the total amount
+
+      // Calculate amounts
       const originalPrice = cartItems.reduce(
         (total, item) => total + item.originalPrice * item.quantity,
         0
       );
-  
       const discountAmount = originalPrice + shippingCharge - totalAmount;
-     
-      const newOrder = await Order.create({
-        user: req.user.id, 
-        items: cartItems,
-        paymentMethod: 'razorpay',  
-        deliveryAddress: address,
-        totalAmount,
-        discountAmount,
-        status: 'Pending', 
-        paymentStatus: 'Paid'
-      });
-      const userId = req.user.id;
-      await Cart.deleteMany({ userId});
-      res.status(200).json({ success: true, order: newOrder });
+
+      // Create new order
+      const newOrder = await Order.create(
+        [
+          {
+            user: req.user.id,
+            items: cartItems,
+            paymentMethod: "razorpay",
+            deliveryAddress: address,
+            totalAmount,
+            discountAmount,
+            status: "Pending",
+            paymentStatus: "Paid",
+          },
+        ],
+        { session }
+      );
+
+      // Clear user cart
+      await Cart.deleteMany({ user: req.user.id }).session(session);
+
+      await session.commitTransaction();
+      session.endSession();
+
+      res.status(200).json({ success: true, order: newOrder[0] });
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ success: false, message: 'Failed to place order' });
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
     }
-  
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 //User: Failed Orders in RazorPay
