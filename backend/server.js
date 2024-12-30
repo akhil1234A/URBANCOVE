@@ -21,6 +21,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 //DB Connection
 connectDB()
 
+//Health Check Up
+app.get('/health', (req, res) => { res.status(200).send('API '); });
+
 //Routes
 app.use('/api',routes);
 
