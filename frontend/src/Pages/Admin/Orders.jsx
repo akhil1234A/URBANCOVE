@@ -92,7 +92,7 @@ const Orders = () => {
               <div>
                 {order.items.map((item, idx) => (
                   <p className="py-0.5" key={idx}>
-                    {item.productId?.productName || "Not Available"} x{" "}
+                    {item?.productId?.productName || "Not Available"} x{" "}
                     {item.quantity} <span> {item.size} </span>
                     {idx < order.items.length - 1 && ", "}
                   </p>

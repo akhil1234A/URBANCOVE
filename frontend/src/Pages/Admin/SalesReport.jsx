@@ -89,7 +89,7 @@ const SalesReport = () => {
       ...summaryData,
       ...allOrders.map((order) => ({
         OrderID: order.orderReference,
-        Product: order.items.map((item) => item.productId?.productName || "New Product-1").join(', '),
+        Product: order.items.map((item) => item?.productId?.productName || "New Product-1").join(', '),
         Quantity: order.items.reduce((acc, item) => acc + item.quantity, 0),
         Amount: `₹${order.totalAmount}`,
         Discount: `₹${order.discountAmount}`,
@@ -125,7 +125,7 @@ const SalesReport = () => {
 
     const reportContent = allOrders.map((order) => [
       order.orderReference,
-      order.items.map((item) => item.productId.productName || "New Product-1").join(', '),
+      order.items.map((item) => item?.productId?.productName || "New Product-1").join(', '),
       order.items.reduce((acc, item) => acc + item.quantity, 0),
       `Rs.${order.totalAmount}`,
       `Rs.${order.discountAmount}`,
@@ -214,7 +214,7 @@ const SalesReport = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderReference}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {order.items.map((item, idx) => (
-                    <p key={idx}>{item.productId.productName || "New Product-1"}</p>
+                    <p key={idx}>{item?.productId?.productName || "New Product-1"}</p>
                   ))}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
