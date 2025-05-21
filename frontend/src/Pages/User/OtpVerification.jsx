@@ -32,7 +32,6 @@ const OtpVerification = () => {
     e.preventDefault();
     try {
       const response = await dispatch(verifyOtp({ email: userEmail, otp })).unwrap();
-      console.log(response);
       if (response.success) {
         toast.success('OTP verified successfully!');
         window.location.href = '/';
@@ -59,7 +58,6 @@ const OtpVerification = () => {
   // };
 
   const handleResendOtp = async () => {
-    console.log("Resend OTP button clicked"); 
     try {
         setIsResendDisabled(true);
         const newExpiry = Date.now() + 1 * 60 * 1000; // Reset to 1 minute from now

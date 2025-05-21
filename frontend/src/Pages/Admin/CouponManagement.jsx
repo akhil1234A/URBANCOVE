@@ -15,7 +15,6 @@ const CouponManagement = () => {
 
  
   const { coupons, isLoading, error } = useSelector((state) => state.coupons);
-  console.log(coupons);
  
   useEffect(() => {
     dispatch(fetchCoupons());
@@ -24,7 +23,6 @@ const CouponManagement = () => {
   
   const toggleCouponStatus = (coupon) => {
     const couponId = coupon._id;
-    console.log(couponId);
     dispatch(deactivateCoupon(couponId));
   };
 

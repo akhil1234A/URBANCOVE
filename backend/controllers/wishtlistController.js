@@ -55,7 +55,6 @@ const getWishlist = async (req, res) => {
 
   
 
-  console.log(wishlist);
   res.status(200).json(wishlist || { products: [] });
 };
 

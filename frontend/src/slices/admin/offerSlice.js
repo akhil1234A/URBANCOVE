@@ -97,7 +97,6 @@ const offerSlice = createSlice({
       .addCase(getOfferById.fulfilled, (state, action) => {
         state.loading = false;
         state.offerDetails = action.payload.offer;
-        console.log(action.payload.offer)
       })
       .addCase(getOfferById.rejected, (state, action) => {
         state.loading = false;

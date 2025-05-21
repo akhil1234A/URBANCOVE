@@ -5,13 +5,13 @@ const Cart = require("../models/Cart");
 const Transaction = require('../models/Transaction')
 const razorpayInstance = require("../utils/Razorpay");
 const crypto = require('crypto');
+const logger = require("../utils/logger");
 
 
 // User: Place an Order
 const placeOrder = async (req, res) => {
   const { addressId, paymentMethod, cartItems, totalAmount } = req.body;
   const userId = req.user.id;
-  // console.log("req body", req.body);
   const shippingCost = 40;
 
   try {
@@ -83,8 +83,7 @@ const placeOrder = async (req, res) => {
       res.status(201).json({ message: 'Order placed successfully', order: newOrder });
     
   } catch (error) {
-    console.log(error);
-    console.error(error);
+    logger.error(error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -202,7 +201,7 @@ const returnOrder = async (req, res) => {
       });
     }
 
-    console.log('paymentStatus',order.paymentStatus)
+    logger.info('paymentStatus',order.paymentStatus)
 
     // Process refund if payment method is not COD
     if (order.paymentStatus ==='Refunded') {
@@ -246,7 +245,6 @@ const createRazorpayOrder = async (req, res) => {
     };
 
     const razorpayOrder = await razorpayInstance.orders.create(options);
-    // console.log(razorpayOrder);
     res.status(201).json({
       razorpayOrderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
@@ -254,7 +252,7 @@ const createRazorpayOrder = async (req, res) => {
     });
 
   } catch (error) {
-    console.log(error);
+    logger.error(error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -263,8 +261,6 @@ const createRazorpayOrder = async (req, res) => {
 const verifyPayment = async (req, res) => {
   const { razorpayOrderId, razorpayPaymentId, razorpaySignature, cartItems, addressId, totalAmount, orderId } = req.body;
   const shippingCharge = 40;
-  // console.log(req.body);
-  // console.log(razorpayOrderId, razorpayPaymentId, razorpaySignature);
  
   const body = razorpayOrderId + "|" + razorpayPaymentId;
   const expectedSignature = crypto
@@ -276,7 +272,6 @@ const verifyPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Payment verification failed' });
     }
   
-    // console.log('Signature verified successfully');
     
     try {
 
@@ -342,7 +337,7 @@ const verifyPayment = async (req, res) => {
       await Cart.deleteMany({ userId});
       res.status(200).json({ success: true, order: newOrder });
     } catch (error) {
-      console.log(error);
+      logger.error(error.message)
       res.status(500).json({ success: false, message: 'Failed to place order' });
     }
   

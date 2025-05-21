@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
+const logger = require('../utils/logger');
 
 const orderSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -30,8 +31,8 @@ orderSchema.pre('save', function (next) {
       const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, ''); 
       this.orderReference = `ORD-${datePart}-${randomSuffix}`;
     }
-
-    console.log(`Processing order: ID=${this._id}, Status=${this.status}, Payment Method=${this.paymentMethod}`);
+    
+    logger.info(`Processing order: ID=${this._id}, Status=${this.status}, Payment Method=${this.paymentMethod}`);
 
     // Ensure valid state transitions
     if (this.isModified('status')) {

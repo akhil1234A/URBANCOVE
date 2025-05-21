@@ -34,10 +34,8 @@ export const updatePassword = (token, passwordData) => {
 
 //User: Resend OTP
 export const resendUserOtp = (email) => {
-  // console.log("Attempting to resend OTP to email:", email); // Debugging
   return userAxios.post(`${API_BASE_URL}/resend-otp`, { email })
     .then(response => {
-      // console.log("Resend OTP response received:", response.data); // Log the response data
       return response.data;
     })
     .catch(error => {

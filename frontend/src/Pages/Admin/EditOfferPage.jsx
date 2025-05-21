@@ -35,7 +35,6 @@ const EditOfferPage = () => {
     (state) => state.offers
   );
 
-  console.log(offerDetails);
 
   const token = useSelector((state) => state.admin.token);
 

@@ -1,5 +1,6 @@
 const Coupon = require('../models/Coupon');
 const User = require('../models/User');
+const logger = require('../utils/logger');
 
 // Admin: Create a new coupon
 exports.createCoupon = async (req, res) => {
@@ -25,7 +26,7 @@ exports.createCoupon = async (req, res) => {
     await coupon.save();
     return res.status(201).json(coupon);
   } catch (error) {
-    console.log(error);
+    logger.error(error.message)
     return res.status(500).json({ message: 'Server error' });
   }
 };
@@ -57,7 +58,7 @@ exports.editCoupon = async (req, res) => {
    
     return res.status(200).json(coupon);
   } catch (error) {
-    console.log(error);
+    logger.error(error.message);
     return res.status(500).json({ message: 'Server error' });
   }
 };
@@ -77,7 +78,7 @@ exports.deleteCoupon = async (req, res) => {
    
     return res.status(200).json({ message: 'Coupon deleted successfully', coupon });
   } catch (error) {
-    console.log(error);
+    logger.error(error.message);
     return res.status(500).json({ message: 'Server error' });
   }
 };
@@ -88,7 +89,7 @@ exports.getAllCoupons = async (req, res) => {
     const coupons = await Coupon.find();
     return res.status(200).json(coupons);
   } catch (error) {
-    console.log(error);
+    logger.error(error.message);
     return res.status(500).json({ message: 'Server error' });
   }
 };
@@ -173,7 +174,7 @@ exports.removeCoupon = async (req, res) => {
       return res.status(400).json({ message: 'You have not applied this coupon' });
     }
   } catch (error) {
-    console.log(error);
+    logger.error(error.message);
     return res.status(500).json({ message: 'Server error' });
   }
 };

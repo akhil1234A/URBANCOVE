@@ -1,6 +1,7 @@
 
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
+const logger = require('../utils/logger');
 
 
 const MAX_QUANTITY_PER_USER = 5; 
@@ -88,16 +89,13 @@ exports.removeFromCart = async (req, res) => {
     const { productId } = req.params;
     const userId = req.user.id;
 
-    // console.log('Product ID:', productId, 'User ID:', userId);
     try {
         
         const cartItem = await Cart.findOne({ userId, productId });
         if (!cartItem) {
-            // console.log('No cart item found for user:', userId, 'and product:', productId);
             return res.status(404).json({ message: 'Cart item not found' });
         }
 
-        // console.log('Cart item found:', cartItem);
 
       
         await Cart.findOneAndDelete({ userId, productId });
@@ -107,14 +105,14 @@ exports.removeFromCart = async (req, res) => {
         if (product) {
             product.stock += cartItem.quantity;
             await product.save();
-            console.log('Product stock updated:', product);
+            logger.info('Product stock updated:', product);
         } else {
-            console.log('Product not found for stock update');
+            logger.error('Product not found for stock update');
         }
 
         res.status(200).json({ message: 'Item removed from cart' });
     } catch (error) {
-        console.log('Error in removeFromCart:', error);
+        logger.error('Error in removeFromCart:', error);
         res.status(500).json({ message: error.message });
     }
 };

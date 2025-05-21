@@ -1,5 +1,6 @@
 const Category = require('../models/Category');
-const Product = require('../models/Product')
+const Product = require('../models/Product');
+const logger = require('../utils/logger');
 
 
 //Admin: Get All Categories
@@ -15,7 +16,7 @@ exports.listCategories = async (req, res) => {
 
     res.status(200).json(categories);
   } catch (error) {
-    console.log(error);
+    logger.error(error.message)
     res.status(500).json({ message: 'Server error', error });
   }
 };
@@ -46,7 +47,7 @@ exports.addCategory = async(req,res)=>{
     res.status(201).json({message:"new category added successfully",newCategory});
   }
   catch(error){
-    console.log(error);
+    logger.error(error.message);
     res.status(500).json({message: 'Server error', error: error.message});
   }
 
@@ -57,7 +58,7 @@ exports.addCategory = async(req,res)=>{
 exports.editCategory = async (req, res) => {
   const { category, isActive } = req.body;
 
-  console.log(isActive); 
+   
    if (!category || !category.trim()) {
     return res.status(400).json({ message: 'Category name is required' });
   }

@@ -1,4 +1,5 @@
 const { verifyToken } = require('../services/authService');
+const logger = require('../utils/logger');
 
 exports.adminAuth = (req, res, next) => {
    if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
@@ -13,7 +14,7 @@ exports.adminAuth = (req, res, next) => {
       req.admin = decoded;
       next();
    } catch (err) {
-      console.log('error',err)
+      logger.error('error',err.message)
       res.status(401).json({ message: 'Authentication failed' });
    }
 };

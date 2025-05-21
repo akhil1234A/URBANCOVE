@@ -6,12 +6,10 @@ const Product = require('../models/Product');
 //Admin: Add a Sub Category 
 exports.addSubCategory = async (req, res) => {
     const { subCategory, category} = req.body;
-    // console.log(req.body)
-    // console.log(category);
+
 
     try {
         const existingcategory = await Category.findById(category);
-        // console.log('category',category)
         if (!existingcategory) {
             return res.status(404).json({ message: 'Category not found' });
         }

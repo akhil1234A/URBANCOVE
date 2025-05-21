@@ -69,10 +69,10 @@ const ProductInfo = ({ productData, size, setSize, onAddToCart, onAddToWishlist 
   return (
     <div className="flex-1">
       <h1 className="font-medium text-2xl mt-2">{productData.productName}</h1>
-      <div className="flex item-center gap-1 mt-2">
+      {/* <div className="flex item-center gap-1 mt-2">
         <StarRating rating={4} />
         <p className="pl-2">(122)</p>
-      </div>
+      </div> */}
 
        {/* Display price with discount if applicable */}
        <p className="mt-5 text-3xl font-medium">
@@ -165,7 +165,6 @@ const Product = () => {
 
 
   useEffect(() => {
-    console.log('changed',productID);
     if (!productData) {
       dispatch(fetchProductsForUser({ page: 1, limit: 20}));
     } else if (productData.images) {
@@ -267,12 +266,12 @@ const Product = () => {
           >
             Description
           </b>
-          <p
+          {/* <p
             className="border px-5 py-3 text-sm cursor-pointer"
             onClick={() => setActiveSection('reviews')}
           >
             Reviews ({dummyReviews.length})
-          </p>
+          </p> */}
         </div>
         {activeSection === 'description' ? (
           <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">

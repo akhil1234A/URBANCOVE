@@ -1,12 +1,12 @@
 const Admin = require('../models/Admin');
 const User = require('../models/User');
 const { generateToken } = require('../services/authService');
+const logger = require('../utils/logger');
 
 
 //Admin : Login
 exports.login = async (req, res) => {
     const { email, password } = req.body;
-   //  console.log('req body',req.body)
 
     try {
        
@@ -23,7 +23,7 @@ exports.login = async (req, res) => {
      
         res.json({ token });
     } catch (error) {
-        console.log(error);
+        logger.error(error.message)
         res.status(500).json({ message: 'Server error', error });
     }
 };
@@ -53,17 +53,15 @@ exports.listUsers = async (req, res) => {
 //Admin: Block a User
 exports.blockUser = async(req,res)=>{
    try{
-      // console.log('Headers: ',req.headers);
       const user = await User.findById(req.params.id);
       if(!user) return res.status(404).json({message: 'User not found'});
 
       user.isActive = !user.isActive;
-      // console.log('debugging',user);
       await user.save();
 
       res.json({message: `User has been ${user.isActive? 'unblocked': 'blocked'}`, isActive: user.isActive});
    } catch(error){
-      console.log(error);
+      logger.error(error.message);
       res.status(500).json({message: `Server error: ${error}`});
    }
 }

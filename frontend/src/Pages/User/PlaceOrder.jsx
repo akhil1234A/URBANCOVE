@@ -191,16 +191,12 @@ useEffect(() => {
       );
   
       const { razorpayOrderId, amount, currency } = response.data;
-      // console.log("Razorpay order data:", response.data); 
-      // console.log(razorpayOrderId,'rx',);
-      // Step 2: Initialize Razorpay options
       const razorpayOptions = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount,
         currency,
         order_id: razorpayOrderId,
         handler: async (response) => {
-          // console.log("Razorpay response:", response); 
           const verifyData = {
             razorpayOrderId,
             razorpayPaymentId: response.razorpay_payment_id,
@@ -209,7 +205,6 @@ useEffect(() => {
             addressId: selectedAddress,
             totalAmount,
           };
-          // console.log("Sending to backend for verification:", verifyData);
           try {
             // Step 3: Verify the payment and finalize the order
             const verifyResponse = await userAxios.post(
@@ -228,7 +223,6 @@ useEffect(() => {
               toast.error("Payment verification failed.");
             }
           } catch (error) {
-            console.log(error);
             toast.error("Payment verification failed.");
           }
         }, modal: {
@@ -263,7 +257,6 @@ useEffect(() => {
       const razorpay = new window.Razorpay(razorpayOptions);
       razorpay.open();
     } catch (error) {
-      console.log(error);
       toast.error("Failed to initialize Razorpay order. Please try again.");
     }
   };
@@ -285,7 +278,6 @@ useEffect(() => {
       setCouponCode('');
       navigate('/success');
     } catch (error) {
-      console.log(error);
       toast.error(error.message || "Order placement failed. Try again.");
     }
   };
@@ -370,7 +362,6 @@ useEffect(() => {
       navigate('/success');
       toast.success("Order placed successfully using wallet balance!");
     } catch (error) {
-      console.log(error);
       toast.error(error.message || "Order placement failed. Try again.");
     }
   };

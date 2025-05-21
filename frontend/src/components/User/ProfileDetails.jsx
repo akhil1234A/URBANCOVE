@@ -35,7 +35,6 @@ const ProfileDetails = () => {
       return;
     }
 
-    console.log(newPassword)
 
     // Dispatch updatePassword action
     dispatch(updatePasswordThunk({ token, passwordData: { newPassword } }))

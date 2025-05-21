@@ -3,7 +3,8 @@ const Offer = require('../models/Offer');
 const fs = require('fs');
 const uploadToCloudinary = require('../utils/cloudinaryUploader')
 const Category = require('../models/Category');
-const SubCategory = require('../models/SubCategory')
+const SubCategory = require('../models/SubCategory');
+const logger = require('../utils/logger');
 
 
 const processImage = async (filePath) => {
@@ -296,12 +297,9 @@ exports.adminListProducts = async (req, res) => {
 // Admin: Add a New Product
 exports.addProduct = async (req, res) => {
     const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller } = req.body;
-    // console.log(req.body);
-    // console.log(req.files);
     try {
         if (req.files.length < 3) return res.status(400).json({ message: 'At least 3 images are required' });
         const images = await Promise.all(req.files.map(async (file) => await processImage(file.path)));
-        // console.log(images);
         const newProduct = new Product({ 
             productName, 
             productDescription, 
@@ -313,11 +311,10 @@ exports.addProduct = async (req, res) => {
             images, 
             isBestSeller 
         });
-        // console.log(newProduct);
         await newProduct.save();
         res.status(201).json(newProduct);
     } catch (error) {
-        console.log(error)
+        logger.error(error.message);
         res.status(500).json({ message: 'Server error', error });
     }
 };
@@ -406,19 +403,18 @@ exports.deleteProduct = async (req, res) => {
     }
 
     const { category, subCategory } = product;
-    console.log('Category:', category);
-    console.log('SubCategory:', subCategory);
+
 
     if (isActive) {
       if (!category?.isActive) {
-        console.log('Category is inactive');
+        logger.info('Category is inactive');
         return res.status(400).json({ 
           message: 'Cannot list product because the associated category is inactive.' 
         });
       }
 
       if (!subCategory?.isActive) {
-        console.log('SubCategory is inactive');
+        logger.info('SubCategory is inactive');
         return res.status(400).json({ 
           message: 'Cannot list product because the associated sub-category is inactive.' 
         });

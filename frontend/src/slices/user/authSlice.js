@@ -32,10 +32,8 @@ export const login = createAsyncThunk('auth/login', async (credentials, { reject
 });
 
 export const resendOtp = createAsyncThunk('auth/resendOtp', async (email, { rejectWithValue }) => {
-  console.log("Sending OTP to email:", email);
   try {
     const response = await resendUserOtp(email);
-    console.log("Resend OTP response:", response); 
     return response;
   } catch (error) {
     const errorMessage = error.response?.data?.message || 'Failed to resend OTP';

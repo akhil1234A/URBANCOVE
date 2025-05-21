@@ -1,4 +1,5 @@
 const Offer = require('../models/Offer'); 
+const logger = require('../utils/logger');
 
 // Admin: Create a new offer
 exports.createOffer = async (req, res) => {
@@ -93,7 +94,7 @@ exports.softDeleteOffer = async (req, res) => {
     offer: updatedOffer,
    })
   } catch (error) {
-    console.log(error)
+    logger.error(error.message);
     res.status(500).json({ message: 'Error toggling offer status', error });
   }
 };
@@ -110,7 +111,7 @@ exports.getOffer = async (req, res) => {
 
     res.status(200).json({ offer });
   } catch (error) {
-    console.log(error)
+    logger.error(error.message);
     res.status(500).json({ message: 'Error fetching offer', error });
   }
 };
