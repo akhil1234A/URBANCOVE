@@ -290,6 +290,11 @@ useEffect(() => {
       toast.error("Please select a delivery address.");
       return;
     }
+
+    if(finalTotal - deliveryFee == 0){
+      toast.error("Your cart is empty. Cannot place an order");
+      return; 
+    }
   
     if (method === "wallet") {
       await handleWalletOrder();
