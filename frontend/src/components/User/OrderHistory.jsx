@@ -178,7 +178,7 @@ const OrderHistory = () => {
                 <ul className="list-disc list-inside ml-4 mt-2 text-gray-600 space-y-1">
                   {order.items?.map((item, index) => (
                     <li key={index}>
-                      <span className="font-medium">{item.productId.productName}</span> - ₹{item.price} x {item.quantity}
+                      <span className="font-medium">{item.productId?.productName || "New Product-1"}</span> - ₹{item.price} x {item.quantity}
                     </li>
                   ))}
                 </ul>
