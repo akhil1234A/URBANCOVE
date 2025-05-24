@@ -36,7 +36,7 @@ exports.listUsers = async (req, res) => {
      const skip = (page - 1) * limit;
  
      const totalUsers = await User.countDocuments();
-     const users = await User.find().skip(skip).limit(limit);
+     const users = await User.find().select('_id name email password isActive isVerified').skip(skip).limit(limit);
  
      res.json({
        users,
