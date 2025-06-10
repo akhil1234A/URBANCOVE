@@ -18,7 +18,6 @@ const CouponList = () => {
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load coupons.');
         setLoading(false);
-        toast.error('Unable to fetch coupons');
       }
     };
     fetchCoupons();

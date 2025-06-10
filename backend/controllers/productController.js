@@ -358,6 +358,10 @@ exports.editProduct = async (req, res) => {
     // Combine existing and new images
     const finalImages = [...updatedImages, ...newImages];
 
+    if(finalImages.length == 0){
+      return res.status(400).json({message: "Select atleast one image"});
+    }
+
     // Update the product
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
@@ -369,7 +373,7 @@ exports.editProduct = async (req, res) => {
         ...(price && { price }),
         ...(stock && { stock }),
         ...(size && { size: Array.isArray(size) ? size : [size] }),
-        ...(finalImages.length > 0 && { images: finalImages }), // Set updated images explicitly
+        ...(finalImages.length > 0 && { images: finalImages }), 
         ...(typeof isBestSeller !== "undefined" && { isBestSeller }),
         ...(typeof isActive !== "undefined" && { isActive }),
       },

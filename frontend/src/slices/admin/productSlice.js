@@ -36,10 +36,16 @@ export const editProduct = createAsyncThunk(
     try {
       return await editProductService(productId, productData, token);
     } catch (error) {
-      return rejectWithValue(error.message);
+      const message =
+        error?.response?.data?.message || 
+        error?.message ||                 
+        "Something went wrong. Please try again.";
+
+      return rejectWithValue(message);
     }
   }
 );
+
 
 
 const productsSlice = createSlice({

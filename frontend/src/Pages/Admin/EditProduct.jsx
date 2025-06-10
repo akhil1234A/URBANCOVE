@@ -66,14 +66,7 @@ const EditProduct = () => {
     }
   }, [selectedCategory, dispatch]);
 
-  const handleSizeSelection = (size) => {
-    setSizes((prevSizes) => {
-      if (prevSizes.includes(size)) {
-        return prevSizes.filter((s) => s !== size);
-      }
-      return [...prevSizes, size];
-    });
-  };
+
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
@@ -86,6 +79,8 @@ const EditProduct = () => {
         return;
       }
 
+     
+
       const formData = new FormData();
       formData.append('productName', name);
       formData.append('productDescription', description);
@@ -96,6 +91,7 @@ const EditProduct = () => {
       formData.append('stock', stock);
       formData.append('size', selectedSize);
 
+      
 
       croppedImages.forEach((image, index) => {
         if (image) {
@@ -108,10 +104,13 @@ const EditProduct = () => {
         }
       });
 
+        
       formData.append('removeImages', JSON.stringify(removedImages.map(index => productData.images[index])));
+      
 
       const resultAction = await dispatch(editProduct({ productId, productData: formData, token }));
 
+      
       if (editProduct.fulfilled.match(resultAction)) {
         toast.success("Product updated successfully!");
         navigate('/admin/products/view');

@@ -343,12 +343,16 @@ const verifyPayment = async (req, res) => {
   
 };
 
-//User: Failed Orders in RazorPay
+/**
+ * Create Failed Order
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const createFailedOrder = async (req, res) => {
   const { razorpayOrderId, cartItems, addressId, totalAmount } = req.body;
   const userId = req.user.id;
   const shippingCharge = 40; 
-
   try {
     const address = await Address.findById(addressId);
     if (!address) {
