@@ -1,25 +1,24 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import orderService from '../../services/admin/orderService';
 
-
 export const placeOrder = createAsyncThunk(
   'orders/placeOrder',
   async (orderData, { rejectWithValue }) => {
     try {
       return await orderService.placeOrder(orderData);
     } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || error.message);
     }
   }
 );
 
 export const cancelOrder = createAsyncThunk(
   'orders/cancelOrder',
-  async (orderId, { rejectWithValue }) => {
+  async ({ orderId, cancellationReason }, { rejectWithValue }) => {
     try {
-      return await orderService.cancelOrder(orderId);
+      return await orderService.cancelOrder({ orderId, cancellationReason });
     } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || error.message);
     }
   }
 );
@@ -28,27 +27,34 @@ export const viewUserOrders = createAsyncThunk(
   'orders/viewUserOrders',
   async ({ page = 1, limit = 10 }, { rejectWithValue }) => {
     try {
-      const response = await orderService.viewUserOrders(page, limit);
-      return response;
+      return await orderService.viewUserOrders(page, limit);
     } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || error.message);
     }
   }
 );
 
-
+export const viewOrder = createAsyncThunk(
+  'orders/viewOrder',
+  async (orderId, { rejectWithValue }) => {
+    try {
+      return await orderService.viewOrder(orderId);
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || error.message);
+    }
+  }
+);
 
 export const viewAllOrders = createAsyncThunk(
-  "orders/viewAllOrders",
+  'orders/viewAllOrders',
   async ({ page = 1, limit = 10 }, { rejectWithValue }) => {
     try {
       return await orderService.viewAllOrders(page, limit);
     } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || error.message);
     }
   }
 );
-
 
 export const updateOrderStatus = createAsyncThunk(
   'orders/updateOrderStatus',
@@ -56,11 +62,10 @@ export const updateOrderStatus = createAsyncThunk(
     try {
       return await orderService.updateOrderStatus(orderId, status);
     } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || error.message);
     }
   }
 );
-
 
 const initialState = {
   orders: [],
@@ -69,12 +74,11 @@ const initialState = {
   error: null,
   successMessage: null,
   pagination: {
-    currentPage: 1,
+    page: 1,
     totalPages: 1,
     totalOrders: 0,
   },
 };
-
 
 const orderSlice = createSlice({
   name: 'orders',
@@ -89,21 +93,18 @@ const orderSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      
       .addCase(placeOrder.pending, (state) => {
         state.loading = true;
       })
       .addCase(placeOrder.fulfilled, (state, action) => {
         state.loading = false;
-        state.orders.push(action.payload);
+        state.orders.push(action.payload.order);
         state.successMessage = 'Order placed successfully';
       })
       .addCase(placeOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-
-      
       .addCase(cancelOrder.pending, (state) => {
         state.loading = true;
       })
@@ -113,48 +114,55 @@ const orderSlice = createSlice({
           (order) => order._id === action.payload.order._id
         );
         if (orderIndex !== -1) state.orders[orderIndex] = action.payload.order;
+        state.order = action.payload.order;
         state.successMessage = 'Order canceled successfully';
       })
       .addCase(cancelOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-
       .addCase(viewUserOrders.pending, (state) => {
         state.loading = true;
       })
       .addCase(viewUserOrders.fulfilled, (state, action) => {
         state.loading = false;
-        state.orders = action.payload.orders; 
-        state.pagination = {                 
-            currentPage: action.payload.currentPage,
-            totalPages: action.payload.totalPages,
-            totalOrders: action.payload.totalOrders,
+        state.orders = action.payload.orders;
+        state.pagination = {
+          page: action.payload.page,
+          totalPages: action.payload.totalPages,
+          totalOrders: action.payload.totalOrders,
         };
-    })    
+      })
       .addCase(viewUserOrders.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-
-  
+      .addCase(viewOrder.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(viewOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        state.order = action.payload.order;
+      })
+      .addCase(viewOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       .addCase(viewAllOrders.pending, (state) => {
         state.loading = true;
       })
       .addCase(viewAllOrders.fulfilled, (state, action) => {
         state.loading = false;
         state.orders = action.payload.orders;
-        state.pagination = { 
-          currentPage: action.payload.currentPage,
+        state.pagination = {
+          page: action.payload.page,
           totalPages: action.payload.totalPages,
-          totalOrders: action.payload.totalOrders,
-        };      })
+        };
+      })
       .addCase(viewAllOrders.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-
-      
       .addCase(updateOrderStatus.pending, (state) => {
         state.loading = true;
       })
@@ -164,6 +172,7 @@ const orderSlice = createSlice({
           (order) => order._id === action.payload.order._id
         );
         if (orderIndex !== -1) state.orders[orderIndex] = action.payload.order;
+        state.order = action.payload.order;
         state.successMessage = 'Order status updated successfully';
       })
       .addCase(updateOrderStatus.rejected, (state, action) => {

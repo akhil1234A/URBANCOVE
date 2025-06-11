@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   viewAllOrders,
-  cancelOrder,
   updateOrderStatus,
 } from "../../slices/admin/orderSlice";
 import { message } from "antd";
@@ -40,7 +39,6 @@ const Orders = () => {
   const handleStatusChange = (event, orderId) => {
     const newStatus = event.target.value;
 
-    // Find the current order
     const currentOrder = orders.find((order) => order._id === orderId);
     if (!currentOrder) {
       message.error("Order not found.");
@@ -57,7 +55,6 @@ const Orders = () => {
       return;
     }
 
-    // Dispatch the action if the transition is valid
     dispatch(updateOrderStatus({ orderId, status: newStatus }));
   };
 
@@ -79,7 +76,7 @@ const Orders = () => {
               />
               <p
                 className="mt-2 text-gray-500 text-xs sm:text-sm truncate"
-                title={`Order ID: ${order.orderReference}`} // Full ID on hover
+                title={`Order ID: ${order.orderReference}`}
               >
                 <strong>Order ID:</strong>
                 <br />
@@ -93,19 +90,22 @@ const Orders = () => {
                 {order.items.map((item, idx) => (
                   <p className="py-0.5" key={idx}>
                     {item?.productId?.productName || "Not Available"} x{" "}
-                    {item.quantity} <span> {item.size} </span>
+                    {item.quantity} <span>{item.size}</span>
                     {idx < order.items.length - 1 && ", "}
                   </p>
                 ))}
               </div>
               <p className="text-sm sm:text-[15px]">{`${order.user.name} (${order.user.email})`}</p>
-
-              {/* Delivery Address */}
               <div>
                 <p>{order.deliveryAddress.street}</p>
                 <p>{`${order.deliveryAddress.city}, ${order.deliveryAddress.state}, ${order.deliveryAddress.country}, ${order.deliveryAddress.postcode}`}</p>
               </div>
               <p>{order.deliveryAddress.phoneNumber}</p>
+              {order.status === 'Cancelled' && order.cancellationReason && (
+                <p className="text-red-600 mt-2">
+                  <strong>Cancellation Reason:</strong> {order.cancellationReason}
+                </p>
+              )}
             </div>
 
             {/* Payment and Order Details */}
@@ -140,7 +140,6 @@ const Orders = () => {
       </div>
       {/* Pagination */}
       <div className="pagination flex justify-center mt-4 space-x-2">
-        {/* Previous Button */}
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
@@ -152,16 +151,12 @@ const Orders = () => {
         >
           Previous
         </button>
-
-        {/* Current Page */}
         <button
           disabled
           className="py-2 px-4 rounded-lg bg-blue-500 text-white cursor-default"
         >
           {currentPage}
         </button>
-
-        {/* Next Button */}
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === pagination.totalPages}
