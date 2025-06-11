@@ -1,8 +1,15 @@
 const Coupon = require("../../models/Coupon");
 const User = require("../../models/User");
 const logger = require("../../utils/logger");
+const httpStatus = require("../../constants/httpStatus");
+const Messages = require("../../constants/messages");
 
-// Admin: Create a new coupon
+/**
+ * Admin: Create a new coupon
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.createCoupon = async (req, res) => {
   try {
     const {
@@ -19,7 +26,7 @@ exports.createCoupon = async (req, res) => {
     const couponExist = await Coupon.findOne({ code });
 
     if (couponExist)
-      return res.status(400).json({ message: "Coupon Already Exist" });
+      return res.status(httpStatus.BAD_REQUEST).json({ message: Messages.COUPON_EXISTS });
 
     const coupon = new Coupon({
       code,
@@ -33,14 +40,19 @@ exports.createCoupon = async (req, res) => {
     });
 
     await coupon.save();
-    return res.status(201).json(coupon);
+    return res.status(httpStatus.CREATED).json(coupon);
   } catch (error) {
     logger.error(error.message);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR });
   }
 };
 
-// Admin: Edit an existing coupon
+/**
+ * Admin: Edit an existing coupon
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.editCoupon = async (req, res) => {
   try {
     const { couponId } = req.params;
@@ -67,46 +79,56 @@ exports.editCoupon = async (req, res) => {
     );
 
     if (!coupon) {
-      return res.status(404).json({ message: "Coupon not found" });
+      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.COUPON_NOT_FOUND });
     }
 
-    return res.status(200).json(coupon);
+    return res.status(httpStatus.OK).json(coupon);
   } catch (error) {
     logger.error(error.message);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR });
   }
 };
 
-// Admin: Soft delete (mark as inactive) a coupon
+/**
+ * Admin: Delete a coupon (soft delete)
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.deleteCoupon = async (req, res) => {
   try {
     const { couponId } = req.params;
     const coupon = await Coupon.findById(couponId);
 
     if (!coupon) {
-      return res.status(404).json({ message: "Coupon not found" });
+      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.COUPON_NOT_FOUND });
     }
 
     coupon.isActive = !coupon.isActive;
     await coupon.save();
 
     return res
-      .status(200)
-      .json({ message: "Coupon deleted successfully", coupon });
+      .status(httpStatus.OK)
+      .json({ message: Messages.COUPON_DELETED, coupon });
   } catch (error) {
     logger.error(error.message);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR });
   }
 };
 
-// Admin: Get all coupons
+/**
+ * Admin: Get all coupons
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getAllCoupons = async (req, res) => {
   try {
     const coupons = await Coupon.find();
-    return res.status(200).json(coupons);
+    return res.status(httpStatus.OK).json(coupons);
   } catch (error) {
     logger.error(error.message);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR });
   }
 };
 

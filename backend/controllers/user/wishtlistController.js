@@ -1,8 +1,12 @@
 const Wishlist = require('../../models/Wishlist');
+const httpStatus = require('../../constants/httpStatus');
 
-
-
-//User: Add to Wishlist
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const addToWishlist = async (req, res) => {
   const { productId } = req.body;
   const userId = req.user.id;
@@ -12,7 +16,7 @@ const addToWishlist = async (req, res) => {
   // Check if the product is already in the wishlist
   const wishlist = await Wishlist.findOne({ userId });
   if (wishlist && wishlist.products.some((item) => item.productId.toString() === productId)) {
-    return res.status(400).json({ message: 'Product already in wishlist' });
+    return res.status(httpStatus.BAD_REQUEST).json({ message: 'Product already in wishlist' });
   }
 
   // Add product to wishlist
@@ -23,18 +27,23 @@ const addToWishlist = async (req, res) => {
     await Wishlist.create({ userId, products: [{ productId }] });
   }
 
-  res.status(200).json({ message: 'Product added to wishlist' });
+  res.status(httpStatus.OK).json({ message: 'Product added to wishlist' });
 };
 
 
-//User: Remove From Wishlist
+/**
+ * User: remove from wishlist
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const removeFromWishlist = async (req, res) => {
   const { productId } = req.params;
   const userId = req.user.id;
 
   const wishlist = await Wishlist.findOne({ userId });
   if (!wishlist) {
-    return res.status(404).json({ message: 'Wishlist not found' });
+    return res.status(httpStatus.NOT_FOUND).json({ message: 'Wishlist not found' });
   }
 
   wishlist.products = wishlist.products.filter(
@@ -44,10 +53,14 @@ const removeFromWishlist = async (req, res) => {
 
 
 
-  res.status(200).json({ message: 'Product removed from wishlist' });
+  res.status(httpStatus.OK).json({ message: 'Product removed from wishlist' });
 };
 
-//User: Get All Items from Wishlist
+/**
+ * User: Get All Items from Wishlist
+ * @param {*} req 
+ * @param {*} res 
+ */
 const getWishlist = async (req, res) => {
   const userId = req.user.id;
 
@@ -55,7 +68,7 @@ const getWishlist = async (req, res) => {
 
   
 
-  res.status(200).json(wishlist || { products: [] });
+  res.status(httpStatus.OK).json(wishlist || { products: [] });
 };
 
 module.exports = {addToWishlist, removeFromWishlist, getWishlist }

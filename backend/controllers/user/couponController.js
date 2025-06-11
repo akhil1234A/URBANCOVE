@@ -1,9 +1,16 @@
 const Coupon = require("../../models/Coupon");
 const User = require("../../models/User");
 const logger = require("../../utils/logger");
+const httpStatus = require("../../constants/httpStatus");
+const Messages = require("../../constants/messages");
 
 
-// User: Apply a coupon to the cart
+/**
+ * User: Apply a coupon to the cart
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.applyCoupon = async (req, res) => {
   try {
     const { couponCode, total: cartTotal } = req.body;
@@ -12,22 +19,22 @@ exports.applyCoupon = async (req, res) => {
     const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
 
     if (!coupon) {
-      return res.status(400).json({ message: "Coupon not found or inactive" });
+      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.COUPON_NOT_FOUND });
     }
 
     const currentDate = new Date();
     if (coupon.validUntil < currentDate) {
-      return res.status(400).json({ message: "Coupon has expired" });
+      return res.status(httpStatus.BAD_REQUEST).json({ message: Messages.COUPON_EXPIRED });
     }
 
     if (cartTotal < coupon.minPurchase) {
       return res
-        .status(400)
+        .status(httpStatus.BAD_REQUEST)
         .json({ message: `Minimum purchase amount is ₹${coupon.minPurchase}` });
     }
 
     if (coupon.usageCount >= coupon.usageLimit) {
-      return res.status(400).json({ message: "Coupon usage limit reached" });
+      return res.status(httpStatus.BAD_REQUEST).json({ message: "Coupon usage limit reached" });
     }
 
     const userCoupon = coupon.userUsage.find(
@@ -35,7 +42,7 @@ exports.applyCoupon = async (req, res) => {
     );
     if (userCoupon && userCoupon.count >= 1) {
       return res
-        .status(400)
+        .status(httpStatus.BAD_REQUEST)
         .json({
           message:
             "You have already used this coupon the maximum number of times",
@@ -61,15 +68,20 @@ exports.applyCoupon = async (req, res) => {
     await coupon.save();
 
     return res
-      .status(200)
+      .status(httpStatus.CREATED)
       .json({ message: "Coupon applied successfully", discount });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
-// User: Remove a coupon from the cart
+/**
+ * User: Remove a coupon from the cart
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.removeCoupon = async (req, res) => {
   try {
     const { couponCode } = req.body;
@@ -77,7 +89,7 @@ exports.removeCoupon = async (req, res) => {
 
     const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
     if (!coupon) {
-      return res.status(400).json({ message: "Coupon not found or inactive" });
+      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.COUPON_NOT_FOUND });
     }
 
     // Remove the user's usage record
@@ -88,19 +100,24 @@ exports.removeCoupon = async (req, res) => {
       coupon.userUsage.splice(userCouponIndex, 1);
       coupon.usageCount -= 1;
       await coupon.save();
-      return res.status(200).json({ message: "Coupon removed successfully" });
+      return res.status(httpStatus.OK).json({ message: "Coupon removed successfully" });
     } else {
       return res
-        .status(400)
+        .status(httpStatus.BAD_REQUEST)
         .json({ message: "You have not applied this coupon" });
     }
   } catch (error) {
     logger.error(error.message);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Server error" });
   }
 };
 
-//User: List Applicable Coupons
+/**
+ * User: List Applicable Coupons
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.listApplicableCoupons = async (req, res) => {
   try {
     const currentDate = new Date();
@@ -119,15 +136,15 @@ exports.listApplicableCoupons = async (req, res) => {
     }).select("-userUsage -usageCount -usageLimit");
 
     if (applicableCoupons.length === 0) {
-      return res.status(404).json({ message: "No applicable coupons found." });
+      return res.status(httpStatus.NOT_FOUND).json({ message: "No applicable coupons found." });
     }
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
       message: "Applicable coupons retrieved successfully.",
       coupons: applicableCoupons,
     });
   } catch (error) {
     console.error("Error fetching applicable coupons:", error);
-    res.status(500).json({ message: "Server error", error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Server error", error });
   }
 };

@@ -1,9 +1,14 @@
 const Transaction = require('../../models/Transaction')
 const razorpay = require('../../utils/Razorpay')
 const crypto = require('crypto');
+const httpStatus = require('../../constants/httpStatus');
 
 
-// User: Get wallet balance
+/**
+ * User: Get wallet balance
+ * @param {*} req 
+ * @param {*} res 
+ */
 const getWalletBalance = async (req, res) => {
   try {
     const { page = 1 } = req.query; 
@@ -27,7 +32,7 @@ const getWalletBalance = async (req, res) => {
       }
     });
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
       transactions,
       balance,
       currentPage: Number(page),
@@ -35,17 +40,23 @@ const getWalletBalance = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching wallet balance:", error);
-    res.status(500).json({ message: 'Failed to retrieve wallet balance' });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Failed to retrieve wallet balance' });
   }
 };
 
-// 1. Initiate Payment
+/**
+ * Initiate Add Money to Wallet
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
+
 const initiateAddMoney = async (req, res) => {
   try {
     const { amount } = req.body; // Amount in INR (e.g., 500)
 
     if (!amount || amount <= 0) {
-      return res.status(400).json({ message: 'Invalid amount' });
+      return res.status(httpStatus.BAD_REQUEST).json({ message: 'Invalid amount' });
     }
 
     const options = {
@@ -55,18 +66,23 @@ const initiateAddMoney = async (req, res) => {
     };
 
     const order = await razorpay.orders.create(options);
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
       success: true,
       orderId: order.id,
       amount: order.amount,
     });
   } catch (error) {
     console.error('Error initiating payment:', error);
-    res.status(500).json({ message: 'Failed to create order' });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Failed to create order' });
   }
 };
 
-// 2. Verify Payment
+/**
+ * User: Verify Add Money to Wallet
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const verifyAddMoney = async (req, res) => {
   try {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature, amount } = req.body;
@@ -91,15 +107,15 @@ const verifyAddMoney = async (req, res) => {
 
     await transaction.save();
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
       success: true,
       message: 'Payment successful and wallet updated',
       transaction,
     });
   } catch (error) {
     console.error('Error verifying payment:', error);
-    res.status(500).json({ message: 'Failed to verify payment' });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Failed to verify payment' });
   }
 };
 
-module.exports = { getWalletBalance, initiateAddMoney, verifyAddMoney  }
+module.exports = { getWalletBalance, initiateAddMoney, verifyAddMoney };

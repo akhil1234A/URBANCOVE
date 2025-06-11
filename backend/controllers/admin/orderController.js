@@ -86,9 +86,9 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
-    res.status(200).json({ message: "Order status updated successfully", order });
+    res.status(HttpStatus.OK).json({ message: Messages.ORDER_STATUS_UPDATED, order });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR });
   }
 };
 

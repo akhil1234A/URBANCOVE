@@ -2,11 +2,18 @@
 const Cart = require('../../models/Cart');
 const Product = require('../../models/Product');
 const logger = require('../../utils/logger');
+const httpStatus = require('../../constants/httpStatus');
+const Messages = require('../../constants/messages');
 
 
 const MAX_QUANTITY_PER_USER = 5; 
 
-// User: Add to cart
+/**
+ * User: Add to cart
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.addToCart = async (req, res) => {
     const { productId, quantity } = req.body;
     const userId = req.user.id;
@@ -14,20 +21,20 @@ exports.addToCart = async (req, res) => {
     try {
         const product = await Product.findById(productId);
         if (!product) {
-            return res.status(404).json({ message: 'Product not found' });
+            return res.status(httpStatus.NOT_FOUND).json({ message: Messages.PRODUCT_NOT_FOUND });
         }
 
         if (product.stock < quantity) {
-            return res.status(400).json({ message: 'Insufficient stock' });
+            return res.status(httpStatus.BAD_REQUEST).json({ message: Messages.INSUFFICIENT_STOCK });
         }
 
         let cartItem = await Cart.findOne({ userId, productId });
         if (cartItem) {
-            return res.status(400).json({ message: 'Product already in cart. Please update the quantity.' });
+            return res.status(httpStatus.BAD_REQUEST).json({ message: 'Product already in cart. Please update the quantity.' });
         }
 
         if (quantity > MAX_QUANTITY_PER_USER) {
-            return res.status(400).json({ message: `Maximum quantity per user for this product is ${MAX_QUANTITY_PER_USER}` });
+            return res.status(httpStatus.BAD_REQUEST).json({ message: `Maximum quantity per user for this product is ${MAX_QUANTITY_PER_USER}` });
         }
 
         cartItem = new Cart({
@@ -41,14 +48,19 @@ exports.addToCart = async (req, res) => {
         // product.stock -= quantity;
         // await product.save();
 
-        res.status(201).json({ message: 'Item added to cart', cartItem });
+        res.status(httpStatus.CREATED).json({ message: 'Item added to cart', cartItem });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
     }
 };
 
 
-// User: Update cart item quantity
+/**
+ * User: Update cart item quantity
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.updateCartItemQuantity = async (req, res) => {
     const { productId } = req.params;
     const { quantity } = req.body;
@@ -57,16 +69,16 @@ exports.updateCartItemQuantity = async (req, res) => {
     try {
         const cartItem = await Cart.findOne({ userId, productId });
         if (!cartItem) {
-            return res.status(404).json({ message: 'Cart item not found' });
+            return res.status(httpStatus.NOT_FOUND).json({ message: Messages.CART_ITEM_NOT_FOUND });
         }
 
         const product = await Product.findById(productId);
         if (!product || product.stock + cartItem.quantity < quantity) {
-            return res.status(400).json({ message: 'Insufficient stock' });
+            return res.status(httpStatus.BAD_REQUEST).json({ message: Messages.INSUFFICIENT_STOCK });
         }
 
         if (quantity > MAX_QUANTITY_PER_USER) {
-            return res.status(400).json({ message: `Maximum quantity per user for this product is ${MAX_QUANTITY_PER_USER}` });
+            return res.status(httpStatus.BAD_REQUEST).json({ message: `Maximum quantity per user for this product is ${MAX_QUANTITY_PER_USER}` });
         }
 
         // Adjust stock based on quantity change
@@ -76,15 +88,20 @@ exports.updateCartItemQuantity = async (req, res) => {
         cartItem.quantity = quantity;
         await cartItem.save();
 
-        res.status(200).json({ message: 'Cart item updated', cartItem });
+        res.status(httpStatus.OK).json({ message: 'Cart item updated', cartItem });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
     }
 };
 
 
 
-// User: Remove from cart
+/**
+ * User: Remove from cart
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.removeFromCart = async (req, res) => {
     const { productId } = req.params;
     const userId = req.user.id;
@@ -93,7 +110,7 @@ exports.removeFromCart = async (req, res) => {
         
         const cartItem = await Cart.findOne({ userId, productId });
         if (!cartItem) {
-            return res.status(404).json({ message: 'Cart item not found' });
+            return res.status(httpStatus.NOT_FOUND).json({ message: Messages.CART_ITEM_NOT_FOUND });
         }
 
 
@@ -110,14 +127,18 @@ exports.removeFromCart = async (req, res) => {
             logger.error('Product not found for stock update');
         }
 
-        res.status(200).json({ message: 'Item removed from cart' });
+        res.status(httpStatus.OK).json({ message: 'Item removed from cart' });
     } catch (error) {
         logger.error('Error in removeFromCart:', error);
-        res.status(500).json({ message: error.message });
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
     }
 };
 
-// User: Get all cart items for a user
+/**
+ * User: Get all cart items for a user
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.getUserCart = async (req, res) => {
     const userId = req.user.id;
 
@@ -137,9 +158,9 @@ exports.getUserCart = async (req, res) => {
             isActive:item.productId.isActive
         }));
 
-       
-        res.status(200).json({ cartItems: formattedCartItems });
+
+        res.status(httpStatus.OK).json({ cartItems: formattedCartItems });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
     }
 };

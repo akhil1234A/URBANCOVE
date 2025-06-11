@@ -3,9 +3,17 @@ const moment = require('moment');
 const User = require('../../models/User');
 const Product = require('../../models/Product');
 const Category = require('../../models/SubCategory');
+const httpStatus = require('../../constants/httpStatus');
+const Messages = require('../../constants/messages');
 
 
-// Middleware to validate input
+/**
+ * Middleware to validate input for sales report generation
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * @returns 
+ */
 const validateInput = (req, res, next) => {
   const { startDate, endDate, period } = req.body;
 
@@ -20,7 +28,13 @@ const validateInput = (req, res, next) => {
   next();
 };
 
-// Helper function to build match criteria
+/**
+ * Helper function to build match criteria for sales report
+ * @param {*} startDate 
+ * @param {*} endDate 
+ * @param {*} period 
+ * @returns 
+ */
 const buildMatchCriteria = (startDate, endDate, period) => {
   const matchCriteria = { status: { $nin: ['Returned', 'Cancelled'] } };
 
@@ -56,7 +70,12 @@ const buildMatchCriteria = (startDate, endDate, period) => {
 
 
 
-// Admin: Sales Report 
+/**
+ * Generate Sales Report
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const generateSalesReport = async (req, res) => {
   const { startDate, endDate, period } = req.body;
 
@@ -71,7 +90,7 @@ const generateSalesReport = async (req, res) => {
       .lean(); 
    
     if (!allOrders.length) {
-      return res.status(200).json({ message: 'No sales data found for this period.' });
+      return res.status(httpStatus.NOT_FOUND).json({ message: 'No sales data found for this period.' });
     }
 
     // Initialize variables to calculate totals
@@ -91,7 +110,7 @@ const generateSalesReport = async (req, res) => {
       });
     });
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
       salesSummary: {
         totalProductsSold: totalQuantities,
         totalAmount: totalAmount.toFixed(2),  
@@ -102,14 +121,17 @@ const generateSalesReport = async (req, res) => {
     });
   } catch (error) {
     console.error('Error generating sales report:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR });
   }
 };
 
 
 
-
-//Admin: Dashboard Counters
+/**
+ * Admin: Dashboard Counters
+ * @param {*} req 
+ * @param {*} res 
+ */
 const counters = async (req,res)=>{
   const users = await User.find({isActive:true}).countDocuments();
   const orders = await Order.find().countDocuments();
@@ -125,7 +147,11 @@ const counters = async (req,res)=>{
 }
 
 
-//Admin: Dashboard Chart
+/**
+ * Admin Dashboard: Order Chart
+ * @param {*} req 
+ * @param {*} res 
+ */
 const getOrdersChart = async (req, res) => {
   try {
     const { period } = req.query;
@@ -184,12 +210,12 @@ const getOrdersChart = async (req, res) => {
       }
     });
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
       success: true,
       data: transformedData,
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Failed to fetch orders chart data',
       error: error.message,
@@ -198,7 +224,11 @@ const getOrdersChart = async (req, res) => {
 };
 
 
-//Admin: Top Selling Products
+/**
+ * Admin: Top Selling Products
+ * @param {*} req 
+ * @param {*} res 
+ */
 const getTopSellingProducts = async (req, res) => {
   try {
     const topSellingProducts = await Order.aggregate([
@@ -229,20 +259,24 @@ const getTopSellingProducts = async (req, res) => {
       },
     ]);
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
       success: true,
       data: topSellingProducts,
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: 'Failed to fetch top-selling products',
+      message: Messages.FAILED_TO_FETCH_TOP_PRODUCTS,
       error: error.message,
     });
   }
 };
 
-//Admin: Top Selling Categories 
+/**
+ * Admin: Top Selling Categories
+ * @param {*} req 
+ * @param {*} res 
+ */
 const getTopSellingCategories = async (req, res) => {
   try {
     const topSellingCategories = await Order.aggregate([
@@ -296,14 +330,14 @@ const getTopSellingCategories = async (req, res) => {
       },
     ]);
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
       success: true,
       data: topSellingCategories,
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: 'Failed to fetch top-selling categories',
+      message: Messages.FAILED_TO_FETCH_TOP_CATEGORIES,
       error: error.message,
     });
   }

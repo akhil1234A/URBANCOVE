@@ -31,11 +31,15 @@ exports.login = async (req, res) => {
         res.json({ token });
     } catch (error) {
         logger.error(error.message)
-        res.status(500).json({ message: 'Server error', error });
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
     }
 };
 
-//Admin : List All Users
+/**
+ * List all users with pagination 
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.listUsers = async (req, res) => {
    try {
      const page = parseInt(req.query.page) || 1; 
@@ -52,16 +56,21 @@ exports.listUsers = async (req, res) => {
        totalUsers,
      });
    } catch (error) {
-     res.status(500).json({ message: 'Server error' });
+     res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR });
    }
  };
  
 
-//Admin: Block a User
+/**
+ * Admin Block or Unblock a user
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.blockUser = async(req,res)=>{
    try{
       const user = await User.findById(req.params.id);
-      if(!user) return res.status(404).json({message: 'User not found'});
+      if(!user) return res.status(httpStatus.NOT_FOUND).json({message: Messages.USER_NOT_FOUND});
 
       user.isActive = !user.isActive;
       await user.save();
@@ -69,6 +78,6 @@ exports.blockUser = async(req,res)=>{
       res.json({message: `User has been ${user.isActive? 'unblocked': 'blocked'}`, isActive: user.isActive});
    } catch(error){
       logger.error(error.message);
-      res.status(500).json({message: `Server error: ${error}`});
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message: Messages.SERVER_ERROR});
    }
 }
