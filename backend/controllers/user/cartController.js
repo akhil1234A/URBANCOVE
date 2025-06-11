@@ -1,7 +1,7 @@
 
-const Cart = require('../models/Cart');
-const Product = require('../models/Product');
-const logger = require('../utils/logger');
+const Cart = require('../../models/Cart');
+const Product = require('../../models/Product');
+const logger = require('../../utils/logger');
 
 
 const MAX_QUANTITY_PER_USER = 5; 

@@ -1,10 +1,10 @@
-const Product = require('../models/Product');
-const Offer = require('../models/Offer');
+const Product = require('../../models/Product');
+const Offer = require('../../models/Offer');
 const fs = require('fs');
-const uploadToCloudinary = require('../utils/cloudinaryUploader')
-const Category = require('../models/Category');
-const SubCategory = require('../models/SubCategory');
-const logger = require('../utils/logger');
+const uploadToCloudinary = require('../../utils/cloudinaryUploader')
+const Category = require('../../models/Category');
+const SubCategory = require('../../models/SubCategory');
+const logger = require('../../utils/logger');
 
 
 const processImage = async (filePath) => {

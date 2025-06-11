@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addAddress, getUserAddresses, updateAddress, deleteAddress } = require('../controllers/addressController')
+const { addAddress, getUserAddresses, updateAddress, deleteAddress } = require('../controllers/user/addressController')
 const authenticateUser  = require('../middlewares/authenticate')
 
 //User: Address Management Routes

@@ -1,5 +1,5 @@
 const express = require('express');
-const { addSubCategory, listSubCategories, editSubCategory, deleteSubCategory } = require('../controllers/subCategoryController');
+const { addSubCategory, listSubCategories, editSubCategory, deleteSubCategory } = require('../controllers/admin/subCategoryController');
 const router = express.Router();
 const {adminAuth} = require('../middlewares/authMiddleware')
 

@@ -1,5 +1,5 @@
-const Offer = require('../models/Offer'); 
-const logger = require('../utils/logger');
+const Offer = require('../../models/Offer'); 
+const logger = require('../../utils/logger');
 
 // Admin: Create a new offer
 exports.createOffer = async (req, res) => {

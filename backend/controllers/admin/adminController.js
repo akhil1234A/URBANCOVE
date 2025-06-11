@@ -1,22 +1,29 @@
-const Admin = require('../models/Admin');
-const User = require('../models/User');
-const { generateToken } = require('../services/authService');
-const logger = require('../utils/logger');
+const Admin = require('../../models/Admin');
+const User = require('../../models/User');
+const { generateToken } = require('../../services/authService');
+const logger = require('../../utils/logger');
+const httpStatus = require('../../constants/httpStatus');
+const Messages = require('../../constants/messages');
 
 
-//Admin : Login
+/**
+ * Admin Login 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
        
         const admin = await Admin.findOne({ email });
-        if (!admin) return res.status(400).json({ message: 'Admin not found' });
+        if (!admin) return res.status(httpStatus.BAD_REQUEST).json({ message: Messages.ADMIN_NOT_FOUND });
 
 
         const isMatch = await admin.comparePassword(password);
- 
-        if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+
+        if (!isMatch) return res.status(httpStatus.BAD_REQUEST).json({ message: Messages.INVALID_CREDENTIALS });
 
         
         const token = generateToken({ id: admin._id, role: 'admin' });

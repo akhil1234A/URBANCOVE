@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const cartController = require('../controllers/cartController');
+const cartController = require('../controllers/user/cartController');
 const authenticateUser  = require('../middlewares/authenticate')
 
 //User: Cart Management Routes

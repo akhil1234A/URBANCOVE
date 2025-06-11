@@ -1,5 +1,5 @@
-const Transaction = require('../models/Transaction')
-const razorpay = require('../utils/Razorpay')
+const Transaction = require('../../models/Transaction')
+const razorpay = require('../../utils/Razorpay')
 const crypto = require('crypto');
 
 

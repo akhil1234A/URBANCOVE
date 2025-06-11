@@ -1,8 +1,8 @@
-const Order = require('../models/Order');
+const Order = require('../../models/Order');
 const moment = require('moment');
-const User = require('../models/User');
-const Product = require('../models/Product');
-const Category = require('../models/SubCategory');
+const User = require('../../models/User');
+const Product = require('../../models/Product');
+const Category = require('../../models/SubCategory');
 
 
 // Middleware to validate input

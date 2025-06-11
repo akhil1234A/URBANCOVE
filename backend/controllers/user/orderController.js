@@ -1,11 +1,11 @@
-const Order = require("../models/Order");
-const Product = require("../models/Product");
-const Address = require("../models/Address");
-const Cart = require("../models/Cart");
-const Transaction = require('../models/Transaction');
-const razorpayInstance = require("../utils/Razorpay");
+const Order = require("../../models/Order");
+const Product = require("../../models/Product");
+const Address = require("../../models/Address");
+const Cart = require("../../models/Cart");
+const Transaction = require('../../models/Transaction');
+const razorpayInstance = require("../../utils/Razorpay");
 const crypto = require('crypto');
-const logger = require("../utils/logger");
+const logger = require("../../utils/logger");
 
 // User: Place an Order
 const placeOrder = async (req, res) => {
@@ -388,88 +388,11 @@ const createFailedOrder = async (req, res) => {
   }
 };
 
-// Admin: View All Orders
-const viewAllOrders = async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
 
-    const totalOrders = await Order.countDocuments();
-    const orders = await Order.find()
-      .skip(skip)
-      .limit(limit)
-      .populate("user", "name email")
-      .populate("items.productId", "productName")
-      .sort({ placedAt: -1 });
-
-    res.status(200).json({
-      orders,
-      currentPage: page,
-      totalPages: Math.ceil(totalOrders / limit),
-      totalOrders,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Admin: Update Order Status
-const updateOrderStatus = async (req, res) => {
-  const { orderId } = req.params;
-  const { status } = req.body;
-
-  try {
-    const order = await Order.findById(orderId)
-      .populate("user", "name email")
-      .populate("items.productId", "productName");
-
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    if (
-      status === "Cancelled" &&
-      (order.status === "Shipped" || order.status === "Delivered")
-    ) {
-      return res.status(400).json({
-        message: "Cannot cancel an order that is already shipped or delivered",
-      });
-    }
-
-    order.status = status;
-
-    if (status === "Cancelled") {
-      for (let item of order.items) {
-        await Product.findByIdAndUpdate(item.productId, {
-          $inc: { stock: item.quantity },
-        });
-      }
-    }
-
-    await order.save();
-
-    if (order.status === 'Cancelled' && order.paymentStatus === 'Refunded') {
-      await Transaction.create({
-        userId: order.user,
-        type: "credit",
-        amount: order.totalAmount,
-        description: `Refund for returned order ${order.orderReference}`,
-        date: new Date(),
-      });
-    }
-
-    res.status(200).json({ message: "Order status updated successfully", order });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
 module.exports = {
   placeOrder,
   cancelOrder,
-  viewAllOrders,
-  updateOrderStatus,
   viewUserOrders,
   verifyPayment,
   createRazorpayOrder,

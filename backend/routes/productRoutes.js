@@ -1,5 +1,5 @@
 const express = require('express');
-const { addProduct, editProduct, listProducts, deleteProduct, adminListProducts, getLatestProducts, getBestSellerProducts } = require('../controllers/productController');
+const { addProduct, editProduct, listProducts, deleteProduct, adminListProducts, getLatestProducts, getBestSellerProducts } = require('../controllers/admin/productController');
 const { adminAuth } = require('../middlewares/authMiddleware');
 const multer = require('multer');  
 

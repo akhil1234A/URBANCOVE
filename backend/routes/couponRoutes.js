@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const couponController = require('../controllers/CouponController');
+const couponController = require('../controllers/admin/CouponController');
+const couponUserController = require('../controllers/user/couponController')
 const {adminAuth} = require('../middlewares/authMiddleware')
 const userAuth = require('../middlewares/authenticate')
 
@@ -13,9 +14,9 @@ router.get('/',adminAuth,couponController.getAllCoupons);
 
 
 //User: Coupon Apply and Remove
-router.post('/apply',userAuth, couponController.applyCoupon);
-router.post('/remove',userAuth, couponController.removeCoupon);
-router.get('/list', userAuth, couponController.listApplicableCoupons);
+router.post('/apply',userAuth, couponUserController.applyCoupon);
+router.post('/remove',userAuth, couponUserController.removeCoupon);
+router.get('/list', userAuth, couponUserController.listApplicableCoupons);
 
 
 module.exports = router;
