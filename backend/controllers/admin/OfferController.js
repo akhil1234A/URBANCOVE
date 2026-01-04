@@ -1,4 +1,4 @@
-const Offer = require('../../models/Offer'); 
+const offerService = require('../../services/offer.service');
 const logger = require('../../utils/logger');
 const httpStatus = require('../../constants/httpStatus');
 const Messages = require('../../constants/messages');
@@ -10,34 +10,18 @@ const Messages = require('../../constants/messages');
  */
 exports.createOffer = async (req, res) => {
   try {
-    const {
-      name, 
-      offerType, 
-      selectedItems, 
-      discountType, 
-      discountValue, 
-      startDate, 
-      endDate 
-    } = req.body;
-  
-
-    const newOffer = new Offer({
-      name,
-      type: offerType,
-      categories: offerType === 'category' ? selectedItems : [],
-      products: offerType === 'product' ? selectedItems : [],
-      discountType,
-      discountValue,
-      startDate,
-      endDate,
-      isActive: true,
+    const offer = await offerService.createOffer(req.body);
+    res.status(httpStatus.CREATED).json({
+      message: Messages.OFFER_ADDED,
+      offer,
     });
-
-    
-    await newOffer.save();
-    res.status(httpStatus.CREATED).json({ message: Messages.OFFER_ADDED, offer: newOffer });
   } catch (error) {
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
+    logger.error(error);
+    res.status(httpStatus.BAD_REQUEST).json({
+      message: error.message === 'OFFER_NOT_FOUND'
+        ? Messages.OFFER_NOT_FOUND
+        : error.message,
+    });
   }
 };
 
@@ -49,69 +33,44 @@ exports.createOffer = async (req, res) => {
  */
 exports.editOffer = async (req, res) => {
   try {
-    const { offerId } = req.params;
-    const {
-      name,
-      type,
-      categories,
-      products,
-      discountType,
-      discountValue,
-      startDate,
-      endDate,
-      isActive,
-    } = req.body;
-
-    const updatedOffer = await Offer.findByIdAndUpdate(
-      offerId,
-      {
-        name,
-        type,
-        categories,
-        products,
-        discountType,
-        discountValue,
-        startDate,
-        endDate,
-        isActive,
-      },
-      { new: true } 
-    );
-
-    if (!updatedOffer) {
-      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.OFFER_NOT_FOUND });
-    }
-
-    res.status(httpStatus.OK).json({ message: Messages.OFFER_UPDATED_SUCCESSFULLY, offer: updatedOffer });
+    const offer = await offerService.updateOffer(req.params.offerId, req.body);
+    res.status(httpStatus.OK).json({
+      message: Messages.OFFER_UPDATED_SUCCESSFULLY,
+      offer,
+    });
   } catch (error) {
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
+    logger.error(error);
+    res.status(
+      error.message === 'OFFER_NOT_FOUND'
+        ? httpStatus.NOT_FOUND
+        : httpStatus.BAD_REQUEST
+    ).json({
+      message:
+        error.message === 'OFFER_NOT_FOUND'
+          ? Messages.OFFER_NOT_FOUND
+          : error.message,
+    });
   }
 };
 
 /**
- * Admin: Soft delete (activate/deactivate) an offer
+ * Admin: (activate/deactivate) an offer
  * @param {*} req 
  * @param {*} res 
  * @returns 
  */
-exports.softDeleteOffer = async (req, res) => {
+exports.toggleOfferStatus = async (req, res) => {
   try {
-    const { offerId } = req.params;
-
-
-    const offer = await Offer.findById(offerId);
-    if(!offer){
-      return res.status(httpStatus.NOT_FOUND).json({message: Messages.OFFER_NOT_FOUND});
-    }
-    offer.isActive = !offer.isActive; 
-    const updatedOffer = await offer.save();
+    const offer = await offerService.toggleOfferStatus(req.params.offerId);
     res.status(httpStatus.OK).json({
-    message: `Offer ${updatedOffer.isActive ? 'activated' : 'deactivated'} successfully`,
-    offer: updatedOffer,
-   })
+      message: `Offer ${offer.isActive ? 'activated' : 'deactivated'} successfully`,
+      offer,
+    });
   } catch (error) {
-    logger.error(error.message);
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
+    logger.error(error);
+    res.status(httpStatus.NOT_FOUND).json({
+      message: Messages.OFFER_NOT_FOUND,
+    });
   }
 };
 
@@ -123,17 +82,13 @@ exports.softDeleteOffer = async (req, res) => {
  */
 exports.getOffer = async (req, res) => {
   try {
-    const { offerId } = req.params;
-    const offer = await Offer.findById(offerId).populate('categories products');
-
-    if (!offer) {
-      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.OFFER_NOT_FOUND });
-    }
-
+    const offer = await offerService.getOfferById(req.params.offerId);
     res.status(httpStatus.OK).json({ offer });
   } catch (error) {
-    logger.error(error.message);
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
+    logger.error(error);
+    res.status(httpStatus.NOT_FOUND).json({
+      message: Messages.OFFER_NOT_FOUND,
+    });
   }
 };
 
@@ -142,14 +97,14 @@ exports.getOffer = async (req, res) => {
  * @param {*} req 
  * @param {*} res 
  */
-exports.listOffers = async (req, res) => {
+exports.listOffers = async (_req, res) => {
   try {
-    const offers = await Offer.find()
-      .populate('categories products')
-      .sort({ startDate: -1 }); 
-
+    const offers = await offerService.listOffers();
     res.status(httpStatus.OK).json({ offers });
   } catch (error) {
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
+    logger.error(error);
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+      message: Messages.SERVER_ERROR,
+    });
   }
 };
