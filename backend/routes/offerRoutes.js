@@ -6,7 +6,7 @@ const {adminAuth} = require('../middlewares/authMiddleware');
 // Admin: Offer Management
 router.post('/', adminAuth, offerController.createOffer); 
 router.put('/:offerId', adminAuth, offerController.editOffer); 
-router.patch('/:offerId', adminAuth, offerController.softDeleteOffer); 
+router.patch('/:offerId', adminAuth, offerController.toggleOfferStatus); 
 router.get('/:offerId', adminAuth, offerController.getOffer); 
 router.get('/', adminAuth, offerController.listOffers); 
 
