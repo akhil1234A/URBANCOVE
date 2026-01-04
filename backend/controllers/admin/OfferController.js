@@ -1,7 +1,13 @@
-const Offer = require('../models/Offer'); 
-const logger = require('../utils/logger');
+const Offer = require('../../models/Offer'); 
+const logger = require('../../utils/logger');
+const httpStatus = require('../../constants/httpStatus');
+const Messages = require('../../constants/messages');
 
-// Admin: Create a new offer
+/**
+ * Admin: Create a new offer
+ * @param {q} req 
+ * @param {*} res 
+ */
 exports.createOffer = async (req, res) => {
   try {
     const {
@@ -29,13 +35,18 @@ exports.createOffer = async (req, res) => {
 
     
     await newOffer.save();
-    res.status(201).json({ message: 'Offer created successfully', offer: newOffer });
+    res.status(httpStatus.CREATED).json({ message: Messages.OFFER_ADDED, offer: newOffer });
   } catch (error) {
-    res.status(500).json({ message: 'Error creating offer', error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
   }
 };
 
-// Admin: Edit an existing offer
+/**
+ * Admin: Edit an existing offer
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.editOffer = async (req, res) => {
   try {
     const { offerId } = req.params;
@@ -68,16 +79,21 @@ exports.editOffer = async (req, res) => {
     );
 
     if (!updatedOffer) {
-      return res.status(404).json({ message: 'Offer not found' });
+      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.OFFER_NOT_FOUND });
     }
 
-    res.status(200).json({ message: 'Offer updated successfully', offer: updatedOffer });
+    res.status(httpStatus.OK).json({ message: Messages.OFFER_UPDATED_SUCCESSFULLY, offer: updatedOffer });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating offer', error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
   }
 };
 
-// Admin: Soft delete an offer (set isActive to false)
+/**
+ * Admin: Soft delete (activate/deactivate) an offer
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.softDeleteOffer = async (req, res) => {
   try {
     const { offerId } = req.params;
@@ -85,46 +101,55 @@ exports.softDeleteOffer = async (req, res) => {
 
     const offer = await Offer.findById(offerId);
     if(!offer){
-      return res.status(404).json({message: 'Offer not found'});
+      return res.status(httpStatus.NOT_FOUND).json({message: Messages.OFFER_NOT_FOUND});
     }
     offer.isActive = !offer.isActive; 
     const updatedOffer = await offer.save();
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
     message: `Offer ${updatedOffer.isActive ? 'activated' : 'deactivated'} successfully`,
     offer: updatedOffer,
    })
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ message: 'Error toggling offer status', error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
   }
 };
 
-// Admin: Get offer details
+/**
+ * Admin: Get details of a specific offer
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getOffer = async (req, res) => {
   try {
     const { offerId } = req.params;
     const offer = await Offer.findById(offerId).populate('categories products');
 
     if (!offer) {
-      return res.status(404).json({ message: 'Offer not found' });
+      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.OFFER_NOT_FOUND });
     }
 
-    res.status(200).json({ offer });
+    res.status(httpStatus.OK).json({ offer });
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ message: 'Error fetching offer', error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
   }
 };
 
-// Admin: List all offers (active or inactive)
+/**
+ * Admin: List all offers
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.listOffers = async (req, res) => {
   try {
     const offers = await Offer.find()
       .populate('categories products')
       .sort({ startDate: -1 }); 
 
-    res.status(200).json({ offers });
+    res.status(httpStatus.OK).json({ offers });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching offers', error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
   }
 };

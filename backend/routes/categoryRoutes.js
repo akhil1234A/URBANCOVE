@@ -1,7 +1,7 @@
 const express = require('express');
-const {addCategory, editCategory, listCategories, deleteCategory} = require('../controllers/categoryController')
+const {addCategory, editCategory, listCategories, deleteCategory} = require('../controllers/admin/categoryController')
 const {adminAuth} = require('../middlewares/authMiddleware');
-const {listSubCategories} = require('../controllers/subCategoryController')
+const {listSubCategories} = require('../controllers/admin/subCategoryController')
 const router = express.Router();
 
 //Admin: Category management Routes

@@ -1,13 +1,20 @@
-const Order = require("../models/Order");
-const Product = require("../models/Product");
-const Address = require("../models/Address");
-const Cart = require("../models/Cart");
-const Transaction = require('../models/Transaction');
-const razorpayInstance = require("../utils/Razorpay");
+const Order = require("../../models/Order");
+const Product = require("../../models/Product");
+const Address = require("../../models/Address");
+const Cart = require("../../models/Cart");
+const Transaction = require('../../models/Transaction');
+const razorpayInstance = require("../../utils/Razorpay");
 const crypto = require('crypto');
-const logger = require("../utils/logger");
+const logger = require("../../utils/logger");
+const httpStatus = require("../../constants/httpStatus");
+const Messages = require("../../constants/messages");
 
-// User: Place an Order
+/**
+ * User: Place an Order
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const placeOrder = async (req, res) => {
   const { addressId, paymentMethod, cartItems, totalAmount } = req.body;
   const userId = req.user.id;
@@ -15,22 +22,22 @@ const placeOrder = async (req, res) => {
 
   try {
     if (paymentMethod === 'cod' && totalAmount > 1000) {
-      return res.status(400).json({ message: "Order above Rs 1000 should not be allowed for COD" });
+      return res.status(httpStatus.BAD_REQUEST).json({ message: "Order above Rs 1000 should not be allowed for COD" });
     }
 
     if (!cartItems || cartItems.length === 0) {
-      return res.status(400).json({ message: "No items in the order" });
+      return res.status(httpStatus.BAD_REQUEST).json({ message: "No items in the order" });
     }
 
     const address = await Address.findById(addressId);
     if (!address) {
-      return res.status(400).json({ message: "Invalid delivery address" });
+      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.ADDRESS_NOT_FOUND });
     }
 
     for (let item of cartItems) {
       const product = await Product.findById(item.productId);
       if (!product || product.stock < item.quantity) {
-        return res.status(400).json({
+        return res.status(httpStatus.NOT_FOUND).json({
           message: `Product ${item.productId} is out of stock or unavailable`,
         });
       }
@@ -71,14 +78,19 @@ const placeOrder = async (req, res) => {
 
     await Cart.deleteMany({ userId });
 
-    res.status(201).json({ message: 'Order placed successfully', order: newOrder });
+    res.status(httpStatus.CREATED).json({ message: 'Order placed successfully', order: newOrder });
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ message: error.message });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
   }
 };
 
-// User: View All Orders
+/**
+ * User: View All Orders
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const viewUserOrders = async (req, res) => {
   const userId = req.user.id;
   const { page = 1, limit = 10 } = req.query;
@@ -97,23 +109,28 @@ const viewUserOrders = async (req, res) => {
     ]);
 
     if (!orders.length) {
-      return res.status(404).json({ message: "No orders found for this user" });
+      return res.status(httpStatus.NOT_FOUND).json({ message: "No orders found for this user" });
     }
 
     const totalPages = Math.ceil(totalOrders / limit);
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
       orders,
       currentPage: Number(page),
       totalPages,
       totalOrders,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
   }
 };
 
-// User: Cancel An Order
+/**
+ * User: Cancel An Order
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const cancelOrder = async (req, res) => {
   const { orderId } = req.params;
   const { cancellationReason } = req.body; 
@@ -125,11 +142,11 @@ const cancelOrder = async (req, res) => {
       .populate("user", "name email");
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.ORDER_NOT_FOUND });
     }
 
     if (order.status !== "Pending") {
-      return res.status(400).json({ message: "Order cannot be canceled, it is already processed" });
+      return res.status(httpStatus.BAD_REQUEST).json({ message: "Order cannot be canceled, it is already processed" });
     }
 
     order.status = "Cancelled";
@@ -154,13 +171,18 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    res.status(200).json({ message: "Order canceled successfully", order });
+    res.status(httpStatus.OK).json({ message: "Order canceled successfully", order });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
   }
 };
 
-// User: View Specific Order
+/**
+ * User: View Specific Order
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const viewOrder = async (req, res) => {
   const { orderId } = req.params;
   const userId = req.user.id;
@@ -171,18 +193,23 @@ const viewOrder = async (req, res) => {
       .populate("user", "_id name email");
 
     if (!order) {
-      return res.status(404).json({ error: "Order not found" });
+      return res.status(httpStatus.NOT_FOUND).json({ error: Messages.ORDER_NOT_FOUND });
     }
-
-    res.status(200).json({ order });
+    
+    res.status(httpStatus.OK).json({ order });
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ error: error.message });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: error.message });
   }
 };
 
 
-// User: Return an Order
+/**
+ * User: Return an Order
+ * @param {*} req
+ * @param {*} res
+ * @returns
+ */
 const returnOrder = async (req, res) => {
   const { orderId } = req.params;
   const userId = req.user.id;
@@ -191,11 +218,11 @@ const returnOrder = async (req, res) => {
     const order = await Order.findOne({ _id: orderId, user: userId });
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.ORDER_NOT_FOUND });
     }
 
     if (order.status !== "Delivered") {
-      return res.status(400).json({ message: "Only delivered orders can be returned." });
+      return res.status(httpStatus.BAD_REQUEST).json({ message: "Only delivered orders can be returned." });
     }
 
     order.status = "Returned";
@@ -217,14 +244,19 @@ const returnOrder = async (req, res) => {
       });
     }
 
-    res.status(200).json({ message: "Order returned successfully", order });
+    res.status(httpStatus.OK).json({ message: "Order returned successfully", order });
   } catch (error) {
     console.error("Error processing return:", error);
-    res.status(500).json({ message: "Failed to process the return." });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Failed to process the return." });
   }
 };
 
-// User: Create a Razor Pay Order
+/**
+ * User: Create a Razor Pay Order
+ * @param {*} req
+ * @param {*} res
+ * @returns
+ */
 const createRazorpayOrder = async (req, res) => {
   const { orderId, totalAmount } = req.body;
 
@@ -233,7 +265,7 @@ const createRazorpayOrder = async (req, res) => {
     if (orderId) {
       order = await Order.findById(orderId);
       if (!order || order.paymentStatus !== 'Failed') {
-        return res.status(400).json({ message: 'Invalid or already paid order.' });
+        return res.status(httpStatus.BAD_REQUEST).json({ message: 'Invalid or already paid order.' });
       }
     }
 
@@ -244,18 +276,23 @@ const createRazorpayOrder = async (req, res) => {
     };
 
     const razorpayOrder = await razorpayInstance.orders.create(options);
-    res.status(201).json({
+    res.status(httpStatus.CREATED).json({
       razorpayOrderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
     });
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ message: error.message });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
   }
 };
 
-// User: Razor Pay Verification
+/**
+ * User: Verify Razorpay Payment
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const verifyPayment = async (req, res) => {
   const { razorpayOrderId, razorpayPaymentId, razorpaySignature, cartItems, addressId, totalAmount, orderId } = req.body;
   const shippingCharge = 40;
@@ -267,35 +304,35 @@ const verifyPayment = async (req, res) => {
     .digest('hex');
 
   if (expectedSignature !== razorpaySignature) {
-    return res.status(400).json({ success: false, message: 'Payment verification failed' });
+    return res.status(httpStatus.BAD_REQUEST).json({ success: false, message: 'Payment verification failed' });
   }
 
   try {
     if (orderId) {
       const order = await Order.findById(orderId);
       if (!order) {
-        return res.status(400).json({ success: false, message: 'Order not found.' });
+        return res.status(httpStatus.BAD_REQUEST).json({ success: false, message: Messages.ORDER_NOT_FOUND });
       }
 
       order.paymentStatus = 'Paid';
       await order.save();
 
-      return res.status(200).json({ success: true, order });
+      return res.status(httpStatus.OK).json({ success: true, order });
     }
 
     if (!cartItems || cartItems.length === 0) {
-      return res.status(400).json({ message: 'No items in the order' });
+      return res.status(httpStatus.BAD_REQUEST).json({ message: 'No items in the order' });
     }
 
     const address = await Address.findById(addressId);
     if (!address) {
-      return res.status(400).json({ message: 'Invalid delivery address' });
+      return res.status(httpStatus.BAD_REQUEST).json({ message: 'Invalid delivery address' });
     }
 
     for (let item of cartItems) {
       const product = await Product.findById(item.productId);
       if (!product || product.stock < item.quantity) {
-        return res.status(400).json({
+        return res.status(httpStatus.BAD_REQUEST).json({
           message: `Product ${item.productId} is out of stock or unavailable`,
         });
       }
@@ -327,14 +364,19 @@ const verifyPayment = async (req, res) => {
 
     const userId = req.user.id;
     await Cart.deleteMany({ userId });
-    res.status(200).json({ success: true, order: newOrder });
+    res.status(httpStatus.OK).json({ success: true, order: newOrder });
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ success: false, message: 'Failed to place order' });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to place order' });
   }
 };
 
-// Create Failed Order
+/**
+ * User: Create a Failed Order
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const createFailedOrder = async (req, res) => {
   const { razorpayOrderId, cartItems, addressId, totalAmount } = req.body;
   const userId = req.user.id;
@@ -343,13 +385,13 @@ const createFailedOrder = async (req, res) => {
   try {
     const address = await Address.findById(addressId);
     if (!address) {
-      return res.status(400).json({ message: 'Invalid delivery address' });
+      return res.status(httpStatus.BAD_REQUEST).json({ message: 'Invalid delivery address' });
     }
 
     for (let item of cartItems) {
       const product = await Product.findById(item.productId);
       if (!product || product.stock < item.quantity) {
-        return res.status(400).json({
+        return res.status(httpStatus.BAD_REQUEST).json({
           message: `Product ${item.productId} is out of stock or unavailable`,
         });
       }
@@ -381,95 +423,18 @@ const createFailedOrder = async (req, res) => {
 
     await Cart.deleteMany({ userId });
 
-    res.status(201).json({ success: true, order: newOrder });
+    res.status(httpStatus.CREATED).json({ success: true, order: newOrder });
   } catch (error) {
     console.error("Failed to create failed order:", error);
-    res.status(500).json({ success: false, message: 'Failed to log failed payment.' });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to log failed payment.' });
   }
 };
 
-// Admin: View All Orders
-const viewAllOrders = async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
 
-    const totalOrders = await Order.countDocuments();
-    const orders = await Order.find()
-      .skip(skip)
-      .limit(limit)
-      .populate("user", "name email")
-      .populate("items.productId", "productName")
-      .sort({ placedAt: -1 });
-
-    res.status(200).json({
-      orders,
-      currentPage: page,
-      totalPages: Math.ceil(totalOrders / limit),
-      totalOrders,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Admin: Update Order Status
-const updateOrderStatus = async (req, res) => {
-  const { orderId } = req.params;
-  const { status } = req.body;
-
-  try {
-    const order = await Order.findById(orderId)
-      .populate("user", "name email")
-      .populate("items.productId", "productName");
-
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    if (
-      status === "Cancelled" &&
-      (order.status === "Shipped" || order.status === "Delivered")
-    ) {
-      return res.status(400).json({
-        message: "Cannot cancel an order that is already shipped or delivered",
-      });
-    }
-
-    order.status = status;
-
-    if (status === "Cancelled") {
-      for (let item of order.items) {
-        await Product.findByIdAndUpdate(item.productId, {
-          $inc: { stock: item.quantity },
-        });
-      }
-    }
-
-    await order.save();
-
-    if (order.status === 'Cancelled' && order.paymentStatus === 'Refunded') {
-      await Transaction.create({
-        userId: order.user,
-        type: "credit",
-        amount: order.totalAmount,
-        description: `Refund for returned order ${order.orderReference}`,
-        date: new Date(),
-      });
-    }
-
-    res.status(200).json({ message: "Order status updated successfully", order });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
 module.exports = {
   placeOrder,
   cancelOrder,
-  viewAllOrders,
-  updateOrderStatus,
   viewUserOrders,
   verifyPayment,
   createRazorpayOrder,

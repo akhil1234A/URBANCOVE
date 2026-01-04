@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const {listUniqueActiveCategories, listUniqueActiveSubCategories} = require('../controllers/subCategoryController');
+const {listUniqueActiveCategories, listUniqueActiveSubCategories} = require('../controllers/admin/subCategoryController');
 
 
 router.get("/subcategories", listUniqueActiveSubCategories);

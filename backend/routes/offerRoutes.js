@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const offerController = require('../controllers/OfferController');
+const offerController = require('../controllers/admin/OfferController');
 const {adminAuth} = require('../middlewares/authMiddleware');
 
 // Admin: Offer Management

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addToWishlist, removeFromWishlist, getWishlist } = require('../controllers/wishtlistController');
+const { addToWishlist, removeFromWishlist, getWishlist } = require('../controllers/user/wishtlistController');
 const authenticateUser  = require('../middlewares/authenticate')
 
 //User: Wishlist Management Routes

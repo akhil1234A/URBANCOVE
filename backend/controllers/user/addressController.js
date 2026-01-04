@@ -1,6 +1,12 @@
-const Address = require('../models/Address');
+const Address = require('../../models/Address');
+const httpStatus = require('../../constants/httpStatus');
+const Messages = require('../../constants/messages');
 
-// User: Create a new address
+/**
+ * User: Add a new address
+ * @param {*} req 
+ * @param {*} res 
+ */
 const addAddress = async (req, res) => {
   try {
     const { street, city, state, postcode, country, phoneNumber, isDefault } = req.body;
@@ -23,14 +29,18 @@ const addAddress = async (req, res) => {
     });
 
     await newAddress.save();
-    res.status(201).json({ success: true, message: 'Address added successfully', address: newAddress });
+    res.status(httpStatus.CREATED).json({ success: true, message: 'Address added successfully', address: newAddress });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to add address', error: error.message });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to add address', error: error.message });
   }
 };
 
-// User: Get all addresses for a user
+/**
+ * User: Get all addresses for a user
+ * @param {*} req 
+ * @param {*} res 
+ */
 const getUserAddresses = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -38,14 +48,19 @@ const getUserAddresses = async (req, res) => {
 
 
 
-    res.status(200).json({ success: true, addresses });
+    res.status(httpStatus.OK).json({ success: true, addresses });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to retrieve addresses', error: error.message });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to retrieve addresses', error: error.message });
   }
 };
 
-// User: Update an address
+/**
+ * User: Update an address
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const updateAddress = async (req, res) => {
   try {
     const { addressId } = req.params;
@@ -56,7 +71,7 @@ const updateAddress = async (req, res) => {
     const address = await Address.findOne({ _id: addressId, user: userId });
 
     if (!address) {
-      return res.status(404).json({ success: false, message: 'Address not found' });
+      return res.status(httpStatus.NOT_FOUND).json({ success: false, message: Messages.ADDRESS_NOT_FOUND });
     }
 
     // If the new address is set as default, update other addresses to non-default
@@ -73,7 +88,7 @@ const updateAddress = async (req, res) => {
     address.isDefault = isDefault;
 
     await address.save();
-    res.status(200).json({ success: true, message: 'Address updated successfully', address });
+    res.status(httpStatus.OK).json({ success: true, message: 'Address updated successfully', address });
   } catch (error) {
     
     res.status(500).json({ success: false, message: 'Failed to update address', error: error.message });
@@ -90,7 +105,7 @@ const deleteAddress = async (req, res) => {
     const address = await Address.findOneAndDelete({ _id: addressId, user: userId });
 
     if (!address) {
-      return res.status(404).json({ success: false, message: 'Address not found' });
+      return res.status(httpStatus.NOT_FOUND).json({ success: false, message: Messages.ADDRESS_NOT_FOUND });
     }
 
     res.status(200).json({ success: true, message: 'Address deleted successfully' });

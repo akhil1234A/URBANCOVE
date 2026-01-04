@@ -1,5 +1,6 @@
 const express = require('express');
-const { placeOrder, cancelOrder, viewOrder, viewAllOrders, updateOrderStatus, viewUserOrders, verifyPayment, createRazorpayOrder, createFailedOrder, returnOrder} = require('../controllers/orderController');
+const { placeOrder, cancelOrder, viewOrder, viewUserOrders, verifyPayment, createRazorpayOrder, createFailedOrder, returnOrder} = require('../controllers/user/orderController');
+const {viewAllOrders, updateOrderStatus} = require('../controllers/admin/orderController')
 const authenticateUser  = require('../middlewares/authenticate')
 const {adminAuth} = require('../middlewares/authMiddleware');
 const router = express.Router();

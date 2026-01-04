@@ -1,22 +1,29 @@
-const Admin = require('../models/Admin');
-const User = require('../models/User');
-const { generateToken } = require('../services/authService');
-const logger = require('../utils/logger');
+const Admin = require('../../models/Admin');
+const User = require('../../models/User');
+const { generateToken } = require('../../services/authService');
+const logger = require('../../utils/logger');
+const httpStatus = require('../../constants/httpStatus');
+const Messages = require('../../constants/messages');
 
 
-//Admin : Login
+/**
+ * Admin Login 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
        
         const admin = await Admin.findOne({ email });
-        if (!admin) return res.status(400).json({ message: 'Admin not found' });
+        if (!admin) return res.status(httpStatus.BAD_REQUEST).json({ message: Messages.ADMIN_NOT_FOUND });
 
 
         const isMatch = await admin.comparePassword(password);
- 
-        if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+
+        if (!isMatch) return res.status(httpStatus.BAD_REQUEST).json({ message: Messages.INVALID_CREDENTIALS });
 
         
         const token = generateToken({ id: admin._id, role: 'admin' });
@@ -24,11 +31,15 @@ exports.login = async (req, res) => {
         res.json({ token });
     } catch (error) {
         logger.error(error.message)
-        res.status(500).json({ message: 'Server error', error });
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
     }
 };
 
-//Admin : List All Users
+/**
+ * List all users with pagination 
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.listUsers = async (req, res) => {
    try {
      const page = parseInt(req.query.page) || 1; 
@@ -45,16 +56,21 @@ exports.listUsers = async (req, res) => {
        totalUsers,
      });
    } catch (error) {
-     res.status(500).json({ message: 'Server error' });
+     res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR });
    }
  };
  
 
-//Admin: Block a User
+/**
+ * Admin Block or Unblock a user
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.blockUser = async(req,res)=>{
    try{
       const user = await User.findById(req.params.id);
-      if(!user) return res.status(404).json({message: 'User not found'});
+      if(!user) return res.status(httpStatus.NOT_FOUND).json({message: Messages.USER_NOT_FOUND});
 
       user.isActive = !user.isActive;
       await user.save();
@@ -62,6 +78,6 @@ exports.blockUser = async(req,res)=>{
       res.json({message: `User has been ${user.isActive? 'unblocked': 'blocked'}`, isActive: user.isActive});
    } catch(error){
       logger.error(error.message);
-      res.status(500).json({message: `Server error: ${error}`});
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message: Messages.SERVER_ERROR});
    }
 }

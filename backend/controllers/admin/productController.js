@@ -1,10 +1,12 @@
-const Product = require('../models/Product');
-const Offer = require('../models/Offer');
+const Product = require('../../models/Product');
+const Offer = require('../../models/Offer');
 const fs = require('fs');
-const uploadToCloudinary = require('../utils/cloudinaryUploader')
-const Category = require('../models/Category');
-const SubCategory = require('../models/SubCategory');
-const logger = require('../utils/logger');
+const uploadToCloudinary = require('../../utils/cloudinaryUploader')
+const Category = require('../../models/Category');
+const SubCategory = require('../../models/SubCategory');
+const logger = require('../../utils/logger');
+const httpStatus = require('../../constants/httpStatus');
+const Messages = require('../../constants/messages');
 
 
 const processImage = async (filePath) => {
@@ -13,12 +15,16 @@ const processImage = async (filePath) => {
     fs.unlinkSync(filePath); 
     return url;
   } catch (error) {
-    throw new Error('Image processing failed');
+    throw new Error(Messages.IMAGE_PROCESSING_FAILED);
   }
 };
 
 
-// Home: List All Active Products 
+/**
+ * Home: List Products with Pagination, Search, and Offers
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.listProducts = async (req, res) => {
   try {
     const { page = 1, limit = 10, productId, search } = req.query;
@@ -119,13 +125,17 @@ exports.listProducts = async (req, res) => {
       totalItems: totalCount,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
   }
 };
 
 
 
-//Home: Latest Products 
+/**
+ * Home: Get Latest Products
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.getLatestProducts = async (req, res) => {
   try {
     const products = await Product.find({ isActive: true }) 
@@ -188,11 +198,15 @@ exports.getLatestProducts = async (req, res) => {
 
     res.json({ products: updatedProducts });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
   }
 };
 
-//Home: Best Seller's
+/**
+ * Home: Get Best Seller Products
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.getBestSellerProducts = async (req, res) => {
   try {
     const products = await Product.find({ isActive: true, isBestSeller: true })
@@ -254,17 +268,17 @@ exports.getBestSellerProducts = async (req, res) => {
 
     res.json({ products: updatedProducts });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
   }
 };
 
 
-//Admin: List All Products
+// Admin: List Products with Pagination, Search, and Filtering
 exports.adminListProducts = async (req, res) => {
   try {
     const { page = 1, limit = 10, productId } = req.query;
 
-    let query = {}; // Admin can see all products
+    let query = {}; 
 
     if (productId) {
       query._id = productId;
@@ -289,12 +303,17 @@ exports.adminListProducts = async (req, res) => {
       totalItems: totalCount,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
   }
 };
 
 
-// Admin: Add a New Product
+/**
+ * Admin: Add a Product
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.addProduct = async (req, res) => {
     const { productName, productDescription, category, subCategory, price, stock, size, isBestSeller } = req.body;
     try {
@@ -312,14 +331,19 @@ exports.addProduct = async (req, res) => {
             isBestSeller 
         });
         await newProduct.save();
-        res.status(201).json(newProduct);
+        res.status(httpStatus.CREATED).json(newProduct);
     } catch (error) {
         logger.error(error.message);
-        res.status(500).json({ message: 'Server error', error });
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
     }
 };
 
-// Admin: Edit a Product
+/**
+ * Admin: Edit a Product
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.editProduct = async (req, res) => {
   const { 
     productName, 
@@ -345,7 +369,7 @@ exports.editProduct = async (req, res) => {
     // Retrieve the current product
     const product = await Product.findById(req.params.id);
     if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.PRODUCT_NOT_FOUND });
     }
 
     // Filter out images marked for removal
@@ -359,7 +383,7 @@ exports.editProduct = async (req, res) => {
     const finalImages = [...updatedImages, ...newImages];
 
     if(finalImages.length == 0){
-      return res.status(400).json({message: "Select atleast one image"});
+      return res.status(httpStatus.BAD_REQUEST).json({message: "Select atleast one image"});
     }
 
     // Update the product
@@ -383,7 +407,7 @@ exports.editProduct = async (req, res) => {
     res.json(updatedProduct);
   } catch (error) {
     console.error("Server error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error: error.message });
   }
 };
 
@@ -391,7 +415,12 @@ exports.editProduct = async (req, res) => {
 
 
 
-// Admin: soft delete a product
+/**
+ * Admin: Delete a Product (Soft Delete)
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.deleteProduct = async (req, res) => {
   try {
     const { isActive } = req.body;
@@ -403,7 +432,7 @@ exports.deleteProduct = async (req, res) => {
     ]);
 
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.PRODUCT_NOT_FOUND });
     }
 
     const { category, subCategory } = product;
@@ -412,15 +441,15 @@ exports.deleteProduct = async (req, res) => {
     if (isActive) {
       if (!category?.isActive) {
         logger.info('Category is inactive');
-        return res.status(400).json({ 
-          message: 'Cannot list product because the associated category is inactive.' 
+        return res.status(httpStatus.BAD_REQUEST).json({ 
+          message:  Messages.CATEGORY_INACTIVE
         });
       }
 
       if (!subCategory?.isActive) {
         logger.info('SubCategory is inactive');
-        return res.status(400).json({ 
-          message: 'Cannot list product because the associated sub-category is inactive.' 
+        return res.status(httpStatus.BAD_REQUEST).json({
+          message: Messages.SUBCATEGORY_INACTIVE
         });
       }
     }
@@ -435,7 +464,7 @@ exports.deleteProduct = async (req, res) => {
 
   } catch (error) {
     console.error('Error in deleteProduct:', error);
-    res.status(500).json({ message: 'Server error', error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
   }
 };
 

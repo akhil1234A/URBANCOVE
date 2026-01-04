@@ -1,9 +1,16 @@
-const SubCategory = require('../models/SubCategory');
-const Category = require('../models/Category');
-const Product = require('../models/Product');
+const SubCategory = require('../../models/SubCategory');
+const Category = require('../../models/Category');
+const Product = require('../../models/Product');
+const httpStatus = require('../../constants/httpStatus');
+const Messages = require('../../constants/messages');
 
 
-//Admin: Add a Sub Category 
+/**
+ * Admin: Add a Sub Category
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.addSubCategory = async (req, res) => {
     const { subCategory, category} = req.body;
 
@@ -11,32 +18,42 @@ exports.addSubCategory = async (req, res) => {
     try {
         const existingcategory = await Category.findById(category);
         if (!existingcategory) {
-            return res.status(404).json({ message: 'Category not found' });
+            return res.status(httpStatus.NOT_FOUND).json({ message: Messages.CATEGORY_NOT_FOUND });
         }
 
         const newSubCategory = new SubCategory({ subCategory, category});
         await newSubCategory.save();
-        res.status(201).json({ message: "Subcategory added successfully", newSubCategory });
+        res.status(httpStatus.CREATED).json({ message: Messages.SUBCATEGORY_ADDED, newSubCategory });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error });
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
     }
 };
 
 
-//Admin: List all Sub Categories 
+
+/**
+ * Admin: List all Sub Categories
+ * @param {*} req
+ * @param {*} res
+ */
 exports.listSubCategories = async (req, res) => {
   try {
     const { categoryId } = req.params;
     const query = categoryId ? { category: categoryId } : {};
     const subCategories = await SubCategory.find(query).populate('category', 'category');
-    res.status(200).json(subCategories);
+    res.status(httpStatus.OK).json(subCategories);
   } catch (error) {
-      res.status(500).json({ message: 'Server error', error });
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
   }
 };
 
 
-//Admin: Edit a Sub Category
+/**
+ * Admin: Edit a Sub Category
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.editSubCategory = async (req, res) => {
   const { id } = req.params;
   const { subCategory, category, isActive } = req.body;
@@ -50,7 +67,7 @@ exports.editSubCategory = async (req, res) => {
     });
     
     if (existingSubCategory) {
-      return res.status(400).json({
+      return res.status(httpStatus.BAD_REQUEST).json({
         message: 'A subcategory with the same name and category already exists.',
       });
     }
@@ -63,9 +80,9 @@ exports.editSubCategory = async (req, res) => {
     
       
       if (!updatedSubCategory) {
-          return res.status(404).json({ message: 'Subcategory not found' });
+          return res.status(httpStatus.NOT_FOUND).json({ message: Messages.SUBCATEGORY_NOT_FOUND });
       }
-      res.status(200).json({ message: "Subcategory updated successfully", updatedSubCategory });
+      res.status(httpStatus.OK).json({ message: Messages.SUBCATEGORY_UPDATED, updatedSubCategory });
 
       if (isActive === false) {
         await Product.updateMany(
@@ -75,11 +92,16 @@ exports.editSubCategory = async (req, res) => {
       }
       
   } catch (error) {
-      res.status(500).json({ message: 'Server error', error });
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
   }
 };
 
-//Admin: Delete a Sub Category
+/**
+ * Admin: Delete a Sub Category
+ * @param {*} req
+ * @param {*} res
+ * @returns
+ */
 exports.deleteSubCategory = async (req, res) => {
   const { id } = req.params;
   const { isActive } = req.body;
@@ -93,7 +115,7 @@ exports.deleteSubCategory = async (req, res) => {
     );
 
     if (!updatedSubCategory) {
-      return res.status(404).json({ message: 'Subcategory not found' });
+      return res.status(httpStatus.NOT_FOUND).json({ message: Messages.SUBCATEGORY_NOT_FOUND });
     }
 
     if (isActive === false) {
@@ -103,18 +125,22 @@ exports.deleteSubCategory = async (req, res) => {
       );
     }
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
       message: `Subcategory ${isActive ? 'activated' : 'deactivated'} successfully`,
       updatedSubCategory,
     });
   } catch (error) {
     console.error('Error toggling subcategory status:', error);
-    res.status(500).json({ message: 'Server error', error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.SERVER_ERROR, error });
   }
 };
 
 
-//Collection: Active Categories 
+/**
+ * Admin: List Unique Active Categories
+ * @param {*} req
+ * @param {*} res
+ */
 exports.listUniqueActiveCategories = async (req, res) => {
   try {
     const uniqueCategories = await Category.aggregate([
@@ -123,15 +149,19 @@ exports.listUniqueActiveCategories = async (req, res) => {
       { $sort: { _id: 1 } }, 
     ]);
 
-    res.status(200).json(
+    res.status(httpStatus.OK).json(
       uniqueCategories.map((item) => ({ category: item._id }))
     );
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch categories", error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.FAILED_TO_FETCH_CATEGORIES, error });
   }
 };
 
-//Collection: Active Sub Categories
+/**
+ * Admin: List Unique Active Sub Categories
+ * @param {*} req
+ * @param {*} res
+ */
 exports.listUniqueActiveSubCategories = async (req, res) => {
   try {
     const uniqueSubCategories = await SubCategory.aggregate([
@@ -140,10 +170,10 @@ exports.listUniqueActiveSubCategories = async (req, res) => {
       { $sort: { _id: 1 } }, 
     ]);
 
-    res.status(200).json(
+    res.status(httpStatus.OK).json(
       uniqueSubCategories.map((item) => ({ subCategory: item._id }))
     );
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch subcategories", error });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: Messages.FAILED_TO_FETCH_SUBCATEGORIES, error });
   }
 };
