@@ -20,7 +20,6 @@ const Wishlist = () => {
     (state) => state.wishlist
   );
   const { error: cartError } = useSelector((state) => state.cart);
-  const products = useSelector((state) => state.products.items);
 
   useEffect(() => {
     dispatch(fetchWishlist());
@@ -39,8 +38,8 @@ const Wishlist = () => {
 
   const handleAddToCart = (productId) => {
     const product = wishlistItems.find(
-      (item) => item.productId._id === productId
-    )?.productId;
+      (item) => item._id === productId
+    )
   
     if (!product) {
       toast.error("Product not found.");
@@ -78,7 +77,7 @@ const Wishlist = () => {
       ) : (
         <div>
           {wishlistItems.map((item) => {
-  const product = item.productId; 
+  const product = item; 
   const isInvalid =
     !product || !product.isActive || product.stock < 1;
 

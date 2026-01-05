@@ -23,7 +23,7 @@ const Collection = () => {
   }, [dispatch]);
 
   const isInWishlist = (productId) => {
-    return wishlistItems.some((wishlistItem) => wishlistItem.productId._id === productId);
+    return wishlistItems.some((wishlistItem) => wishlistItem._id === productId);
   };
 
   const productList = useSelector(selectProducts);

@@ -19,7 +19,7 @@ const LatestCollection = ({ products }) => {
   }, [dispatch]);
 
   const isInWishlist = (productId) => {
-    return wishlistItems.some((wishlistItem) => wishlistItem.productId._id === productId);
+    return wishlistItems.some((wishlistItem) => wishlistItem._id === productId);
   };
   
 
