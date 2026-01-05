@@ -5,8 +5,8 @@ const logger = require("../../utils/logger");
 const httpStatus = require("../../constants/httpStatus");
 const Messages = require("../../constants/messages");
 const productService = require("../../services/product.service");
-const offerService = require("../../services/offer.service");
-const { applyBestOffer } = require("../../services/pricing.service");
+const pricingService = require("../../services/pricing.service");
+const HttpStatus = require("../../constants/httpStatus");
 
 const processImage = async (filePath) => {
   try {
@@ -34,12 +34,8 @@ exports.listProducts = async (req, res) => {
       search,
     });
 
-    const activeOffers = await offerService.getActiveOffersForPricing();
 
-    const updatedProducts = products.map((product) => ({
-      ...product.toObject(),
-      discountedPrice: applyBestOffer(product, activeOffers),
-    }));
+    const updatedProducts = await pricingService.calculatePriceForProducts(products)
 
     res.json({
       products: updatedProducts,
@@ -59,13 +55,10 @@ exports.listProducts = async (req, res) => {
  */
 exports.getLatestProducts = async (req, res) => {
   const products = await productService.getLatestProducts();
-  const offers = await offerService.getActiveOffersForPricing();
+  const updatedPrice = await pricingService.calculatePriceForProducts(products)
 
   res.json({
-    products: products.map((p) => ({
-      ...p.toObject(),
-      discountedPrice: applyBestOffer(p, offers),
-    })),
+    products: updatedPrice
   });
 };
 
@@ -77,19 +70,12 @@ exports.getLatestProducts = async (req, res) => {
 exports.getBestSellerProducts = async (req, res) => {
   try {
     const products = await productService.getBestSellerProducts();
-    const offers = await offerService.getActiveOffersForPricing();
+    const updatedPrice = await pricingService.calculatePriceForProducts(products)
 
-    exports.getLatestProducts = async (req, res) => {
-      const products = await productService.getLatestProducts();
-      const offers = await offerService.getActiveOffersForPricing();
+    return res.status(HttpStatus.OK).json({
+      products: updatedPrice
+    })
 
-      res.json({
-        products: products.map((p) => ({
-          ...p.toObject(),
-          discountedPrice: applyBestOffer(p, offers),
-        })),
-      });
-    };
   } catch (error) {
     res
       .status(httpStatus.INTERNAL_SERVER_ERROR)
