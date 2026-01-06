@@ -4,6 +4,7 @@ const Product = require('../../models/Product');
 const logger = require('../../utils/logger');
 const httpStatus = require('../../constants/httpStatus');
 const Messages = require('../../constants/messages');
+const PricingService = require('../../services/pricing.service');
 
 
 const MAX_QUANTITY_PER_USER = 5; 
@@ -37,8 +38,12 @@ exports.addToCart = async (req, res) => {
             return res.status(httpStatus.BAD_REQUEST).json({ message: `Maximum quantity per user for this product is ${MAX_QUANTITY_PER_USER}` });
         }
 
+        const cartPrice = await PricingService.calculateProductPrice(product)
+
         cartItem = new Cart({
             userId,
+            basePrice: product.price, 
+            cartPrice,
             productId,
             quantity,
         });
@@ -143,15 +148,15 @@ exports.getUserCart = async (req, res) => {
     const userId = req.user.id;
 
     try {
-        const cartItems = await Cart.find({ userId }).populate('productId', 'productName price discountedPrice stock images size isActive');
+        const cartItems = await Cart.find({ userId }).populate('productId', 'productName stock images size isActive');
 
         const formattedCartItems = cartItems.map(item => ({
             _id: item._id,
             productId: item.productId._id,
             productName: item.productId.productName,
             images: item.productId.images[0],
-            price: item.productId.discountedPrice, 
-            originalPrice: item.productId.price,
+            price: item.cartPrice, 
+            originalPrice: item.basePrice,
             stock: item.productId.stock,
             quantity: item.quantity,
             size: item.productId.size,
