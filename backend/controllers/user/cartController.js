@@ -143,14 +143,14 @@ exports.removeFromCart = async (req, res) => {
     await Cart.findOneAndDelete({ userId, productId });
 
     // Re-stock the product
-    const product = await Product.findById(productId);
-    if (product) {
-      product.stock += cartItem.quantity;
-      await product.save();
-      logger.info("Product stock updated:", product);
-    } else {
-      logger.error("Product not found for stock update");
-    }
+    // const product = await Product.findById(productId);
+    // if (product) {
+    //   product.stock += cartItem.quantity;
+    //   await product.save();
+    //   logger.info("Product stock updated:", product);
+    // } else {
+    //   logger.error("Product not found for stock update");
+    // }
 
     res.status(httpStatus.OK).json({ message: "Item removed from cart" });
   } catch (error) {

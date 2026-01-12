@@ -2,7 +2,6 @@ import Title from './Title';
 
 const CartTotal = ({ subtotal=0, deliveryFee=40, total=0, discount=0 }) => {
   const currency = "₹";
-  const discountedTotal = total - discount;
 
   return (
     <div className="w-full">
@@ -30,7 +29,7 @@ const CartTotal = ({ subtotal=0, deliveryFee=40, total=0, discount=0 }) => {
         <hr />
         <div className="flex justify-between">
           <b>Total</b>
-          <b>{currency} {discountedTotal.toFixed(2)}</b>
+          <b>{currency} {total.toFixed(2)}</b>
         </div>
       </div>
     </div>
