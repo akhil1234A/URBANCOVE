@@ -8,6 +8,7 @@ const crypto = require('crypto');
 const logger = require("../../utils/logger");
 const httpStatus = require("../../constants/httpStatus");
 const Messages = require("../../constants/messages");
+const cartService = require("../../services/cart.service");
 
 /**
  * User: Place an Order
@@ -16,18 +17,29 @@ const Messages = require("../../constants/messages");
  * @returns 
  */
 const placeOrder = async (req, res) => {
-  const { addressId, paymentMethod, cartItems, totalAmount } = req.body;
+  const { addressId, paymentMethod } = req.body;
   const userId = req.user.id;
   const shippingCost = 40;
 
   try {
-    if (paymentMethod === 'cod' && totalAmount > 1000) {
-      return res.status(httpStatus.BAD_REQUEST).json({ message: "Order above Rs 1000 should not be allowed for COD" });
-    }
+    const cart = await cartService.getCart(userId);
+
+    const cartItems = await cartService.calculateLivePrice(cart);
 
     if (!cartItems || cartItems.length === 0) {
       return res.status(httpStatus.BAD_REQUEST).json({ message: "No items in the order" });
     }
+
+
+    const { cartPriceTotal, total } = cartService.calculateTotal(cartItems);
+    const discountAmount = cartService.getCouponAmount(cartItems);
+    const totalAmount = cartPriceTotal + shippingCost - discountAmount;
+
+
+    if (paymentMethod === 'cod' && totalAmount > 1000) {
+      return res.status(httpStatus.BAD_REQUEST).json({ message: "Order above Rs 1000 should not be allowed for COD" });
+    }
+
 
     const address = await Address.findById(addressId);
     if (!address) {
@@ -49,12 +61,7 @@ const placeOrder = async (req, res) => {
       });
     }
 
-    const originalPrice = cartItems.reduce(
-      (total, item) => total + item.originalPrice * item.quantity,
-      0
-    );
 
-    const discountAmount = originalPrice - totalAmount + shippingCost;
 
     if (paymentMethod === 'wallet') {
       await Transaction.create({
@@ -133,7 +140,7 @@ const viewUserOrders = async (req, res) => {
  */
 const cancelOrder = async (req, res) => {
   const { orderId } = req.params;
-  const { cancellationReason } = req.body; 
+  const { cancellationReason } = req.body;
   const userId = req.user.id;
 
   try {
@@ -151,7 +158,7 @@ const cancelOrder = async (req, res) => {
 
     order.status = "Cancelled";
     if (cancellationReason) {
-      order.cancellationReason = cancellationReason; 
+      order.cancellationReason = cancellationReason;
     }
     await order.save();
 
@@ -195,7 +202,7 @@ const viewOrder = async (req, res) => {
     if (!order) {
       return res.status(httpStatus.NOT_FOUND).json({ error: Messages.ORDER_NOT_FOUND });
     }
-    
+
     res.status(httpStatus.OK).json({ order });
   } catch (error) {
     logger.error(error.message);
@@ -258,7 +265,18 @@ const returnOrder = async (req, res) => {
  * @returns
  */
 const createRazorpayOrder = async (req, res) => {
-  const { orderId, totalAmount } = req.body;
+  const { orderId } = req.body;
+  const cart = await cartService.getCart(req.user.id);
+  const cartItems = await cartService.calculateLivePrice(cart);
+  const shippingCost = 40;
+
+  if (!cartItems || cartItems.length === 0) {
+    return res.status(httpStatus.BAD_REQUEST).json({ message: "No items in the order" });
+  }
+
+  const { cartPriceTotal, total } = cartService.calculateTotal(cartItems);
+  const discountAmount = cartService.getCouponAmount(cartItems);
+  const totalAmount = cartPriceTotal + shippingCost - discountAmount;
 
   try {
     let order;
@@ -294,8 +312,11 @@ const createRazorpayOrder = async (req, res) => {
  * @returns 
  */
 const verifyPayment = async (req, res) => {
-  const { razorpayOrderId, razorpayPaymentId, razorpaySignature, cartItems, addressId, totalAmount, orderId } = req.body;
+  const { razorpayOrderId, razorpayPaymentId, razorpaySignature, addressId, orderId } = req.body;
   const shippingCharge = 40;
+  const userId = req.user.id;
+  const cart = await cartService.getCart(userId);
+
 
   const body = razorpayOrderId + "|" + razorpayPaymentId;
   const expectedSignature = crypto
@@ -319,6 +340,11 @@ const verifyPayment = async (req, res) => {
 
       return res.status(httpStatus.OK).json({ success: true, order });
     }
+
+    const cartItems = await cartService.calculateLivePrice(cart);
+    const { cartPriceTotal, total } = cartService.calculateTotal(cartItems);
+    const discountAmount = cartService.getCouponAmount(cartItems);
+    const totalAmount = cartPriceTotal + shippingCharge - discountAmount;
 
     if (!cartItems || cartItems.length === 0) {
       return res.status(httpStatus.BAD_REQUEST).json({ message: 'No items in the order' });
@@ -344,12 +370,6 @@ const verifyPayment = async (req, res) => {
       });
     }
 
-    const originalPrice = cartItems.reduce(
-      (total, item) => total + item.originalPrice * item.quantity,
-      0
-    );
-
-    const discountAmount = originalPrice + shippingCharge - totalAmount;
 
     const newOrder = await Order.create({
       user: req.user.id,
@@ -378,7 +398,7 @@ const verifyPayment = async (req, res) => {
  * @returns 
  */
 const createFailedOrder = async (req, res) => {
-  const { razorpayOrderId, cartItems, addressId, totalAmount } = req.body;
+  const { razorpayOrderId, addressId  } = req.body;
   const userId = req.user.id;
   const shippingCharge = 40;
 
@@ -387,6 +407,11 @@ const createFailedOrder = async (req, res) => {
     if (!address) {
       return res.status(httpStatus.BAD_REQUEST).json({ message: 'Invalid delivery address' });
     }
+    const cart = await cartService.getCart(userId);
+    const cartItems = await cartService.calculateLivePrice(cart);
+    const { cartPriceTotal, total } = cartService.calculateTotal(cartItems);
+    const discountAmount = cartService.getCouponAmount(cartItems);
+    const totalAmount = cartPriceTotal + shippingCharge - discountAmount;
 
     for (let item of cartItems) {
       const product = await Product.findById(item.productId);
@@ -403,12 +428,6 @@ const createFailedOrder = async (req, res) => {
       });
     }
 
-    const originalPrice = cartItems.reduce(
-      (total, item) => total + item.originalPrice * item.quantity,
-      0
-    );
-
-    const discountAmount = originalPrice + shippingCharge - totalAmount;
 
     const newOrder = await Order.create({
       user: req.user.id,

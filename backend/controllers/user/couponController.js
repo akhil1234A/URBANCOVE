@@ -1,8 +1,8 @@
 const Coupon = require("../../models/Coupon");
-const User = require("../../models/User");
 const logger = require("../../utils/logger");
 const httpStatus = require("../../constants/httpStatus");
 const Messages = require("../../constants/messages");
+const cartService = require("../../services/cart.service");
 
 
 /**
@@ -40,6 +40,7 @@ exports.applyCoupon = async (req, res) => {
     const userCoupon = coupon.userUsage.find(
       (usage) => usage.userId.toString() === userId
     );
+
     if (userCoupon && userCoupon.count >= 1) {
       return res
         .status(httpStatus.BAD_REQUEST)
@@ -59,11 +60,12 @@ exports.applyCoupon = async (req, res) => {
 
     // Apply coupon and update usage count
     if (!userCoupon) {
-      coupon.userUsage.push({ userId, count: 1 });
+      coupon.userUsage.push({ userId, count: 1 });  
     } else {
       userCoupon.count += 1;
     }
 
+    await cartService.applyCoupon(userId, discount);
     coupon.usageCount += 1;
     await coupon.save();
 
@@ -100,6 +102,7 @@ exports.removeCoupon = async (req, res) => {
       coupon.userUsage.splice(userCouponIndex, 1);
       coupon.usageCount -= 1;
       await coupon.save();
+      await cartService.removeCoupon(userId);
       return res.status(httpStatus.OK).json({ message: "Coupon removed successfully" });
     } else {
       return res

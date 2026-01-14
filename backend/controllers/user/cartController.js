@@ -172,7 +172,7 @@ exports.getUserCart = async (req, res) => {
 
   try {
     const cartItems = await cartService.getCart(userId);
-
+    
     const formattedCartItems = cartItems.map((item) => ({
       _id: item._id,
       productId: item.productId._id,
@@ -214,7 +214,7 @@ exports.cartCheckout = async (req, res) => {
 
     // 6. Correct totals (quantity-aware)
     const { cartPriceTotal, total, priceChanged } =
-      await cartService.calculateTotal(items);
+      cartService.calculateTotal(items);
 
     res.status(httpStatus.OK).json({
       cartItems: items,

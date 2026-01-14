@@ -7,7 +7,7 @@ export const placeOrder = createAsyncThunk(
     try {
       return await orderService.placeOrder(orderData);
     } catch (error) {
-      return rejectWithValue(error.response?.data?.error || error.message);
+      return rejectWithValue(error.response.data);
     }
   }
 );
