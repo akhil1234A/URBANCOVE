@@ -20,6 +20,10 @@ const cartSchema = new mongoose.Schema(
       type: Number,
       required: true,
     }, 
+    couponAmount: {
+      type: Number,
+      default: 0,
+    },
     quantity: {
       type: Number,
       required: true,

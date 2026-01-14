@@ -41,13 +41,14 @@ class CartService {
         stock: item.productId.stock,
         size: item.productId.size,
         isActive: item.productId.isActive,
+        couponAmount: item.couponAmount,
       };
     });
 
     return items;
    }
 
-   async calculateTotal(cartItems){
+   calculateTotal(cartItems){
     const { cartPriceTotal, total } = cartItems.reduce(
       (acc, item) => {
         acc.cartPriceTotal += item.cartPrice * item.quantity;
@@ -60,6 +61,23 @@ class CartService {
     const priceChanged = cartPriceTotal !== total;
 
     return { cartPriceTotal, total, priceChanged };
+   }
+
+   async applyCoupon(userId, couponAmount){
+     const cart = await Cart.findOneAndUpdate({userId}, {couponAmount}, {new: true});
+     return cart;
+   }
+
+   async removeCoupon(userId){
+     const cart = await Cart.findOneAndUpdate({userId}, {couponAmount: 0}, {new: true});
+     return cart;
+   }
+
+   getCouponAmount(cartItems){
+    if(cartItems.length === 0){
+      return 0;
+    }
+     return cartItems[0]?.couponAmount || 0;
    }
 }
 
