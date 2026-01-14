@@ -4,6 +4,7 @@ const logger = require("../../utils/logger");
 const httpStatus = require("../../constants/httpStatus");
 const Messages = require("../../constants/messages");
 const PricingService = require("../../services/pricing.service");
+const cartService = require("../../services/cart.service");
 
 const MAX_QUANTITY_PER_USER = 5;
 
@@ -170,10 +171,7 @@ exports.getUserCart = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const cartItems = await Cart.find({ userId }).populate(
-      "productId",
-      "productName stock images size isActive"
-    );
+    const cartItems = await cartService.getCart(userId);
 
     const formattedCartItems = cartItems.map((item) => ({
       _id: item._id,
@@ -201,10 +199,7 @@ exports.cartCheckout = async (req, res) => {
 
   try {
     // 1. Fetch cart items with product data
-    const cartItems = await Cart.find({ userId }).populate(
-      'productId',
-      'productName stock images size isActive price category subCategory'
-    );
+    const cartItems = await cartService.getCart(userId);
 
     if (!cartItems || cartItems.length === 0) {
       return res.status(httpStatus.OK).json({
@@ -215,49 +210,11 @@ exports.cartCheckout = async (req, res) => {
       });
     }
 
-    // 2. Extract products directly from populated cart
-    const products = cartItems.map(item => item.productId);
-
-    // 3. Calculate live prices in ONE call
-    const pricedProducts =
-      await PricingService.calculatePriceForProducts(products);
-
-    // 4. Build a lookup map (O(1))
-    const priceMap = new Map(
-      pricedProducts.map(p => [p._id.toString(), p.discountedPrice])
-    );
-
-    // 5. Build response items
-    const items = cartItems.map(item => {
-      const livePrice = priceMap.get(item.productId._id.toString());
-      const previewPrice = Math.min(item.cartPrice, livePrice);
-
-      return {
-        _id: item._id,
-        productId: item.productId._id,
-        productName: item.productId.productName,
-        images: item.productId.images?.[0],
-        originalPrice: item.basePrice,
-        cartPrice: item.cartPrice,
-        price: previewPrice,
-        quantity: item.quantity,
-        stock: item.productId.stock,
-        size: item.productId.size,
-        isActive: item.productId.isActive,
-      };
-    });
+    const items = await cartService.calculateLivePrice(cartItems);
 
     // 6. Correct totals (quantity-aware)
-    const { cartPriceTotal, total } = items.reduce(
-      (acc, item) => {
-        acc.cartPriceTotal += item.cartPrice * item.quantity;
-        acc.total += item.price * item.quantity;
-        return acc;
-      },
-      { cartPriceTotal: 0, total: 0 }
-    );
-
-    const priceChanged = cartPriceTotal !== total;
+    const { cartPriceTotal, total, priceChanged } =
+      await cartService.calculateTotal(items);
 
     res.status(httpStatus.OK).json({
       cartItems: items,
