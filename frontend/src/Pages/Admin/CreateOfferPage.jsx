@@ -4,9 +4,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import Select from 'react-select';
 import { adminAxios } from '../../utils/api';
 import './css/Offer.css';
-import { fetchSubCategoriesThunk } from '../../slices/admin/subCategorySlice'; 
+import { fetchSubCategoriesThunk } from '../../slices/admin/subCategorySlice';
 import { addOffer } from '../../slices/admin/offerSlice';
-import { toast } from 'react-toastify'; 
+import { toast } from 'react-toastify';
 
 
 const CreateOfferPage = () => {
@@ -34,7 +34,7 @@ const CreateOfferPage = () => {
         _id: cat._id,
         name: `${cat.category.category} - ${cat.subCategory}`,
       }));
-      setFormattedCategories(formatted); 
+      setFormattedCategories(formatted);
     }
   }, [categories]);
 
@@ -46,7 +46,8 @@ const CreateOfferPage = () => {
         const response = await adminAxios.get(`/products?limit=100`);
         const formattedProducts = response.data.products.map((product) => ({
           value: product._id,
-          label: product.productName,
+          label: `${product.productName} - ${product.price}`,
+          price: product.price,
         }));
         setProducts(formattedProducts);
       } catch (error) {
@@ -57,6 +58,11 @@ const CreateOfferPage = () => {
     fetchProducts();
   }, [dispatch]);
 
+  const filteredProducts =
+    offer.discountType === 'flat'
+      ? products.filter((p) => p.price > 2 * Number(offer.discountValue || 0))
+      : products;
+
   const handleOfferTypeChange = (e) => {
     setOffer({ ...offer, offerType: e.target.value, selectedItems: [] });
   };
@@ -66,61 +72,89 @@ const CreateOfferPage = () => {
     setOffer({ ...offer, selectedItems: selectedIds });
   };
 
+  useEffect(() => {
+    if (offer.discountType === 'flat') {
+      const validProductIds = products
+        .filter((p) => p.price > Number(offer.discountValue || 0))
+        .map((p) => p.value);
+
+      setOffer((prev) => ({
+        ...prev,
+        selectedItems: prev.selectedItems.filter((id) =>
+          validProductIds.includes(id)
+        )
+      }));
+    }
+  }, [offer.discountValue, offer.discountType, products]);
+
+
   // Validate the offer fields
   const validateOffer = () => {
     const { name, discountValue, startDate, endDate, offerType, discountType, selectedItems } = offer;
-  
+
     // Ensure required fields are filled
     if (!name || !discountValue || !startDate || !endDate) {
       toast.error('Please fill all required fields.');
       return false;
     }
-  
+
     // Validate discount value
-    if (discountType === 'percentage' && (discountValue <= 0 || discountValue > 100)) {
-      toast.error('Percentage discount value must be between 1 and 100.');
+    if (discountType === 'percentage' && (discountValue <= 0 || discountValue >= 50)) {
+      toast.error('Percentage discount value must be between 1 and 50.');
       return false;
     }
     if (discountType === 'flat' && discountValue <= 0) {
       toast.error('Flat discount value must be greater than 0.');
       return false;
     }
-  
+
     // Validate date format and logic
     const start = new Date(startDate);
     const end = new Date(endDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Normalize to midnight
-  
+
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       toast.error('Invalid date format.');
       return false;
     }
-  
+
     if (start < today) {
       toast.error('Valid From date cannot be in the past.');
       return false;
     }
-  
+
     if (end < today) {
       toast.error('Valid Until date cannot be in the past.');
       return false;
     }
-  
+
     if (start >= end) {
       toast.error('Valid Until date must be later than Valid From date.');
       return false;
     }
-  
+
     // Validate selection
     if ((offerType === 'category' || offerType === 'product') && selectedItems.length === 0) {
       toast.error(`Please select at least one ${offerType}.`);
       return false;
     }
-  
+
     return true;
   };
-  
+
+  const handleDiscountTypeChange = (e) => {
+    const discountType = e.target.value;
+
+    setOffer((prev) => ({
+      ...prev,
+      discountType,
+      offerType: discountType === 'flat' ? 'product' : prev.offerType,
+      selectedItems: []
+    }));
+  };
+
+
   const handleSubmit = async () => {
     if (!validateOffer()) return;
 
@@ -153,7 +187,7 @@ const CreateOfferPage = () => {
           <label className="block text-lg font-medium mb-2">Discount Type</label>
           <select
             value={offer.discountType}
-            onChange={(e) => setOffer({ ...offer, discountType: e.target.value })}
+            onChange={handleDiscountTypeChange}
             className="p-3 border border-gray-300 rounded-md w-full"
           >
             <option value="percentage">Percentage</option>
@@ -195,7 +229,9 @@ const CreateOfferPage = () => {
             onChange={handleOfferTypeChange}
             className="p-3 border border-gray-300 rounded-md w-full"
           >
-            <option value="category">Category</option>
+            {offer.discountType === 'percentage' && (
+              <option value="category">Category</option>
+            )}
             <option value="product">Product</option>
           </select>
         </div>
@@ -228,9 +264,9 @@ const CreateOfferPage = () => {
           <div>
             <h4 className="text-xl font-semibold mb-2">Select Products</h4>
             <Select
-              options={products}
+              options={filteredProducts}
               isMulti
-              value={products.filter((p) => offer.selectedItems.includes(p.value))}
+              value={filteredProducts.filter((p) => offer.selectedItems.includes(p.value))}
               onChange={handleSelectedItemsChange}
               className="react-select-container"
               classNamePrefix="react-select"

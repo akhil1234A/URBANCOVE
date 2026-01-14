@@ -57,7 +57,7 @@ class OfferService {
   async updateOffer(offerId, data) {
     const {
       name,
-      offerType,
+      type: offerType,
       selectedItems,
       discountType,
       discountValue,
@@ -71,9 +71,11 @@ class OfferService {
     }
 
     let targetUpdate = {};
+
     if (offerType && selectedItems) {
       targetUpdate = mapOfferTargets({ offerType, selectedItems });
     }
+
 
     const updatedOffer = await Offer.findByIdAndUpdate(
       offerId,
