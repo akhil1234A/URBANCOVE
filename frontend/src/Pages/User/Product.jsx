@@ -10,6 +10,7 @@ import {  toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { addToWishlist } from '../../slices/user/wishlistSlice';
 import { ClipLoader } from 'react-spinners';
+import { userAxios } from '../../utils/api';
 
 
 // Sub-components
@@ -146,8 +147,8 @@ const Product = () => {
   const { productID } = useParams();
   const dispatch = useDispatch();
 
-  const productData = useSelector((state) => selectProductById(state, productID));
-  const products = useSelector(selectProducts);
+  const [productData, setProductData] = useState(null);
+  const [products, setProducts] = useState([]);
   const loading = useSelector(selectLoading);
 
   const [currentImage, setCurrentImage] = useState('');
@@ -165,12 +166,17 @@ const Product = () => {
 
 
   useEffect(() => {
-    if (!productData) {
-      dispatch(fetchProductsForUser({ page: 1, limit: 20}));
-    } else if (productData.images) {
-      setCurrentImage(productData.images[0]);
-    }
-  }, [productID, dispatch, productData,]);
+    userAxios.get(`/products/${productID}`)
+    .then((response) => {
+      setProductData(response.data.product);
+      setProducts(response.data.relatedProducts);
+      setCurrentImage(response.data.product.images[0]);
+    })
+    .catch((error) => {
+      console.error('Error fetching product:', error);
+    });
+  }, [productID]);
+
 
   const handleAddToCart = () => {
     if (!size) {
@@ -284,10 +290,7 @@ const Product = () => {
 
       {/* Related Products */}
       <RelatedProducts
-        category={productData.category?._id}
-        subCategory={productData.subCategory?._id}
         products={products}
-        currentProductId={productID}
       />
     </div>
   ) : (

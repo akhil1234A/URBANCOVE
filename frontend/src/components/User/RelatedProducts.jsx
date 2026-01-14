@@ -24,16 +24,7 @@ const RelatedProducts = ({ category, subCategory, products, currentProductId}) =
     return wishlistItems.some((wishlistItem) => wishlistItem._id === productId);
   };
 
-  useEffect(() => {
-    if (products.length > 0) {
-      const filteredProducts = products.filter(item => 
-        item.category?._id === category && item.subCategory?._id === subCategory && item._id !== currentProductId
-      );
 
-      // Limit to 5 related products
-      setRelated(filteredProducts.slice(0, 5));
-    }
-  }, [products, category, subCategory]);
 
   return (
     <div className='my-24'>
@@ -41,8 +32,8 @@ const RelatedProducts = ({ category, subCategory, products, currentProductId}) =
         <Title text1={'RELATED'} text2={'PRODUCTS'} />
       </div>
       <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6'>
-        {related.length > 0 ? (
-          related.map(item => (
+        {products.length > 0 ? (
+          products.map(item => (
             <ProductItem 
               key={item._id} 
               id={item._id} 

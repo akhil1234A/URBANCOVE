@@ -1,5 +1,5 @@
 const express = require('express');
-const { addProduct, editProduct, listProducts, deleteProduct, adminListProducts, getLatestProducts, getBestSellerProducts } = require('../controllers/admin/productController');
+const { addProduct, editProduct, listProducts, deleteProduct, adminListProducts, getLatestProducts, getBestSellerProducts, getProduct } = require('../controllers/admin/productController');
 const { adminAuth } = require('../middlewares/authMiddleware');
 const multer = require('multer');  
 
@@ -23,6 +23,7 @@ const upload = multer({ storage });
 router.get('/', listProducts);
 router.get('/latest', getLatestProducts);
 router.get('/best-sellers',getBestSellerProducts);
+router.get('/:productId', getProduct);
 
 //Admin: Product Management 
 router.get('/admin',adminListProducts);
