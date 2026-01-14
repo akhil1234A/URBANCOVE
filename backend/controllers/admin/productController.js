@@ -302,3 +302,28 @@ exports.deleteProduct = async (req, res) => {
       .json({ message: Messages.SERVER_ERROR, error });
   }
 };
+
+exports.getProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.productId);
+    if (!product) {
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .json({ message: Messages.PRODUCT_NOT_FOUND });
+    }
+    const products = await Product.find({
+      category: product.category,
+      subCategory: product.subCategory,
+    })
+
+    const relatedProducts = products.filter((item) => item._id.toString() !== product._id.toString()).slice(0, 4);
+
+
+    res.json({ product, relatedProducts });
+  } catch (error) {
+    console.error("Error in getProduct:", error);
+    res
+      .status(httpStatus.INTERNAL_SERVER_ERROR)
+      .json({ message: Messages.SERVER_ERROR, error });
+  }
+};
