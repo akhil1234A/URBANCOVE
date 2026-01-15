@@ -327,7 +327,6 @@ exports.getProduct = async (req, res) => {
 
     res.json({ product, relatedProducts });
   } catch (error) {
-    console.error("Error in getProduct:", error);
     res
       .status(httpStatus.INTERNAL_SERVER_ERROR)
       .json({ message: Messages.SERVER_ERROR, error });

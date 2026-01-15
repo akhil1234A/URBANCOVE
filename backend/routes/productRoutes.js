@@ -23,13 +23,14 @@ const upload = multer({ storage });
 router.get('/', listProducts);
 router.get('/latest', getLatestProducts);
 router.get('/best-sellers',getBestSellerProducts);
-router.get('/:productId', getProduct);
 
 //Admin: Product Management 
 router.get('/admin',adminListProducts);
-router.get('/admin/:productId?', listProducts);
+router.get('/admin/:productId', listProducts);
 router.post('/admin/', adminAuth, upload.array('images', 4), addProduct);
 router.patch('/admin/:id', adminAuth, upload.array('images', 4), editProduct);
 router.patch('/admin/:productId/delete', adminAuth, deleteProduct);
+router.get('/:productId', getProduct);
+
 
 module.exports = router;
