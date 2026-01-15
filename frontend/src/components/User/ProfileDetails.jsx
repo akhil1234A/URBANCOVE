@@ -1,29 +1,23 @@
 import React, { useState } from 'react';
-import { useSelector, useDispatch} from 'react-redux';
-import {toast} from 'react-toastify'
+import { useSelector, useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
 import { updatePasswordThunk } from '../../slices/user/authSlice';
 
 const ProfileDetails = () => {
-
   const dispatch = useDispatch();
-  
-  const {user, token} = useSelector((state)=>state.auth);
+  const { user, token } = useSelector((state) => state.auth);
 
- 
-  const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
+  const [name] = useState(user?.name || '');
+  const [email] = useState(user?.email || '');
   const [password, setPassword] = useState('pass-key');
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  
-
   const handlePasswordModalToggle = () => {
     setIsPasswordModalOpen(!isPasswordModalOpen);
   };
 
- 
   const handlePasswordSave = () => {
     if (!newPassword || !confirmPassword) {
       toast.error("Password fields can't be empty.");
@@ -35,8 +29,6 @@ const ProfileDetails = () => {
       return;
     }
 
-
-    // Dispatch updatePassword action
     dispatch(updatePasswordThunk({ token, passwordData: { newPassword } }))
       .unwrap()
       .then(() => {
@@ -51,105 +43,115 @@ const ProfileDetails = () => {
       });
   };
 
-
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800">Profile Details</h2>
+    <div className="max-w-3xl">
+      {/* Section Header */}
+      <div className="mb-10">
+        <h2 className="text-2xl font-semibold text-gray-900">
+          Profile Details
+        </h2>
+        <p className="mt-1 text-sm text-gray-500">
+          View your personal information
+        </p>
+      </div>
 
-      <form>
-        <div className="space-y-6">
-          {/* Name Field */}
-          <div>
-            <label htmlFor="name" className="text-lg font-semibold text-gray-700">Your Name</label>
-            <div className="flex items-center mt-2">
-              <input
-                type="text"
-                id="name"
-                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                readOnly
-              />
-              
-            </div>
-          </div>
+      <form className="space-y-8">
+        {/* Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Your Name
+          </label>
+          <input
+            type="text"
+            value={name}
+            readOnly
+            className="w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-3 text-gray-800 cursor-not-allowed"
+          />
+        </div>
 
-          {/* Email Field */}
-          <div>
-            <label htmlFor="email" className="text-lg font-semibold text-gray-700">Email Address</label>
-            <div className="flex items-center mt-2">
-              <input
-                type="email"
-                id="email"
-                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                readOnly
-              />
-             
-            </div>
-          </div>
+        {/* Email */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Email Address
+          </label>
+          <input
+            type="email"
+            value={email}
+            readOnly
+            className="w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-3 text-gray-800 cursor-not-allowed"
+          />
+        </div>
 
-          {/* Password Field */}
-          <div>
-            <label htmlFor="password" className="text-lg font-semibold text-gray-700">Password</label>
-            <div className="flex items-center mt-2">
-              <input
-                type="password"
-                id="password"
-                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={password}
-                readOnly
-              />
-          {!user?.googleId ? ( 
+        {/* Divider */}
+        <div className="border-t border-gray-200 pt-8">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Password
+          </label>
+
+          <div className="flex items-center gap-4">
+            <input
+              type="password"
+              value={password}
+              readOnly
+              className="flex-1 rounded-md border border-gray-300 bg-gray-50 px-4 py-3 text-gray-800 cursor-not-allowed"
+            />
+
+            {!user?.googleId ? (
               <button
                 type="button"
-                className="ml-4 py-2 px-4 bg-blue-600 text-white rounded-md transition duration-200 ease-in-out hover:bg-blue-500"
                 onClick={handlePasswordModalToggle}
+                className="rounded-md bg-[#7B1E1E] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#651818] transition"
               >
                 Change
               </button>
             ) : (
-              <span className="ml-4 text-gray-500">Password change disabled</span> 
+              <span className="text-sm text-gray-500">
+                Managed via Google
+              </span>
             )}
-            </div>
           </div>
         </div>
       </form>
 
-      
-
-      {/* Password Change Modal */}
+      {/* Password Modal */}
       {isPasswordModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-            <h3 className="text-xl font-semibold mb-4 text-gray-800">Change Password</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-sm rounded-xl bg-white px-6 py-6 shadow-xl">
+            <h3 className="mb-1 text-lg font-semibold text-gray-900">
+              Change Password
+            </h3>
+            <p className="mb-5 text-sm text-gray-500">
+              Enter a new password below
+            </p>
+
             <div className="space-y-4">
               <input
                 type="password"
-                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="New Password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full rounded-md border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#7B1E1E]"
               />
+
               <input
                 type="password"
-                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Confirm Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full rounded-md border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#7B1E1E]"
               />
             </div>
-            <div className="flex justify-end space-x-4 mt-6">
+
+            <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={handlePasswordModalToggle}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+                className="rounded-md px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePasswordSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition"
+                className="rounded-md bg-[#7B1E1E] px-4 py-2 text-sm font-medium text-white hover:bg-[#651818]"
               >
                 Save
               </button>
