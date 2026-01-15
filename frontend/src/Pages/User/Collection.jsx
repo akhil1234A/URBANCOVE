@@ -1,6 +1,6 @@
-import  { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchProductsForUser, selectProducts, selectLoading, setCurrentPage, setSort, setFilters } from '../../slices/admin/productSlice';
+import { fetchProductsForUser, selectProducts, selectLoading, setCurrentPage } from '../../slices/admin/productSlice';
 import { fetchWishlist } from '../../slices/user/wishlistSlice';
 import { assets } from '../../assets/assets';
 import Title from '../../components/User/Title';
@@ -8,6 +8,7 @@ import ProductItem from '../../components/User/ProductItem';
 import { ClipLoader } from 'react-spinners';
 import { isTokenExpired } from '../../utils/jwtdecode';
 import { userAxios } from '../../utils/api';
+import { toast } from 'react-toastify';
 
 const Collection = () => {
   const dispatch = useDispatch();
@@ -29,24 +30,21 @@ const Collection = () => {
   const productList = useSelector(selectProducts);
   const loading = useSelector(selectLoading);
 
-  const currentPage = useSelector((state) => state.products.currentPage); 
-  const totalPages = useSelector((state) => state.products.totalPages); 
-  const itemsPerPage = 12; 
+  const currentPage = useSelector((state) => state.products.currentPage);
+  const totalPages = useSelector((state) => state.products.totalPages);
+  const itemsPerPage = 12;
   const search = useSelector((state) => state.products.search);
-  const sort = useSelector((state) => state.products.sort);
-  const filters = useSelector((state) => state.products.filters);
-  
 
-  const [localFilters, setLocalFilters] = useState({
-    categories: filters.categories || [],
-    subCategories: filters.subCategories || [],
-    priceRange: filters.priceRange || { min: 0, max: Infinity },
-    inStock: filters.inStock || false,
-  });
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [inStock, setInStock] = useState(true);
+  const [min, setMin] = useState(0);
+  const [max, setMax] = useState(Infinity);
+  const [sort, setSort] = useState('newest');
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedSubCategories, setSelectedSubCategories] = useState([]);
 
 
   useEffect(() => {
@@ -70,60 +68,55 @@ const Collection = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search }));
-  }, [dispatch, currentPage, search]);
-  
+    dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search, inStock, min, max, sort, categoryNames: selectedCategories.join(','), subCategoryNames: selectedSubCategories.join(',') }));
+  }, [dispatch, currentPage, search, sort]);
+
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) {
-      dispatch(setCurrentPage(page));  
+      dispatch(setCurrentPage(page));
     }
   };
 
   const handleSortChange = (e) => {
-    dispatch(setSort(e.target.value));
+    setSort(e.target.value);
   };
 
-  const handleCategoryFilterChange = (category) => {
-    const updatedCategories = localFilters.categories.includes(category)
-      ? localFilters.categories.filter(c => c !== category)
-      : [...localFilters.categories, category];
-    
-    setLocalFilters(prev => ({
-      ...prev,
-      categories: updatedCategories
-    }));
-  };
-
-  const handleSubCategoryFilterChange = (subCategory) => {
-    const updatedSubCategories = localFilters.subCategories.includes(subCategory)
-      ? localFilters.subCategories.filter(sc => sc !== subCategory)
-      : [...localFilters.subCategories, subCategory];
-    
-    setLocalFilters(prev => ({
-      ...prev,
-      subCategories: updatedSubCategories
-    }));
-  };
 
   const handleInStockChange = () => {
-    setLocalFilters(prev => ({
-      ...prev,
-      inStock: !prev.inStock
-    }));
+    setInStock(prev => !prev);
   };
 
   const handlePriceRangeChange = (min, max) => {
-    setLocalFilters(prev => ({
-      ...prev,
-      priceRange: { min, max }
-    }));
+    if (min > max) {
+      toast.error('Invalid price range');
+      return;
+    }
+    setMin(min);
+    setMax(max);
   };
 
-  const applyFilters = async () => {
-    dispatch(fetchProductsForUser({ page: currentPage, limit: 20, search }));
-    dispatch(setFilters(localFilters));
+  const handleCategoryFilterChange = (category) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
+    );
   };
-  
+
+  const handleSubCategoryFilterChange = (subCategory) => {
+    setSelectedSubCategories((prev) =>
+      prev.includes(subCategory)
+        ? prev.filter((s) => s !== subCategory)
+        : [...prev, subCategory]
+    );
+  };
+
+
+  const applyFilters = async () => {
+    dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search, inStock, min, max, sort, categoryNames: selectedCategories.join(','), subCategoryNames: selectedSubCategories.join(',') }));
+    dispatch(setCurrentPage(1));
+  };
+
 
   if (loading || isLoading) {
     return (
@@ -148,30 +141,30 @@ const Collection = () => {
 
   return (
     <div className='flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t'>
-       
-        {/* Filter options */}
-        <div className='min-w-60'>
+
+      {/* Filter options */}
+      <div className='min-w-60'>
         <p className='my-2 text-xl flex items-center cursor-pointer gap-2'>FILTERS
           <img className={`h-3 sm:hidden`} src={assets.dropdown_icon} alt="" />
         </p>
 
-        
+
         {/* Category filter */}
         <div className={`border border-gray-300 pl-5 py-3 mt-6 sm:block`}>
           <p className='mb-3 text-sm font-medium'>CATEGORIES</p>
           <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
-          {categories.map((category) => (
-            <p key={category._id} className='flex gap-2'>
-              <input
-                className='w-3'
-                type="checkbox"
-                value={category.category}
-                checked={localFilters.categories.includes(category.category)}
-                onChange={() => handleCategoryFilterChange(category.category)}
-              />
-              {category.category}
-            </p>
-          ))}
+            {categories.map((category) => (
+              <p key={category._id} className='flex gap-2'>
+                <input
+                  className='w-3'
+                  type="checkbox"
+                  value={category.category}
+                  checked={selectedCategories.includes(category.category)}
+                  onChange={() => handleCategoryFilterChange(category.category)}
+                />
+                {category.category}
+              </p>
+            ))}
           </div>
         </div>
 
@@ -179,18 +172,18 @@ const Collection = () => {
         <div className={`border border-gray-300 pl-5 py-3 my-5 sm:block`}>
           <p className='mb-3 text-sm font-medium'>TYPE</p>
           <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
-          {subCategories.map((subCategory) => (
-            <p key={subCategory._id} className='flex gap-2'>
-              <input
-                className='w-3'
-                type="checkbox"
-                value={subCategory.subCategory}
-                checked={localFilters.subCategories.includes(subCategory.subCategory)}
-                onChange={() => handleSubCategoryFilterChange(subCategory.subCategory)}
-              />
-              {subCategory.subCategory}
-            </p>
-          ))}
+            {subCategories.map((subCategory) => (
+              <p key={subCategory._id} className='flex gap-2'>
+                <input
+                  className='w-3'
+                  type="checkbox"
+                  value={subCategory.subCategory}
+                  checked={selectedSubCategories.includes(subCategory.subCategory)}
+                  onChange={() => handleSubCategoryFilterChange(subCategory.subCategory)}
+                />
+                {subCategory.subCategory}
+              </p>
+            ))}
           </div>
         </div>
 
@@ -201,15 +194,15 @@ const Collection = () => {
             <input
               type="number"
               placeholder="Min Price"
-              value={localFilters.priceRange.min}
-              onChange={(e) => handlePriceRangeChange(Number(e.target.value), localFilters.priceRange.max)}
+              value={min}
+              onChange={(e) => handlePriceRangeChange(Number(e.target.value), max)}
               className="border rounded px-2 py-1"
             />
             <input
               type="number"
               placeholder="Max Price"
-              value={localFilters.priceRange.max === Infinity ? '' : localFilters.priceRange.max}
-              onChange={(e) => handlePriceRangeChange(localFilters.priceRange.min, Number(e.target.value) || Infinity)}
+              value={max === Infinity ? '' : max}
+              onChange={(e) => handlePriceRangeChange(min, Number(e.target.value) || Infinity)}
               className="border rounded px-2 py-1"
             />
           </div>
@@ -221,7 +214,7 @@ const Collection = () => {
             <input
               className='w-3'
               type="checkbox"
-              checked={localFilters.inStock}
+              checked={inStock}
               onChange={handleInStockChange}
             /> In Stock Only
           </p>
@@ -234,7 +227,7 @@ const Collection = () => {
           Apply Filters
         </button>
       </div>
-     
+
       {/* Right side */}
       <div className='flex-1'>
         <div className='flex justify-between text-base sm:text-2xl mb-4'>
@@ -260,27 +253,27 @@ const Collection = () => {
         {/* Map products */}
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6'>
           {Array.isArray(productList) && productList.map((item) => (
-             <ProductItem 
-             key={item._id} 
-             id={item._id} 
-             name={item.productName} 
-             price={item.price} 
-             image={item.images[0]} 
-             currency={currency}
-             discountedPrice={item?.discountedPrice || 0}
-             wishlist={isInWishlist(item._id)}
-           />
+            <ProductItem
+              key={item._id}
+              id={item._id}
+              name={item.productName}
+              price={item.price}
+              image={item.images[0]}
+              currency={currency}
+              discountedPrice={item?.discountedPrice || 0}
+              wishlist={isInWishlist(item._id)}
+            />
           ))}
         </div>
         <div className="pagination flex justify-center items-center mt-4 space-x-2">
           <button
-            onClick={() => handlePageChange(currentPage - 1)}
+            onClick={() => handlePageChange(Number(currentPage) - 1)}
             disabled={currentPage === 1}
             className={`py-2 px-4 bg-gray-200 rounded-lg ${currentPage === 1 ? 'cursor-not-allowed text-gray-400' : 'hover:bg-gray-300'} transition duration-300`}
           >
             Previous
           </button>
-          
+
           {Array.from({ length: totalPages }, (_, index) => (
             <button
               key={index + 1}
@@ -291,8 +284,9 @@ const Collection = () => {
             </button>
           ))}
 
+
           <button
-            onClick={() => handlePageChange(currentPage + 1)}
+            onClick={() => handlePageChange(Number(currentPage) + 1)}
             disabled={currentPage === totalPages}
             className={`py-2 px-4 bg-gray-200 rounded-lg ${currentPage === totalPages ? 'cursor-not-allowed text-gray-400' : 'hover:bg-gray-300'} transition duration-300`}
           >

@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import {fetchProducts, fetchAdminProducts, updateProductStatusService, addProductService, editProductService }from '../../services/admin/productService'
 
-export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async ({page = 1, limit = 100, search}) => {
-  return await fetchProducts(page,limit,search);
+export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async ({page = 1, limit = 100, search, inStock, min, max, sort, categoryNames, subCategoryNames}) => {
+  return await fetchProducts(page,limit,search, inStock, min, max, sort, categoryNames, subCategoryNames);
 });
 
 export const fetchProductsForAdmin = createAsyncThunk(
@@ -56,12 +56,9 @@ const productsSlice = createSlice({
     totalPages: 1,
     totalItems: 0,
     search: '',
-    sort: '',
     filters: {
       categories: [],
       subCategories: [],
-      priceRange: { min: 0, max: Infinity },
-      inStock: true
     },
     loading: false,
     error: null,
@@ -182,36 +179,6 @@ export const selectProducts = createSelector(
         filters.subCategories.includes(product.subCategory.subCategory)
       );
     }
-
-    // Apply price range filter
-    filteredProducts = filteredProducts.filter(product => 
-      product.price >= filters.priceRange.min && 
-      product.price <= filters.priceRange.max
-    );
-
-    // Apply in stock filter
-    if (filters.inStock) {
-      filteredProducts = filteredProducts.filter(product => product.stock > 0);
-    }
-
-    // Apply sorting
-    if (sort) {
-      filteredProducts.sort((a, b) => {
-        switch (sort) {
-          case 'price-low-high':
-            return a.price - b.price;
-          case 'price-high-low':
-            return b.price - a.price;
-          case 'name-a-z':
-            return a.productName.localeCompare(b.productName);
-          case 'name-z-a':
-            return b.productName.localeCompare(a.productName);
-          default:
-            return 0;
-        }
-      });
-    }
-
     return filteredProducts;
   }
 );
@@ -224,5 +191,5 @@ export const selectProductById = (state, productID) =>
   state.products.items.find((product) => product._id === productID);
 
 
-export const {setCurrentPage, setSearch, setSort, setFilters} = productsSlice.actions;
+export const {setCurrentPage, setSearch, setFilters} = productsSlice.actions;
 export default productsSlice.reducer;

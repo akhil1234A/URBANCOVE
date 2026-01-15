@@ -25,13 +25,19 @@ const processImage = async (filePath) => {
  */
 exports.listProducts = async (req, res) => {
   try {
-    const { page = 1, limit = 10, productId, search } = req.query;
+    const { page = 1, limit = 10, productId, search, inStock, min, max, sort, categoryNames, subCategoryNames} = req.query;
 
     const { products, totalCount } = await productService.listActiveProducts({
       page: Number(page),
       limit: Number(limit),
       productId,
       search,
+      inStock,
+      min,
+      max,
+      sort,
+      categoryName: categoryNames,
+      subCategoryName: subCategoryNames
     });
 
 
@@ -44,6 +50,7 @@ exports.listProducts = async (req, res) => {
       totalItems: totalCount,
     });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: Messages.SERVER_ERROR });
   }
 };
