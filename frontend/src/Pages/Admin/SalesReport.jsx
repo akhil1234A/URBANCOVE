@@ -5,7 +5,11 @@ import 'jspdf-autotable';
 import * as XLSX from 'xlsx'; 
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { ChartBarIcon, DocumentDownloadIcon, ExclamationCircleIcon } from '@heroicons/react/outline';
+import {
+  ChartBarIcon,
+  DocumentArrowDownIcon,
+  ExclamationCircleIcon,
+} from "@heroicons/react/24/outline";
 import { formatDate } from '../../utils/dateFormatter';
 import { toast } from 'react-toastify';
 
@@ -297,14 +301,14 @@ const SalesReport = () => {
               onClick={handleDownloadExcel}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              <DocumentDownloadIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+              <DocumentArrowDownIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
               Download Excel
             </button>
             <button
               onClick={handleDownloadPDF}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
             >
-              <DocumentDownloadIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+              <DocumentArrowDownIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
               Download PDF
             </button>
           </div>

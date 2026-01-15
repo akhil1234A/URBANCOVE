@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { cancelOrder, viewUserOrders } from '../../slices/admin/orderSlice';
+import { viewUserOrders } from '../../slices/admin/orderSlice';
 import { AiOutlineShoppingCart } from 'react-icons/ai';
 import { toast } from 'react-toastify';
 import { generateInvoice } from '../../utils/invoiceUtils';
@@ -14,6 +14,7 @@ const OrderHistory = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { orders, loading, pagination } = useSelector((state) => state.orders);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [returnModalOpen, setReturnModalOpen] = useState(false);
@@ -46,62 +47,15 @@ const OrderHistory = () => {
   };
 
   const confirmReturnOrder = async () => {
-    if (selectedOrderId) {
-      try {
-        await userAxios.post(`/orders/${selectedOrderId}/return`);
-        toast.success('Order returned successfully!');
-        dispatch(viewUserOrders({ page: currentPage, limit: 5 }));
-      } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to process the return.');
-      }
-      setReturnModalOpen(false);
-      setSelectedOrderId(null);
-    }
-  };
-
-  const handleRetryPayment = async (order) => {
     try {
-      const response = await userAxios.post(`/orders/razorpay`, {
-        orderId: order._id,
-        addressId: order.deliveryAddress._id,
-        cartItems: order.items,
-        totalAmount: Math.round(order.totalAmount),
-      });
-
-      const { razorpayOrderId, amount, currency } = response.data;
-      const razorpayOptions = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount,
-        currency,
-        order_id: razorpayOrderId,
-        handler: async (response) => {
-          try {
-            const verifyData = {
-              razorpayOrderId,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-              orderId: order._id,
-            };
-
-            const verifyResponse = await userAxios.post(`/orders/verify`, verifyData);
-            if (verifyResponse.data.success) {
-              toast.success('Payment verified successfully!');
-              dispatch(viewUserOrders({ page: currentPage, limit: 5 }));
-            } else {
-              toast.error('Payment verification failed.');
-            }
-          } catch (error) {
-            toast.error('Payment verification failed.');
-          }
-        },
-        theme: { color: '#3399cc' },
-      };
-
-      const razorpay = new window.Razorpay(razorpayOptions);
-      razorpay.open();
-    } catch (error) {
-      toast.error('Failed to initialize retry payment.');
+      await userAxios.post(`/orders/${selectedOrderId}/return`);
+      toast.success('Order returned successfully!');
+      dispatch(viewUserOrders({ page: currentPage, limit: 5 }));
+    } catch {
+      toast.error('Failed to process the return.');
     }
+    setReturnModalOpen(false);
+    setSelectedOrderId(null);
   };
 
   const handleDownload = async (order) => {
@@ -109,16 +63,9 @@ const OrderHistory = () => {
       const doc = await generateInvoice(order);
       doc.save(`invoice-${order.orderReference}.pdf`);
       toast.success('Invoice downloaded successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to download invoice.');
     }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    });
   };
 
   const getStatusStyle = (status) => {
@@ -132,167 +79,156 @@ const OrderHistory = () => {
     return styles[status] || 'bg-gray-100 text-gray-800';
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <PulseLoader color="#7B1E1E" size={8} />
+      </div>
+    );
+  }
+
+  if (!orders.length) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+        <AiOutlineShoppingCart className="mb-4 text-6xl" />
+        <p className="text-lg">No orders found</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 max-w-6xl mx-auto bg-gray-50 rounded-lg shadow-md">
-      <h2 className="text-3xl font-bold mb-6 text-gray-800 border-b pb-3">Order History</h2>
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <PulseLoader color="#4A90E2" size={10} />
-        </div>
-      ) : orders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center text-gray-500 py-12">
-          <AiOutlineShoppingCart className="text-6xl mb-4" />
-          <p className="text-xl">No orders found</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {orders.map((order) => (
-            <div key={order._id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Order #{order.orderReference}
-                  </h3>
-                  <p className="text-sm text-gray-500">Placed on: {formatDate(order.placedAt)}</p>
-                </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusStyle(
-                    order.status
-                  )}`}
-                >
-                  {order.status}
-                </span>
+    <div className="max-w-5xl">
+      {/* Header */}
+      <div className="mb-10">
+        <h2 className="text-2xl font-semibold text-gray-900">Order History</h2>
+        <p className="mt-1 text-sm text-gray-500">
+          View and manage your past orders
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        {orders.map((order) => (
+          <div
+            key={order._id}
+            className="rounded-xl border border-gray-200 bg-white p-6"
+          >
+            {/* Order header */}
+            <div className="flex items-start justify-between gap-4 mb-6">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">
+                  Order #{order.orderReference}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  Placed on {new Date(order.placedAt).toLocaleDateString()}
+                </p>
               </div>
-              <div className="mb-4">
-                <h4 className="text-md font-medium text-gray-700 mb-2">Items:</h4>
-                {order.items.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center space-x-4 py-2 border-b last:border-b-0"
-                  >
-                    <img
-                      src={item.productId?.images?.[0] || '/placeholder-image.jpg'}
-                      alt={item.productId?.productName || 'Product'}
-                      className="w-16 h-16 object-cover rounded-md"
-                    />
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-800">
-                        {item.productId?.productName || 'Product'}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Size: {item.size} | Quantity: {item.quantity}
-                      </p>
-                      <p className="text-sm text-gray-500">Price: ₹{item.price}</p>
-                    </div>
-                    <p className="text-gray-700 font-semibold">₹{item.price * item.quantity}</p>
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusStyle(
+                  order.status
+                )}`}
+              >
+                {order.status}
+              </span>
+            </div>
+
+            {/* Items */}
+            <div className="divide-y divide-gray-200">
+              {order.items.map((item, index) => (
+                <div key={index} className="flex gap-4 py-4">
+                  <img
+                    src={item.productId?.images?.[0] || '/placeholder.jpg'}
+                    alt=""
+                    className="h-16 w-16 rounded-md object-cover"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">
+                      {item.productId?.productName}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Size: {item.size} · Qty: {item.quantity}
+                    </p>
                   </div>
-                ))}
-              </div>
-              <div className="mb-4">
-                <h4 className="text-md font-medium text-gray-700 mb-2">Delivery Address:</h4>
-                <p className="text-gray-600">
-                  {order.deliveryAddress?.street}, {order.deliveryAddress?.city},{' '}
-                  {order.deliveryAddress?.state}, {order.deliveryAddress?.postcode},{' '}
-                  {order.deliveryAddress?.country}
-                </p>
-                <p className="text-gray-600">Phone: {order.deliveryAddress?.phoneNumber}</p>
-              </div>
-              <div className="mb-4">
-                <h4 className="text-md font-medium text-gray-700 mb-2">Payment Details:</h4>
-                <p className="text-gray-600 capitalize">
-                  Method: {order.paymentMethod || 'Not specified'}
-                </p>
-                <p className="text-gray-600">Status: {order.paymentStatus}</p>
-                {order.discountAmount > 0 && (
-                  <p className="text-gray-600">Discount: ₹{order.discountAmount}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    ₹{item.price * item.quantity}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+              <p className="text-lg font-semibold text-gray-900">
+                Total: ₹{order.totalAmount}
+              </p>
+
+              <div className="flex flex-wrap gap-3 text-sm">
+                <button
+                  onClick={() => navigate(`/account/orders/${order._id}`)}
+                  className="rounded-md bg-[#7B1E1E] px-4 py-2 text-white hover:bg-[#651818]"
+                >
+                  View Details
+                </button>
+
+                {order.status === 'Pending' && (
+                  <button
+                    onClick={() => handleCancelOrder(order._id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Cancel
+                  </button>
+                )}
+
+                {order.status === 'Delivered' && (
+                  <button
+                    onClick={() => handleReturnOrder(order._id)}
+                    className="text-gray-700 hover:underline"
+                  >
+                    Return
+                  </button>
+                )}
+
+                {order.status !== 'Cancelled' && (
+                  <button
+                    onClick={() => handleDownload(order)}
+                    className="text-gray-700 hover:underline"
+                  >
+                    Download Invoice
+                  </button>
                 )}
               </div>
-              {order.cancellationReason && (
-                <div className="mb-4">
-                  <h4 className="text-md font-medium text-gray-700 mb-2">Cancellation Reason:</h4>
-                  <p className="text-gray-600">{order.cancellationReason}</p>
-                </div>
-              )}
-              <div className="flex justify-between items-center">
-                <p className="text-lg font-semibold text-gray-800">Total: ₹{order.totalAmount}</p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => navigate(`/account/orders/${order._id}`)}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-500 transition"
-                  >
-                    View Details
-                  </button>
-                  {order.status === 'Pending' && (
-                    <button
-                      onClick={() => handleCancelOrder(order._id)}
-                      className="px-4 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-500 transition"
-                    >
-                      Cancel Order
-                    </button>
-                  )}
-                  {order.paymentStatus === 'Failed' && order.status !== 'Cancelled' && (
-                    <button
-                      onClick={() => handleRetryPayment(order)}
-                      className="px-4 py-2 bg-orange-600 text-white text-sm rounded-md hover:bg-orange-500 transition"
-                    >
-                      Retry Payment
-                    </button>
-                  )}
-                  {order.status === 'Delivered' && (
-                    <button
-                      onClick={() => handleReturnOrder(order._id)}
-                      className="px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-500 transition"
-                    >
-                      Return
-                    </button>
-                  )}
-                  {order.status !== 'Cancelled' && (
-                    <button
-                      onClick={() => handleDownload(order)}
-                      className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-500 transition"
-                    >
-                      Download Invoice
-                    </button>
-                  )}
-                </div>
-              </div>
             </div>
-          ))}
-          <div className="flex justify-center items-center mt-6 space-x-2">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-md text-sm font-medium ${
-                currentPage === 1
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-500'
-              }`}
-            >
-              Previous
-            </button>
-            <span className="px-4 py-2 text-sm text-gray-700">
-              Page {currentPage} of {pagination.totalPages}
-            </span>
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === pagination.totalPages}
-              className={`px-4 py-2 rounded-md text-sm font-medium ${
-                currentPage === pagination.totalPages
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-500'
-              }`}
-            >
-              Next
-            </button>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
+
+      {/* Pagination */}
+      <div className="mt-10 flex items-center justify-center gap-4 text-sm">
+        <button
+          disabled={currentPage === 1}
+          onClick={() => handlePageChange(currentPage - 1)}
+          className="rounded-md border px-4 py-2 disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="text-gray-600">
+          Page {currentPage} of {pagination.totalPages}
+        </span>
+        <button
+          disabled={currentPage === pagination.totalPages}
+          onClick={() => handlePageChange(currentPage + 1)}
+          className="rounded-md border px-4 py-2 disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+
       <CancelOrderModal
         isOpen={cancelModalOpen}
         onClose={() => setCancelModalOpen(false)}
         onConfirm={confirmCancelOrder}
         orderId={selectedOrderId}
       />
+
       <ReturnOrderModal
         isOpen={returnModalOpen}
         onClose={() => setReturnModalOpen(false)}

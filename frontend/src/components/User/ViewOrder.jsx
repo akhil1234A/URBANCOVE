@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { userAxios } from '../../utils/api';
-import { cancelOrder, viewOrder } from '../../slices/admin/orderSlice';
+import { viewOrder } from '../../slices/admin/orderSlice';
 import { generateInvoice } from '../../utils/invoiceUtils';
 import { PulseLoader } from 'react-spinners';
 import CancelOrderModal from './CancelOrderModal';
@@ -14,102 +14,33 @@ const ViewOrder = () => {
   const { orderId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { order: orderDetails, loading, error } = useSelector((state) => state.orders);
+  const { order: orderDetails, loading, error } = useSelector(
+    (state) => state.orders
+  );
+
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [returnModalOpen, setReturnModalOpen] = useState(false);
 
   useEffect(() => {
-    if (orderId) {
-      dispatch(viewOrder(orderId));
-    }
+    if (orderId) dispatch(viewOrder(orderId));
   }, [dispatch, orderId]);
-
-  const handleCancelOrder = () => {
-    setCancelModalOpen(true);
-  };
-
-  const confirmCancelOrder = async () => {
-      setCancelModalOpen(false);
-      dispatch(viewOrder(orderId));
-    
-  };
-
-  const handleReturnOrder = () => {
-    setReturnModalOpen(true);
-  };
-
-  const confirmReturnOrder = async () => {
-    try {
-      await userAxios.post(`/orders/${orderId}/return`);
-      toast.success('Order returned successfully!');
-      dispatch(viewOrder(orderId));
-      setReturnModalOpen(false);
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to process the return.');
-    }
-  };
-
-  const handleRetryPayment = async () => {
-    try {
-      const response = await userAxios.post(`/orders/razorpay`, {
-        orderId,
-        addressId: orderDetails.deliveryAddress._id,
-        cartItems: orderDetails.items,
-        totalAmount: Math.round(orderDetails.totalAmount),
-      });
-
-      const { razorpayOrderId, amount, currency } = response.data;
-      const razorpayOptions = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount,
-        currency,
-        order_id: razorpayOrderId,
-        handler: async (response) => {
-          try {
-            const verifyData = {
-              razorpayOrderId,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-              orderId,
-            };
-
-            const verifyResponse = await userAxios.post(`/orders/verify`, verifyData);
-            if (verifyResponse.data.success) {
-              toast.success('Payment verified successfully!');
-              dispatch(viewOrder(orderId));
-            } else {
-              toast.error('Payment verification failed.');
-            }
-          } catch (error) {
-            toast.error('Payment verification failed.');
-          }
-        },
-        theme: { color: '#3399cc' },
-      };
-
-      const razorpay = new window.Razorpay(razorpayOptions);
-      razorpay.open();
-    } catch (error) {
-      toast.error('Failed to initialize retry payment.');
-    }
-  };
 
   const handleDownload = async () => {
     try {
       const doc = await generateInvoice(orderDetails);
       doc.save(`invoice-${orderDetails.orderReference}.pdf`);
       toast.success('Invoice downloaded successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to download invoice.');
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
+  const formatDate = (date) =>
+    new Date(date).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
     });
-  };
 
   const getStatusStyle = (status) => {
     const styles = {
@@ -124,147 +55,163 @@ const ViewOrder = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <PulseLoader color="#4A90E2" size={10} />
+      <div className="flex h-64 items-center justify-center">
+        <PulseLoader color="#7B1E1E" size={8} />
       </div>
     );
   }
 
   if (error || !orderDetails) {
     return (
-      <div className="flex flex-col items-center justify-center text-gray-500 py-12">
-        <AiOutlineShoppingCart className="text-6xl mb-4" />
-        <p className="text-xl">{error || 'Order not found'}</p>
+      <div className="flex flex-col items-center py-16 text-gray-500">
+        <AiOutlineShoppingCart className="mb-4 text-6xl" />
+        <p className="text-lg">{error || 'Order not found'}</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-3xl font-bold mb-6 text-gray-800">Order Details</h2>
-      <div className="space-y-6">
-        <div className="border-b pb-4">
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Order Summary</h3>
-          <div className="space-y-2">
-            <p className="text-gray-600">
-              <strong>Order ID:</strong> {orderDetails.orderReference}
-            </p>
-            <p className="text-gray-600">
-              <strong>Placed On:</strong> {formatDate(orderDetails.placedAt)}
-            </p>
-            <span
-              className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getStatusStyle(
-                orderDetails.status
-              )}`}
-            >
-              <strong>Status:</strong> {orderDetails.status}
-            </span>
-            {orderDetails.cancellationReason && (
-              <p className="text-gray-600">
-                <strong>Cancellation Reason:</strong> {orderDetails.cancellationReason}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="border-b pb-4">
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Items</h3>
-          <div className="space-y-4">
-            {orderDetails.items.map((item, index) => (
-              <div key={index} className="flex items-center space-x-4 py-2">
-                <img
-                  src={item.productId?.images?.[0] || '/placeholder-image.jpg'}
-                  alt={item.productId?.productName || 'Product'}
-                  className="w-20 h-20 object-cover rounded-md"
-                />
-                <div className="flex-1">
-                  <p className="text-gray-700 font-medium">
-                    {item.productId?.productName || 'Product'}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Size: {item.size} | Quantity: {item.quantity}
-                  </p>
-                  <p className="text-sm text-gray-500">Price: ₹{item.price}</p>
-                </div>
-                <p className="text-gray-700 font-semibold">₹{item.price * item.quantity}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="border-b pb-4">
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Delivery Address</h3>
-          <div className="space-y-1">
-            <p className="text-gray-600">{orderDetails.deliveryAddress.street}</p>
-            <p className="text-gray-600">
-              {orderDetails.deliveryAddress.city}, {orderDetails.deliveryAddress.state},{' '}
-              {orderDetails.deliveryAddress.postcode}, {orderDetails.deliveryAddress.country}
-            </p>
-            <p className="text-gray-600">Phone: {orderDetails.deliveryAddress.phoneNumber}</p>
-          </div>
-        </div>
-        <div className="border-b pb-4">
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Payment Details</h3>
-          <div className="space-y-2">
-            <p className="text-gray-600">
-              <strong>Method:</strong> {orderDetails.paymentMethod}
-            </p>
-            <p className="text-gray-600">
-              <strong>Status:</strong> {orderDetails.paymentStatus}
-            </p>
-            {orderDetails.discountAmount > 0 && (
-              <p className="text-gray-600">
-                <strong>Discount:</strong> ₹{orderDetails.discountAmount}
-              </p>
-            )}
-            <p className="text-gray-700 font-semibold">
-              <strong>Total:</strong> ₹{orderDetails.totalAmount}
+    <div className="max-w-5xl">
+      {/* Header */}
+      <div className="mb-10 border-b border-gray-200 pb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-3 text-sm text-gray-500 hover:underline"
+        >
+          ← Back to orders
+        </button>
+
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-900">
+              Order #{orderDetails.orderReference}
+            </h2>
+            <p className="text-sm text-gray-500">
+              Placed on {formatDate(orderDetails.placedAt)}
             </p>
           </div>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          {orderDetails.status === 'Pending' && (
-            <button
-              onClick={handleCancelOrder}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-500 transition"
-            >
-              Cancel Order
-            </button>
-          )}
-          {orderDetails.paymentStatus === 'Failed' && orderDetails.status !== 'Cancelled' && (
-            <button
-              onClick={handleRetryPayment}
-              className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-500 transition"
-            >
-              Retry Payment
-            </button>
-          )}
-          {orderDetails.status === 'Delivered' && (
-            <button
-              onClick={handleReturnOrder}
-              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-500 transition"
-            >
-              Return
-            </button>
-          )}
-          {orderDetails.status !== 'Cancelled' && (
-            <button
-              onClick={handleDownload}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-500 transition"
-            >
-              Download Invoice
-            </button>
-          )}
+
+          <span
+            className={`rounded-full px-4 py-1 text-sm font-medium ${getStatusStyle(
+              orderDetails.status
+            )}`}
+          >
+            {orderDetails.status}
+          </span>
         </div>
       </div>
+
+      {/* Items */}
+      <section className="mb-10">
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">Items</h3>
+
+        <div className="divide-y divide-gray-200 rounded-xl border border-gray-200">
+          {orderDetails.items.map((item, index) => (
+            <div key={index} className="flex gap-4 p-4">
+              <img
+                src={item.productId?.images?.[0] || '/placeholder.jpg'}
+                alt=""
+                className="h-20 w-20 rounded-md object-cover"
+              />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">
+                  {item.productId?.productName}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Size: {item.size} · Qty: {item.quantity}
+                </p>
+              </div>
+              <p className="text-sm font-medium text-gray-900">
+                ₹{item.price * item.quantity}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Address + Payment */}
+      <section className="mb-10 grid gap-6 md:grid-cols-2">
+        <div className="rounded-xl border border-gray-200 p-5">
+          <h4 className="mb-3 text-sm font-semibold text-gray-900">
+            Delivery Address
+          </h4>
+          <p className="text-sm text-gray-600">
+            {orderDetails.deliveryAddress.street}
+          </p>
+          <p className="text-sm text-gray-600">
+            {orderDetails.deliveryAddress.city},{' '}
+            {orderDetails.deliveryAddress.state} –{' '}
+            {orderDetails.deliveryAddress.postcode}
+          </p>
+          <p className="text-sm text-gray-600">
+            {orderDetails.deliveryAddress.country}
+          </p>
+          <p className="mt-1 text-sm text-gray-600">
+            Phone: {orderDetails.deliveryAddress.phoneNumber}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-gray-200 p-5">
+          <h4 className="mb-3 text-sm font-semibold text-gray-900">
+            Payment Summary
+          </h4>
+          <p className="text-sm text-gray-600">
+            Method: {orderDetails.paymentMethod}
+          </p>
+          <p className="text-sm text-gray-600">
+            Status: {orderDetails.paymentStatus}
+          </p>
+          {orderDetails.discountAmount > 0 && (
+            <p className="text-sm text-gray-600">
+              Discount: ₹{orderDetails.discountAmount}
+            </p>
+          )}
+          <p className="mt-2 text-lg font-semibold text-gray-900">
+            Total: ₹{orderDetails.totalAmount}
+          </p>
+        </div>
+      </section>
+
+      {/* Actions */}
+      <div className="flex flex-wrap items-center gap-4">
+        <button
+          onClick={handleDownload}
+          className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        >
+          Download Invoice
+        </button>
+
+        {orderDetails.status === 'Pending' && (
+          <button
+            onClick={() => setCancelModalOpen(true)}
+            className="text-sm text-red-600 hover:underline"
+          >
+            Cancel Order
+          </button>
+        )}
+
+        {orderDetails.status === 'Delivered' && (
+          <button
+            onClick={() => setReturnModalOpen(true)}
+            className="text-sm text-gray-700 hover:underline"
+          >
+            Return Order
+          </button>
+        )}
+      </div>
+
+      {/* Modals */}
       <CancelOrderModal
         isOpen={cancelModalOpen}
         onClose={() => setCancelModalOpen(false)}
-        onConfirm={confirmCancelOrder}
+        onConfirm={() => dispatch(viewOrder(orderId))}
         orderId={orderId}
       />
+
       <ReturnOrderModal
         isOpen={returnModalOpen}
         onClose={() => setReturnModalOpen(false)}
-        onConfirm={confirmReturnOrder}
+        onConfirm={() => dispatch(viewOrder(orderId))}
       />
     </div>
   );
