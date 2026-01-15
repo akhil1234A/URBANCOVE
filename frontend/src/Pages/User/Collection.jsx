@@ -69,6 +69,7 @@ const Collection = () => {
 
   useEffect(() => {
     dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search, inStock, min, max, sort, categoryNames: selectedCategories.join(','), subCategoryNames: selectedSubCategories.join(',') }));
+    console.log("triggred");
   }, [dispatch, currentPage, search, sort]);
 
   const handlePageChange = (page) => {

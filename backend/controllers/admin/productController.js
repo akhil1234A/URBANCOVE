@@ -50,7 +50,6 @@ exports.listProducts = async (req, res) => {
       totalItems: totalCount,
     });
   } catch (error) {
-    console.log(error)
     res.status(500).json({ message: Messages.SERVER_ERROR });
   }
 };

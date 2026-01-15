@@ -8,7 +8,6 @@ class ProductService {
     let sortQuery = { createdAt: -1 };
     const emptyResult = { products: [], totalCount: 0 };
 
-    console.log(categoryName, subCategoryName);
 
     if (productId) {
       query._id = productId;
@@ -59,7 +58,6 @@ class ProductService {
       ? subCategoryName.split(",").map((s) => s.trim())
       : [];
 
-    console.log(categoryNames, subCategoryNames);
 
     // CASE 1: category + subCategory (MULTI)
     if (categoryNames.length && subCategoryNames.length) {
@@ -86,7 +84,6 @@ class ProductService {
         category: { $in: categoryNames.map(n => new RegExp(`^${n}$`, "i")) }
       });
 
-      console.log(categories);
 
       if (!categories.length) return emptyResult;
 
@@ -104,7 +101,6 @@ class ProductService {
       query.subCategory = { $in: subCategories.map(sc => sc._id) };
     }
 
-    console.log(query);
 
     const skip = (page - 1) * limit;
 

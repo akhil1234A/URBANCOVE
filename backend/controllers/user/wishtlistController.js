@@ -31,7 +31,7 @@ const addToWishlist = async (req, res) => {
     await Wishlist.create({ userId, products: [{ productId }] });
   }
 
-  res.status(httpStatus.OK).json({ message: "Product added to wishlist" });
+  res.status(httpStatus.OK).json({ message: "Product added to wishlist", wishlistItem: {_id: productId } });
 };
 
 /**
