@@ -1,7 +1,7 @@
 const Product = require('../models/Product');
 
 class ProductService {
-  async listActiveProducts({ page, limit, search, productId, inStock = true }) {
+  async listActiveProducts({ page, limit, search, productId, inStock = true, min=0, max=Infinity }) {
     let query = { isActive: true };
 
     if (productId) {
@@ -14,6 +14,14 @@ class ProductService {
 
     if (inStock == "true") {
       query.stock = { $gt: 0 };
+    }
+    
+    if (min > 0) {
+      query.price = { $gte: min };
+    }
+
+    if (max < Infinity) {
+      query.price = { $lte: max };
     }
 
     const skip = (page - 1) * limit;

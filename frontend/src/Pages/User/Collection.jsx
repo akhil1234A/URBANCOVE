@@ -8,6 +8,7 @@ import ProductItem from '../../components/User/ProductItem';
 import { ClipLoader } from 'react-spinners';
 import { isTokenExpired } from '../../utils/jwtdecode';
 import { userAxios } from '../../utils/api';
+import { toast } from 'react-toastify';
 
 const Collection = () => {
   const dispatch = useDispatch();
@@ -40,13 +41,14 @@ const Collection = () => {
   const [localFilters, setLocalFilters] = useState({
     categories: filters.categories || [],
     subCategories: filters.subCategories || [],
-    priceRange: filters.priceRange || { min: 0, max: Infinity },
   });
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [inStock, setInStock] = useState(true);
+  const [min, setMin] = useState(0);
+  const [max, setMax] = useState(Infinity);
 
 
   useEffect(() => {
@@ -70,8 +72,8 @@ const Collection = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search, inStock }));
-  }, [dispatch, currentPage, search, inStock]);
+    dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search, inStock, min, max }));
+  }, [dispatch, currentPage, search]);
   
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) {
@@ -110,14 +112,16 @@ const Collection = () => {
   };
 
   const handlePriceRangeChange = (min, max) => {
-    setLocalFilters(prev => ({
-      ...prev,
-      priceRange: { min, max }
-    }));
+    if(min > max) {
+      toast.error('Invalid price range');
+      return;
+    }
+    setMin(min);
+    setMax(max);
   };
 
   const applyFilters = async () => {
-    dispatch(fetchProductsForUser({ page: currentPage, limit: 20, search }));
+    dispatch(fetchProductsForUser({ page: currentPage, limit: 20, search, inStock, min, max }));
     dispatch(setFilters(localFilters));
   };
   
@@ -198,15 +202,15 @@ const Collection = () => {
             <input
               type="number"
               placeholder="Min Price"
-              value={localFilters.priceRange.min}
-              onChange={(e) => handlePriceRangeChange(Number(e.target.value), localFilters.priceRange.max)}
+              value={min}
+              onChange={(e) => handlePriceRangeChange(Number(e.target.value), max)}
               className="border rounded px-2 py-1"
             />
             <input
               type="number"
               placeholder="Max Price"
-              value={localFilters.priceRange.max === Infinity ? '' : localFilters.priceRange.max}
-              onChange={(e) => handlePriceRangeChange(localFilters.priceRange.min, Number(e.target.value) || Infinity)}
+              value={max === Infinity ? '' : max}
+              onChange={(e) => handlePriceRangeChange(min, Number(e.target.value) || Infinity)}
               className="border rounded px-2 py-1"
             />
           </div>
