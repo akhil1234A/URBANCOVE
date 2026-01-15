@@ -28,7 +28,7 @@ export const addToWishlist = createAsyncThunk(
         BASE_URL,
         { productId },
       );
-      return response.data.message;
+      return response.data.wishlistItem;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to add product to wishlist');
     }
@@ -79,8 +79,9 @@ const wishlistSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(addToWishlist.fulfilled, (state) => {
+      .addCase(addToWishlist.fulfilled, (state, action) => {
         state.loading = false;
+        state.items.push(action.payload);
       })
       .addCase(addToWishlist.rejected, (state, action) => {
         state.loading = false;
@@ -92,7 +93,9 @@ const wishlistSlice = createSlice({
       })
       .addCase(removeFromWishlist.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = state.items.filter((item) => item.productId._id !== action.payload);
+        state.items = state.items.filter(
+          item => String(item._id) !== String(action.payload)
+        );
       })
       .addCase(removeFromWishlist.rejected, (state, action) => {
         state.loading = false;
