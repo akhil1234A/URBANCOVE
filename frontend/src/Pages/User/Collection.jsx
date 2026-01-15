@@ -41,12 +41,12 @@ const Collection = () => {
     categories: filters.categories || [],
     subCategories: filters.subCategories || [],
     priceRange: filters.priceRange || { min: 0, max: Infinity },
-    inStock: filters.inStock || false,
   });
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [inStock, setInStock] = useState(true);
 
 
   useEffect(() => {
@@ -70,8 +70,8 @@ const Collection = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search }));
-  }, [dispatch, currentPage, search]);
+    dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search, inStock }));
+  }, [dispatch, currentPage, search, inStock]);
   
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) {
@@ -106,10 +106,7 @@ const Collection = () => {
   };
 
   const handleInStockChange = () => {
-    setLocalFilters(prev => ({
-      ...prev,
-      inStock: !prev.inStock
-    }));
+    setInStock(prev => !prev);
   };
 
   const handlePriceRangeChange = (min, max) => {
@@ -221,7 +218,7 @@ const Collection = () => {
             <input
               className='w-3'
               type="checkbox"
-              checked={localFilters.inStock}
+              checked={inStock}
               onChange={handleInStockChange}
             /> In Stock Only
           </p>
@@ -274,7 +271,7 @@ const Collection = () => {
         </div>
         <div className="pagination flex justify-center items-center mt-4 space-x-2">
           <button
-            onClick={() => handlePageChange(currentPage - 1)}
+            onClick={() => handlePageChange(Number(currentPage) - 1)}
             disabled={currentPage === 1}
             className={`py-2 px-4 bg-gray-200 rounded-lg ${currentPage === 1 ? 'cursor-not-allowed text-gray-400' : 'hover:bg-gray-300'} transition duration-300`}
           >
@@ -291,8 +288,9 @@ const Collection = () => {
             </button>
           ))}
 
+
           <button
-            onClick={() => handlePageChange(currentPage + 1)}
+            onClick={() => handlePageChange(Number(currentPage) + 1)}
             disabled={currentPage === totalPages}
             className={`py-2 px-4 bg-gray-200 rounded-lg ${currentPage === totalPages ? 'cursor-not-allowed text-gray-400' : 'hover:bg-gray-300'} transition duration-300`}
           >

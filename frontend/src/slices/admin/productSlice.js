@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import {fetchProducts, fetchAdminProducts, updateProductStatusService, addProductService, editProductService }from '../../services/admin/productService'
 
-export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async ({page = 1, limit = 100, search}) => {
-  return await fetchProducts(page,limit,search);
+export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async ({page = 1, limit = 100, search, inStock}) => {
+  return await fetchProducts(page,limit,search, inStock);
 });
 
 export const fetchProductsForAdmin = createAsyncThunk(
@@ -61,7 +61,6 @@ const productsSlice = createSlice({
       categories: [],
       subCategories: [],
       priceRange: { min: 0, max: Infinity },
-      inStock: true
     },
     loading: false,
     error: null,
@@ -189,11 +188,7 @@ export const selectProducts = createSelector(
       product.price <= filters.priceRange.max
     );
 
-    // Apply in stock filter
-    if (filters.inStock) {
-      filteredProducts = filteredProducts.filter(product => product.stock > 0);
-    }
-
+  
     // Apply sorting
     if (sort) {
       filteredProducts.sort((a, b) => {

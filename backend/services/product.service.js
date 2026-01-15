@@ -1,7 +1,7 @@
 const Product = require('../models/Product');
 
 class ProductService {
-  async listActiveProducts({ page, limit, search, productId }) {
+  async listActiveProducts({ page, limit, search, productId, inStock = true }) {
     let query = { isActive: true };
 
     if (productId) {
@@ -10,6 +10,10 @@ class ProductService {
 
     if (search) {
       query.productName = { $regex: search, $options: 'i' };
+    }
+
+    if (inStock == "true") {
+      query.stock = { $gt: 0 };
     }
 
     const skip = (page - 1) * limit;
