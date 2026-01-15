@@ -1,7 +1,7 @@
 import { adminAxios, userAxios } from "../../utils/api";
 
 // Home: Fetch Products
-export const fetchProducts = async (page = 1, limit = 10, search = '', inStock, min, max, sort) => {
+export const fetchProducts = async (page = 1, limit = 10, search = '', inStock, min, max, sort, categoryNames, subCategoryNames ) => {
   const response = await userAxios.get(`/products`, {
     params: {
       page,
@@ -10,7 +10,9 @@ export const fetchProducts = async (page = 1, limit = 10, search = '', inStock, 
       inStock,
       min,
       max,
-      sort
+      sort,
+      categoryNames,
+      subCategoryNames
     },
   });
   return response.data; 

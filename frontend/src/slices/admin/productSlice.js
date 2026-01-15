@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import {fetchProducts, fetchAdminProducts, updateProductStatusService, addProductService, editProductService }from '../../services/admin/productService'
 
-export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async ({page = 1, limit = 100, search, inStock, min, max, sort}) => {
-  return await fetchProducts(page,limit,search, inStock, min, max, sort);
+export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async ({page = 1, limit = 100, search, inStock, min, max, sort, categoryNames, subCategoryNames}) => {
+  return await fetchProducts(page,limit,search, inStock, min, max, sort, categoryNames, subCategoryNames);
 });
 
 export const fetchProductsForAdmin = createAsyncThunk(
