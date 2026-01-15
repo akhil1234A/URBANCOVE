@@ -1,6 +1,6 @@
 import  { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchProductsForUser, selectProducts, selectLoading, setCurrentPage, setSort, setFilters } from '../../slices/admin/productSlice';
+import { fetchProductsForUser, selectProducts, selectLoading, setCurrentPage, setFilters } from '../../slices/admin/productSlice';
 import { fetchWishlist } from '../../slices/user/wishlistSlice';
 import { assets } from '../../assets/assets';
 import Title from '../../components/User/Title';
@@ -34,7 +34,6 @@ const Collection = () => {
   const totalPages = useSelector((state) => state.products.totalPages); 
   const itemsPerPage = 12; 
   const search = useSelector((state) => state.products.search);
-  const sort = useSelector((state) => state.products.sort);
   const filters = useSelector((state) => state.products.filters);
   
 
@@ -49,6 +48,8 @@ const Collection = () => {
   const [inStock, setInStock] = useState(true);
   const [min, setMin] = useState(0);
   const [max, setMax] = useState(Infinity);
+  const [sort, setSort] = useState('newest');
+
 
 
   useEffect(() => {
@@ -72,8 +73,8 @@ const Collection = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search, inStock, min, max }));
-  }, [dispatch, currentPage, search]);
+    dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search, inStock, min, max, sort }));
+  }, [dispatch, currentPage, search, sort]);
   
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) {
@@ -82,7 +83,7 @@ const Collection = () => {
   };
 
   const handleSortChange = (e) => {
-    dispatch(setSort(e.target.value));
+    setSort(e.target.value);
   };
 
   const handleCategoryFilterChange = (category) => {
@@ -121,7 +122,7 @@ const Collection = () => {
   };
 
   const applyFilters = async () => {
-    dispatch(fetchProductsForUser({ page: currentPage, limit: 20, search, inStock, min, max }));
+    dispatch(fetchProductsForUser({ page: currentPage, limit: itemsPerPage, search, inStock, min, max, sort }));
     dispatch(setFilters(localFilters));
   };
   

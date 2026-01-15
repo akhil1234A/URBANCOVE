@@ -1,8 +1,9 @@
 const Product = require('../models/Product');
 
 class ProductService {
-  async listActiveProducts({ page, limit, search, productId, inStock = true, min=0, max=Infinity }) {
+  async listActiveProducts({ page, limit, search, productId, inStock = true, min=0, max=Infinity, sort }) {
     let query = { isActive: true };
+    let sortQuery = { createdAt: -1 };
 
     if (productId) {
       query._id = productId;
@@ -24,13 +25,39 @@ class ProductService {
       query.price = { $lte: max };
     }
 
+
+    switch(sort){
+      case 'price-low-high':
+        sortQuery = { price: 1 };
+        break;
+      case 'price-high-low':
+        sortQuery = { price: -1 };
+        break;
+      case 'name-a-z':
+        sortQuery = { productName: 1 };
+        break;
+      case 'name-z-a':
+        sortQuery = { productName: -1 };
+        break;
+      case 'newest':
+        sortQuery = { createdAt: -1 };
+        break;
+      case 'oldest':
+        sortQuery = { createdAt: 1 };
+        break;
+      default:
+        sortQuery = { createdAt: -1 };
+    }
+
+
     const skip = (page - 1) * limit;
 
     const products = await Product.find(query)
       .populate('category subCategory')
-      .sort({ createdAt: -1 })
+      .sort(sortQuery)
       .skip(skip)
       .limit(limit);
+  
 
     const totalCount = await Product.countDocuments(query);
 

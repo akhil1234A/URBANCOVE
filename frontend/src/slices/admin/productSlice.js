@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import {fetchProducts, fetchAdminProducts, updateProductStatusService, addProductService, editProductService }from '../../services/admin/productService'
 
-export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async ({page = 1, limit = 100, search, inStock, min, max}) => {
-  return await fetchProducts(page,limit,search, inStock, min, max);
+export const fetchProductsForUser = createAsyncThunk('products/fetchProducts', async ({page = 1, limit = 100, search, inStock, min, max, sort}) => {
+  return await fetchProducts(page,limit,search, inStock, min, max, sort);
 });
 
 export const fetchProductsForAdmin = createAsyncThunk(
@@ -56,7 +56,6 @@ const productsSlice = createSlice({
     totalPages: 1,
     totalItems: 0,
     search: '',
-    sort: '',
     filters: {
       categories: [],
       subCategories: [],
@@ -180,28 +179,6 @@ export const selectProducts = createSelector(
         filters.subCategories.includes(product.subCategory.subCategory)
       );
     }
-
-    
-
-  
-    // Apply sorting
-    if (sort) {
-      filteredProducts.sort((a, b) => {
-        switch (sort) {
-          case 'price-low-high':
-            return a.price - b.price;
-          case 'price-high-low':
-            return b.price - a.price;
-          case 'name-a-z':
-            return a.productName.localeCompare(b.productName);
-          case 'name-z-a':
-            return b.productName.localeCompare(a.productName);
-          default:
-            return 0;
-        }
-      });
-    }
-
     return filteredProducts;
   }
 );
@@ -214,5 +191,5 @@ export const selectProductById = (state, productID) =>
   state.products.items.find((product) => product._id === productID);
 
 
-export const {setCurrentPage, setSearch, setSort, setFilters} = productsSlice.actions;
+export const {setCurrentPage, setSearch, setFilters} = productsSlice.actions;
 export default productsSlice.reducer;

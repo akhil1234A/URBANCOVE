@@ -25,7 +25,7 @@ const processImage = async (filePath) => {
  */
 exports.listProducts = async (req, res) => {
   try {
-    const { page = 1, limit = 10, productId, search, inStock, min, max } = req.query;
+    const { page = 1, limit = 10, productId, search, inStock, min, max, sort } = req.query;
 
     const { products, totalCount } = await productService.listActiveProducts({
       page: Number(page),
@@ -34,7 +34,8 @@ exports.listProducts = async (req, res) => {
       search,
       inStock,
       min,
-      max
+      max,
+      sort
     });
 
 
